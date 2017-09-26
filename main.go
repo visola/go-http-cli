@@ -72,7 +72,6 @@ func main() {
 	}
 	fmt.Println("---")
 
-	// fmt.Println(resp)
 	for k, v := range resp.Header {
 		fmt.Printf("<< '%s' = '%s'\n", k, v)
 	}
