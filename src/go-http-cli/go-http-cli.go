@@ -1,26 +1,59 @@
 package main
 
 import (
+  "flag"
   "fmt"
   "io/ioutil"
   "net/http"
   "os"
+  "strings"
 )
 
-func main () {
-  argsWithoutProg := os.Args[1:]
-  fmt.Println("Arguments: ", argsWithoutProg)
+type headerFlags []string
 
-  if len(argsWithoutProg) != 1 {
+func (i *headerFlags) String() string {
+	return "No String Representation"
+}
+
+func (i *headerFlags) Set(value string) error {
+  *i = append(*i, value)
+  return nil
+}
+
+func main () {
+  var method string
+  var headers headerFlags
+
+  flag.StringVar(&method, "method", "GET", "HTTP method to be used")
+  flag.Var(&headers, "header", "Headers to include with your request")
+
+  flag.Parse()
+
+  fmt.Println("Method: ", method)
+
+  if len(flag.Args()) != 1 {
     fmt.Println("Nothing to do.")
     os.Exit(1)
   }
 
-  req, reqErr := http.NewRequest("GET", argsWithoutProg[0], nil)
+  url := flag.Args()[0]
+  fmt.Println("URL: ", url)
+
+  req, reqErr := http.NewRequest("GET", url, nil)
 
   if reqErr != nil {
     fmt.Println("Error while creating request: ", reqErr)
     os.Exit(10)
+  }
+
+  for _, kv := range headers {
+    s := strings.Split(kv, "=")
+    if len(s) != 2 {
+      fmt.Println("Error while parsing header: ", kv)
+      fmt.Println("Should be a '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
+      os.Exit(11)
+    }
+    req.Header.Add(s[0], s[1])
   }
 
   client := &http.Client {}
