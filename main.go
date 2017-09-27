@@ -1,59 +1,45 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/visola/go-http-cli/config"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strings"
 )
 
-type headerFlags []string
-
-func (i *headerFlags) String() string {
-	return "No String Representation"
-}
-
-func (i *headerFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
-
 func main() {
-	var method string
-	var headers headerFlags
+	configuration, err := config.Parse()
 
-	flag.StringVar(&method, "method", "GET", "HTTP method to be used")
-	flag.Var(&headers, "header", "Headers to include with your request")
-
-	flag.Parse()
-
-	fmt.Println("Method: ", method)
-
-	if len(flag.Args()) != 1 {
-		fmt.Println("Nothing to do.")
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	url := flag.Args()[0]
-	fmt.Println("URL: ", url)
+	if configuration.Url == "" {
+		fmt.Println("Nothing to do.")
+		os.Exit(2)
+	}
 
-	req, reqErr := http.NewRequest("GET", url, nil)
+	fmt.Printf("\n%s %s\n", configuration.Method, configuration.Url)
+
+	if len(configuration.Headers) == 0 {
+		fmt.Println(">>")
+	} else {
+		for k, v := range configuration.Headers {
+			fmt.Printf(">> '%s' = '%s'\n", k, v)
+		}
+	}
+
+	req, reqErr := http.NewRequest(configuration.Method, configuration.Url, nil)
 
 	if reqErr != nil {
 		fmt.Println("Error while creating request: ", reqErr)
 		os.Exit(10)
 	}
 
-	for _, kv := range headers {
-		s := strings.Split(kv, "=")
-		if len(s) != 2 {
-			fmt.Println("Error while parsing header: ", kv)
-			fmt.Println("Should be a '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
-			os.Exit(11)
-		}
-		req.Header.Add(s[0], s[1])
+	for k, v := range configuration.Headers {
+		req.Header.Add(k, v)
 	}
 
 	client := &http.Client{}
@@ -67,16 +53,9 @@ func main() {
 
 	defer resp.Body.Close()
 
-	for k, v := range req.Header {
-		fmt.Printf(">> '%s' = '%s'\n", k, v)
-	}
-	fmt.Println("---")
-
 	for k, v := range resp.Header {
 		fmt.Printf("<< '%s' = '%s'\n", k, v)
 	}
-
-	fmt.Println("---")
 
 	bodyBytes, readErr := ioutil.ReadAll(resp.Body)
 
@@ -85,6 +64,6 @@ func main() {
 		os.Exit(30)
 	}
 
-	fmt.Println(string(bodyBytes))
+	fmt.Printf("\n%s\n", string(bodyBytes))
 
 }
