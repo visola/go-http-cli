@@ -1,12 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/visola/go-http-cli/config"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 )
+
+type bodyBuffer struct {
+	*bytes.Buffer
+}
+
+func (bb *bodyBuffer) Close() error {
+	return nil
+}
 
 func main() {
 	configuration, err := config.Parse()
@@ -42,6 +52,18 @@ func main() {
 		req.Header.Add(k, v)
 	}
 
+	if configuration.Body != "" {
+		fmt.Println(">>")
+		split := strings.Split(configuration.Body, "\n")
+		for _, line := range split {
+			fmt.Printf(">> %s\n", line)
+		}
+
+		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body)}
+	}
+
+	fmt.Println("--")
+
 	client := &http.Client{}
 	resp, respErr := client.Do(req)
 
@@ -64,6 +86,13 @@ func main() {
 		os.Exit(30)
 	}
 
-	fmt.Printf("\n%s\n", string(bodyBytes))
+	fmt.Println("<<")
+	if len(bodyBytes) != 0 {
+		split := strings.Split(string(bodyBytes), "\n")
+		for _, line := range split {
+			fmt.Printf("<< %s\n", line)
+		}
+		fmt.Println("<<")
+	}
 
 }
