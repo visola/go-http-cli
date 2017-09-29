@@ -18,6 +18,7 @@ func (i *headerFlags) Set(value string) error {
 }
 
 type Configuration struct {
+	Body    string
 	Headers map[string]string
 	Method  string
 	Url     string
@@ -47,15 +48,18 @@ func parseUrl(args []string) (string, error) {
 
 func Parse() (*Configuration, error) {
 	var method string
+	var body string
 	var headers headerFlags
 
 	flag.StringVar(&method, "method", "GET", "HTTP method to be used")
+	flag.StringVar(&body, "data", "", "Data to be sent as body")
 	flag.Var(&headers, "header", "Headers to include with your request")
 
 	flag.Parse()
 
 	result := new(Configuration)
 	result.Method = method
+	result.Body = body
 
 	url, urlError := parseUrl(flag.Args())
 	result.Url = url
