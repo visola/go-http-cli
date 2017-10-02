@@ -19,7 +19,7 @@ func (bb *bodyBuffer) Close() error {
 }
 
 func main() {
-	configuration, err := config.Parse()
+	configuration, err := config.Parse(os.Args[1:])
 
 	if err != nil {
 		fmt.Println(err)
