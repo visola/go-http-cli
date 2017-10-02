@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"flag"
+	"os"
 	"strings"
 )
 
@@ -39,29 +40,27 @@ func parseHeaders(headers headerFlags) (map[string]string, error) {
 }
 
 func parseUrl(args []string) (string, error) {
-	if len(args) != 1 {
-		return "", errors.New("Unexpected number of arguments. Expected 1, got " + string(len(args)))
-	}
-
 	return args[0], nil
 }
 
-func Parse() (*Configuration, error) {
+func Parse(args []string) (*Configuration, error) {
 	var method string
 	var body string
 	var headers headerFlags
 
-	flag.StringVar(&method, "method", "GET", "HTTP method to be used")
-	flag.StringVar(&body, "data", "", "Data to be sent as body")
-	flag.Var(&headers, "header", "Headers to include with your request")
+	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	flag.Parse()
+	commandLine.StringVar(&method, "method", "GET", "HTTP method to be used")
+	commandLine.StringVar(&body, "data", "", "Data to be sent as body")
+	commandLine.Var(&headers, "header", "Headers to include with your request")
+
+	commandLine.Parse(args)
 
 	result := new(Configuration)
 	result.Method = method
 	result.Body = body
 
-	url, urlError := parseUrl(flag.Args())
+	url, urlError := parseUrl(commandLine.Args())
 	result.Url = url
 
 	if urlError != nil {
