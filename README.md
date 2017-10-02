@@ -1,4 +1,4 @@
-### go-http-cli
+### go-http-cli [![Build Status](https://travis-ci.org/visola/go-http-cli.svg?branch=master)](https://travis-ci.org/visola/go-http-cli)
 
 An HTTP client inspired by `curl` made in Go.
 
