@@ -75,6 +75,8 @@ func main() {
 
 	defer resp.Body.Close()
 
+	fmt.Printf("<< %s\n", resp.Status)
+
 	for k, v := range resp.Header {
 		fmt.Printf("<< '%s' = '%s'\n", k, v)
 	}
