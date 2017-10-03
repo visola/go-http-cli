@@ -1,3 +1,8 @@
+/*
+	When making an HTTP request, there are many things that can/need to be configured. In the `config`
+	package you'll find methods required to parse (like Parse([]string)) configuration from command
+	line arguments and files.
+*/
 package config
 
 import (
@@ -18,11 +23,12 @@ func (i *headerFlags) Set(value string) error {
 	return nil
 }
 
+// A configuration stores all the configuration that will be used to build the request.
 type Configuration struct {
 	Body    string
 	Headers map[string]string
 	Method  string
-	Url     string
+	URL     string
 }
 
 func parseHeaders(headers headerFlags) (map[string]string, error) {
@@ -39,7 +45,7 @@ func parseHeaders(headers headerFlags) (map[string]string, error) {
 	return result, nil
 }
 
-func parseUrl(args []string) (string, error) {
+func parseURL(args []string) (string, error) {
 	return args[0], nil
 }
 
@@ -60,8 +66,8 @@ func Parse(args []string) (*Configuration, error) {
 	result.Method = method
 	result.Body = body
 
-	url, urlError := parseUrl(commandLine.Args())
-	result.Url = url
+	url, urlError := parseURL(commandLine.Args())
+	result.URL = url
 
 	if urlError != nil {
 		return result, urlError
