@@ -26,12 +26,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if configuration.Url == "" {
+	if configuration.URL == "" {
 		fmt.Println("Nothing to do.")
 		os.Exit(2)
 	}
 
-	fmt.Printf("\n%s %s\n", configuration.Method, configuration.Url)
+	fmt.Printf("\n%s %s\n", configuration.Method, configuration.URL)
 
 	if len(configuration.Headers) == 0 {
 		fmt.Println(">>")
@@ -41,7 +41,7 @@ func main() {
 		}
 	}
 
-	req, reqErr := http.NewRequest(configuration.Method, configuration.Url, nil)
+	req, reqErr := http.NewRequest(configuration.Method, configuration.URL, nil)
 
 	if reqErr != nil {
 		fmt.Println("Error while creating request: ", reqErr)
