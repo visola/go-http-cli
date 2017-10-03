@@ -8,9 +8,9 @@ Example command pointing to a test server:
 
 ```bash
 go-http-cli \
-  -header Content-Type=application/json \
-  -method POST \
-  -data "Some test data" \
+  -H Content-Type=application/json \
+  -X POST \
+  -d "Some test data" \
   http://localhost:3000/test
 ```
 
