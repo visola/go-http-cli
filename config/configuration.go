@@ -1,15 +1,13 @@
-/*
-	When making an HTTP request, there are many things that can/need to be configured. In the `config`
-	package you'll find methods required to parse (like Parse([]string)) configuration from command
-	line arguments and files.
-*/
+// Package config has all the things required to parse configuration from command line arguments
+// and files.
 package config
 
 import (
 	"errors"
-	"flag"
 	"os"
 	"strings"
+
+	flag "github.com/spf13/pflag"
 )
 
 type headerFlags []string
@@ -23,7 +21,11 @@ func (i *headerFlags) Set(value string) error {
 	return nil
 }
 
-// A configuration stores all the configuration that will be used to build the request.
+func (i *headerFlags) Type() string {
+	return "headers"
+}
+
+// Configuration stores all the configuration that will be used to build the request.
 type Configuration struct {
 	Body    string
 	Headers map[string]string
@@ -49,6 +51,7 @@ func parseURL(args []string) (string, error) {
 	return args[0], nil
 }
 
+// Parse parses arguments and create a Configuration object.
 func Parse(args []string) (*Configuration, error) {
 	var method string
 	var body string
@@ -56,9 +59,9 @@ func Parse(args []string) (*Configuration, error) {
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	commandLine.StringVar(&method, "method", "GET", "HTTP method to be used")
-	commandLine.StringVar(&body, "data", "", "Data to be sent as body")
-	commandLine.Var(&headers, "header", "Headers to include with your request")
+	commandLine.StringVarP(&method, "method", "X", "GET", "HTTP method to be used")
+	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
+	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 
 	commandLine.Parse(args)
 
