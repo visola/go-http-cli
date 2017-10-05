@@ -16,5 +16,8 @@ func Parse(args []string) (Configuration, error) {
 	if err != nil {
 		return nil, err
 	}
-	return commandLineConfiguration, nil
+	result := hierarchicalConfigurationFormat{
+		configurations: []Configuration{commandLineConfiguration},
+	}
+	return result, nil
 }

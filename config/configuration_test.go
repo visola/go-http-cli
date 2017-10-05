@@ -24,6 +24,8 @@ func TestParse(t *testing.T) {
 	assert.Nil(t, err, "Should not return error")
 	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
 	assert.Equal(t, []string{value}, configuration.Headers()[header], "Should parse the correct value for the header")
+	assert.Equal(t, method, configuration.Method(), "Should parse method correctly")
+	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
 	assert.Equal(t, data, configuration.Body(), "Should parse data correctly")
 
 	// Parse all arguments correctly using short format
@@ -33,6 +35,8 @@ func TestParse(t *testing.T) {
 	assert.Nil(t, err, "Should not return error")
 	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
 	assert.Equal(t, []string{value}, configuration.Headers()[header], "Should parse the correct value for the header")
+	assert.Equal(t, method, configuration.Method(), "Should parse method correctly")
+	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
 	assert.Equal(t, data, configuration.Body(), "Should parse data correctly")
 
 	// Fail to parse header with wrong separator
