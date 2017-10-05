@@ -39,6 +39,16 @@ func TestParse(t *testing.T) {
 	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
 	assert.Equal(t, data, configuration.Body(), "Should parse data correctly")
 
+	// Parses multiple values for the same header
+	newValue := "AnotherValue"
+	args = []string{"--header", header + "=" + value, "--header", header + "=" + newValue, url}
+	configuration, err = Parse(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
+	assert.Equal(t, []string{value, newValue}, configuration.Headers()[header], "Should parse the correct values for the header")
+	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
+
 	// Fail to parse header with wrong separator
 	args = []string{"--header", header + ":" + value, url}
 	configuration, err = Parse(args)

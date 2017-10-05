@@ -55,7 +55,15 @@ func parseHeaders(headers headerFlags) (map[string][]string, error) {
 		if len(s) != 2 {
 			return result, errors.New("Error while parsing header '" + kv + "'\nShould be a '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
 		}
-		result[s[0]] = []string{s[1]}
+
+		key := s[0]
+		value := s[1]
+
+		if existing_value, ok := result[key]; ok {
+			result[key] = append(existing_value, value)
+		} else {
+			result[key] = []string{value}
+		}
 	}
 
 	return result, nil
