@@ -26,40 +26,42 @@ func main() {
 		os.Exit(1)
 	}
 
-	if configuration.URL == "" {
+	if configuration.URL() == "" {
 		fmt.Println("Nothing to do.")
 		os.Exit(2)
 	}
 
-	fmt.Printf("\n%s %s\n", configuration.Method, configuration.URL)
+	fmt.Printf("\n%s %s\n", configuration.Method(), configuration.URL())
 
-	if len(configuration.Headers) == 0 {
+	if len(configuration.Headers()) == 0 {
 		fmt.Println(">>")
 	} else {
-		for k, v := range configuration.Headers {
+		for k, v := range configuration.Headers() {
 			fmt.Printf(">> '%s' = '%s'\n", k, v)
 		}
 	}
 
-	req, reqErr := http.NewRequest(configuration.Method, configuration.URL, nil)
+	req, reqErr := http.NewRequest(configuration.Method(), configuration.URL(), nil)
 
 	if reqErr != nil {
 		fmt.Println("Error while creating request: ", reqErr)
 		os.Exit(10)
 	}
 
-	for k, v := range configuration.Headers {
-		req.Header.Add(k, v)
+	for k, vs := range configuration.Headers() {
+		for _, v := range vs {
+			req.Header.Add(k, v)
+		}
 	}
 
-	if configuration.Body != "" {
+	if configuration.Body() != "" {
 		fmt.Println(">>")
-		split := strings.Split(configuration.Body, "\n")
+		split := strings.Split(configuration.Body(), "\n")
 		for _, line := range split {
 			fmt.Printf(">> %s\n", line)
 		}
 
-		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body)}
+		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body())}
 	}
 
 	fmt.Println("--")
