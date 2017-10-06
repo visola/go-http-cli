@@ -8,23 +8,23 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-type headerFlags []string
+type arrayFlags []string
 
-func (i *headerFlags) String() string {
+func (i *arrayFlags) String() string {
 	return "No String Representation"
 }
 
-func (i *headerFlags) Set(value string) error {
+func (i *arrayFlags) Set(value string) error {
 	*i = append(*i, value)
 	return nil
 }
 
-func (i *headerFlags) Type() string {
+func (i *arrayFlags) Type() string {
 	return "headers"
 }
 
 type commandLineConfiguration struct {
-	configurationPaths []string
+	ConfigurationPaths []string
 	headers            map[string][]string
 	body               string
 	method             string
@@ -47,7 +47,7 @@ func (conf commandLineConfiguration) URL() string {
 	return conf.url
 }
 
-func parseHeaders(headers headerFlags) (map[string][]string, error) {
+func parseHeaders(headers arrayFlags) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	for _, kv := range headers {
@@ -59,8 +59,8 @@ func parseHeaders(headers headerFlags) (map[string][]string, error) {
 		key := s[0]
 		value := s[1]
 
-		if existing_value, ok := result[key]; ok {
-			result[key] = append(existing_value, value)
+		if existingValue, ok := result[key]; ok {
+			result[key] = append(existingValue, value)
 		} else {
 			result[key] = []string{value}
 		}
@@ -76,19 +76,23 @@ func parseURL(args []string) (string, error) {
 func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 	var method string
 	var body string
-	var headers headerFlags
+	var headers arrayFlags
+	var configPaths arrayFlags
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	commandLine.StringVarP(&method, "method", "X", "GET", "HTTP method to be used")
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
+	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
 
 	commandLine.Parse(args)
 
 	result := new(commandLineConfiguration)
 	result.method = method
 	result.body = body
+
+	result.ConfigurationPaths = configPaths
 
 	url, urlError := parseURL(commandLine.Args())
 	result.url = url
