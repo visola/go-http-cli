@@ -5,83 +5,43 @@ package config
 import (
 	"errors"
 	"os"
-	"strings"
-
-	flag "github.com/spf13/pflag"
 )
 
-type headerFlags []string
-
-func (i *headerFlags) String() string {
-	return "No String Representation"
-}
-
-func (i *headerFlags) Set(value string) error {
-	*i = append(*i, value)
-	return nil
-}
-
-func (i *headerFlags) Type() string {
-	return "headers"
-}
-
 // Configuration stores all the configuration that will be used to build the request.
-type Configuration struct {
-	Body    string
-	Headers map[string]string
-	Method  string
-	URL     string
-}
-
-func parseHeaders(headers headerFlags) (map[string]string, error) {
-	result := make(map[string]string)
-
-	for _, kv := range headers {
-		s := strings.Split(kv, "=")
-		if len(s) != 2 {
-			return result, errors.New("Error while parsing header '" + kv + "'\nShould be a '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
-		}
-		result[s[0]] = s[1]
-	}
-
-	return result, nil
-}
-
-func parseURL(args []string) (string, error) {
-	return args[0], nil
+type Configuration interface {
+	Headers() map[string][]string
+	Body() string
+	Method() string
+	URL() string
 }
 
 // Parse parses arguments and create a Configuration object.
-func Parse(args []string) (*Configuration, error) {
-	var method string
-	var body string
-	var headers headerFlags
-
-	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-
-	commandLine.StringVarP(&method, "method", "X", "GET", "HTTP method to be used")
-	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
-	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
-
-	commandLine.Parse(args)
-
-	result := new(Configuration)
-	result.Method = method
-	result.Body = body
-
-	url, urlError := parseURL(commandLine.Args())
-	result.URL = url
-
-	if urlError != nil {
-		return result, urlError
+func Parse(args []string) (Configuration, error) {
+	commandLineConfiguration, err := parseCommandLine(args)
+	if err != nil {
+		return nil, err
 	}
 
-	parsedHeaders, headerError := parseHeaders(headers)
-	result.Headers = parsedHeaders
+	// We'll have at least one configuration
+	configurations := []Configuration{}
 
-	if headerError != nil {
-		return result, headerError
+	if len(commandLineConfiguration.ConfigurationPaths) > 0 {
+		for _, configPath := range commandLineConfiguration.ConfigurationPaths {
+			if _, err := os.Stat(configPath); os.IsNotExist(err) {
+				return commandLineConfiguration, errors.New("Configuration file does not exist: " + configPath)
+			}
+			yamlConfig, err := readFrom(configPath)
+			if err != nil {
+				return commandLineConfiguration, err
+			}
+			configurations = append(configurations, yamlConfig)
+		}
 	}
 
+	configurations = append(configurations, commandLineConfiguration)
+
+	result := hierarchicalConfigurationFormat{
+		configurations: configurations,
+	}
 	return result, nil
 }
