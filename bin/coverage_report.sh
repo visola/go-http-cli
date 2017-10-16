@@ -18,4 +18,3 @@ grep -h -v "^mode:" "$BUILD_DIR"/*.cover >> all.cover
 mv all.cover $BUILD_DIR/all.cover
 
 go tool cover "-html=$BUILD_DIR/all.cover" -o $BUILD_DIR/coverage.html
-open $BUILD_DIR/coverage.html

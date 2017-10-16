@@ -3,11 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/visola/go-http-cli/config"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/visola/go-http-cli/config"
 )
 
 type bodyBuffer struct {
@@ -22,29 +24,23 @@ func main() {
 	configuration, err := config.Parse(os.Args[1:])
 
 	if err != nil {
-		fmt.Println(err)
+		color.Red("%s", err)
 		os.Exit(1)
 	}
 
-	if configuration.URL() == "" {
-		fmt.Println("Nothing to do.")
-		os.Exit(2)
-	}
+	color.Green("\n%s %s\n", configuration.Method(), configuration.URL())
 
-	fmt.Printf("\n%s %s\n", configuration.Method(), configuration.URL())
-
-	if len(configuration.Headers()) == 0 {
-		fmt.Println(">>")
-	} else {
-		for k, v := range configuration.Headers() {
-			fmt.Printf(">> '%s' = '%s'\n", k, v)
-		}
+	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
+	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
+	for k, vs := range configuration.Headers() {
+		sentHeaderKeyColor("%s", k)
+		sentHeaderValueColor(" = %s\n", strings.Join(vs, ", "))
 	}
 
 	req, reqErr := http.NewRequest(configuration.Method(), configuration.URL(), nil)
 
 	if reqErr != nil {
-		fmt.Println("Error while creating request: ", reqErr)
+		color.Red("Error while creating request: %s", reqErr)
 		os.Exit(10)
 	}
 
@@ -55,7 +51,6 @@ func main() {
 	}
 
 	if configuration.Body() != "" {
-		fmt.Println(">>")
 		split := strings.Split(configuration.Body(), "\n")
 		for _, line := range split {
 			fmt.Printf(">> %s\n", line)
@@ -63,8 +58,6 @@ func main() {
 
 		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body())}
 	}
-
-	fmt.Println("--")
 
 	client := &http.Client{}
 	resp, respErr := client.Do(req)
@@ -77,26 +70,31 @@ func main() {
 
 	defer resp.Body.Close()
 
-	fmt.Printf("<< %s\n", resp.Status)
+	color.Green("\n%s\n", resp.Status)
 
-	for k, v := range resp.Header {
-		fmt.Printf("<< '%s' = '%s'\n", k, v)
+	receivedHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
+	receivedHeaderValueColor := color.New(color.FgBlack).PrintfFunc()
+	for k, vs := range resp.Header {
+		receivedHeaderKeyColor("%s", k)
+		receivedHeaderValueColor(" = %s\n", strings.Join(vs, ", "))
 	}
 
 	bodyBytes, readErr := ioutil.ReadAll(resp.Body)
 
 	if readErr != nil {
-		fmt.Println("Error while reading body.", readErr)
+		color.Red("Error while reading body. %s", readErr)
 		os.Exit(30)
 	}
 
-	fmt.Println("<<")
 	if len(bodyBytes) != 0 {
 		split := strings.Split(string(bodyBytes), "\n")
+		fmt.Println("")
+
+		receivedBodyColor := color.New(color.Bold).PrintfFunc()
 		for _, line := range split {
-			fmt.Printf("<< %s\n", line)
+			receivedBodyColor("%s\n", line)
 		}
-		fmt.Println("<<")
+		fmt.Println("")
 	}
 
 }

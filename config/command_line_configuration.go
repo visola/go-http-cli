@@ -70,6 +70,9 @@ func parseHeaders(headers arrayFlags) (map[string][]string, error) {
 }
 
 func parseURL(args []string) (string, error) {
+	if len(args) == 0 {
+		return "", errors.New("no arguments passed in")
+	}
 	return args[0], nil
 }
 
