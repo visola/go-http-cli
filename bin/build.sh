@@ -10,7 +10,7 @@ cd $DIR
 cd ..
 
 go install
-golint ./...
+golint -set_exit_status ./...
 bin/coverage_report.sh
 
 cd $CURRENT_DIR
