@@ -30,13 +30,6 @@ func main() {
 
 	color.Green("\n%s %s\n", configuration.Method(), configuration.URL())
 
-	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
-	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
-	for k, vs := range configuration.Headers() {
-		sentHeaderKeyColor("%s", k)
-		sentHeaderValueColor(" = %s\n", strings.Join(vs, ", "))
-	}
-
 	req, reqErr := http.NewRequest(configuration.Method(), configuration.URL(), nil)
 
 	if reqErr != nil {
@@ -48,6 +41,13 @@ func main() {
 		for _, v := range vs {
 			req.Header.Add(k, v)
 		}
+	}
+
+	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
+	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
+	for k, vs := range req.Header {
+		sentHeaderKeyColor("%s:", k)
+		sentHeaderValueColor(" %s\n", strings.Join(vs, ", "))
 	}
 
 	if configuration.Body() != "" {
@@ -75,8 +75,8 @@ func main() {
 	receivedHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
 	receivedHeaderValueColor := color.New(color.FgBlack).PrintfFunc()
 	for k, vs := range resp.Header {
-		receivedHeaderKeyColor("%s", k)
-		receivedHeaderValueColor(" = %s\n", strings.Join(vs, ", "))
+		receivedHeaderKeyColor("%s:", k)
+		receivedHeaderValueColor(" %s\n", strings.Join(vs, ", "))
 	}
 
 	bodyBytes, readErr := ioutil.ReadAll(resp.Body)
