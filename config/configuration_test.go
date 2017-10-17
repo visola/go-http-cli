@@ -19,7 +19,8 @@ func TestParse(t *testing.T) {
 	t.Run("Parses all arguments using short names", testParsesShortNames)
 	t.Run("Parses all arguments using long names", testParsesLongNames)
 	t.Run("Parses multiple values for the same header", testParsesMultipleValuesForHeader)
-	t.Run("Parses configuration from file", testParsesConfigurationFromFile)
+	t.Run("Parses configuration from file using header as string", testParsesConfigurationFromFileUsingHeaderString)
+	t.Run("Parses configuration from file using header as array", testParsesConfigurationFromFileUsingHeaderAsArray)
 	t.Run("Fails to parse header with wrong separator", testFailToParseHeaderWithWrongSeparator)
 	t.Run("Failes if configuration file does not exist", testConfigurationFileDoesNotExist)
 	t.Run("Handles failure to parse Yaml file", testFailToParseYamlFile)
@@ -56,7 +57,22 @@ func testFailToParseHeaderWithWrongSeparator(t *testing.T) {
 	assert.Regexp(t, "^Error while parsing header", err.Error())
 }
 
-func testParsesConfigurationFromFile(t *testing.T) {
+func testParsesConfigurationFromFileUsingHeaderString(t *testing.T) {
+	simpleHeaderYaml := "headers:\n  " + header + ": " + value
+	tmpFile, err := ioutil.TempFile("", "simple_header.yml")
+
+	if err != nil {
+		panic(err)
+	}
+
+	tmpFile.WriteString(simpleHeaderYaml)
+
+	args := []string{"--method", method, "--data", data, "--config", tmpFile.Name(), url}
+	configuration, err := Parse(args)
+	assertCorrectlyParsed(t, configuration, err)
+}
+
+func testParsesConfigurationFromFileUsingHeaderAsArray(t *testing.T) {
 	simpleHeaderYaml := "headers:\n  " + header + ":\n    - " + value
 	tmpFile, err := ioutil.TempFile("", "simple_header.yml")
 
@@ -78,7 +94,7 @@ func testConfigurationFileDoesNotExist(t *testing.T) {
 }
 
 func testFailToParseYamlFile(t *testing.T) {
-	simpleHeaderYaml := "headers:\n  Content-type: application/json"
+	simpleHeaderYaml := "bla bla"
 	tmpFile, err := ioutil.TempFile("", "simple_header.yml")
 
 	if err != nil {
