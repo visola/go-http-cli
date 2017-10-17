@@ -79,7 +79,7 @@ func parseArgs(args []string) (string, []string, error) {
 	var url string
 	for _, arg := range args {
 		if arg[0] == '+' { // Found a profile to activate
-			profiles = append(profiles, arg[1:len(arg)])
+			profiles = append(profiles, arg[1:])
 		} else {
 			url = arg
 		}
