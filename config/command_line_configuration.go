@@ -20,14 +20,15 @@ func (i *arrayFlags) Set(value string) error {
 }
 
 func (i *arrayFlags) Type() string {
-	return "headers"
+	return "arrayFlags"
 }
 
 type commandLineConfiguration struct {
-	ConfigurationPaths []string
-	headers            map[string][]string
 	body               string
+	configurationPaths []string
+	headers            map[string][]string
 	method             string
+	profiles           []string
 	url                string
 }
 
@@ -69,11 +70,21 @@ func parseHeaders(headers arrayFlags) (map[string][]string, error) {
 	return result, nil
 }
 
-func parseURL(args []string) (string, error) {
+func parseArgs(args []string) (string, []string, error) {
 	if len(args) == 0 {
-		return "", errors.New("no arguments passed in")
+		return "", nil, errors.New("no arguments passed in")
 	}
-	return args[0], nil
+
+	profiles := make([]string, 0)
+	var url string
+	for _, arg := range args {
+		if arg[0] == '+' { // Found a profile to activate
+			profiles = append(profiles, arg[1:len(arg)])
+		} else {
+			url = arg
+		}
+	}
+	return url, profiles, nil
 }
 
 func parseCommandLine(args []string) (*commandLineConfiguration, error) {
@@ -95,10 +106,11 @@ func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 	result.method = method
 	result.body = body
 
-	result.ConfigurationPaths = configPaths
+	result.configurationPaths = configPaths
 
-	url, urlError := parseURL(commandLine.Args())
+	url, profiles, urlError := parseArgs(commandLine.Args())
 	result.url = url
+	result.profiles = profiles
 
 	if urlError != nil {
 		return result, urlError
