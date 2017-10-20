@@ -1,4 +1,4 @@
-package config
+package yaml
 
 import (
 	"io/ioutil"
@@ -29,15 +29,22 @@ func (v *headerValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Used to unmarshal data from YAML files
 type yamlConfigurationFormat struct {
+	BaseURL string `yaml:"baseURL"`
 	Headers map[string]headerValue
 }
 
-// Configuration implementation that wraps configuration coming from a YAML file
-type fileConfiguration struct {
+// FileConfiguration represents a Configuration loaded from a YAML file
+type FileConfiguration struct {
 	parsedYaml *yamlConfigurationFormat
 }
 
-func (conf fileConfiguration) Headers() map[string][]string {
+// BaseURL returns the base URL loaded from the file
+func (conf FileConfiguration) BaseURL() string {
+	return conf.parsedYaml.BaseURL
+}
+
+// Headers loaded from the file
+func (conf FileConfiguration) Headers() map[string][]string {
 	result := make(map[string][]string)
 	for header, values := range conf.parsedYaml.Headers {
 		result[header] = values
@@ -45,19 +52,23 @@ func (conf fileConfiguration) Headers() map[string][]string {
 	return result
 }
 
-func (conf fileConfiguration) Body() string {
+// Body returns empty string (not implemented)
+func (conf FileConfiguration) Body() string {
 	return ""
 }
 
-func (conf fileConfiguration) Method() string {
+// Method returns empty string (not implemented)
+func (conf FileConfiguration) Method() string {
 	return ""
 }
 
-func (conf fileConfiguration) URL() string {
+// URL returns empty string  (not implemented)
+func (conf FileConfiguration) URL() string {
 	return ""
 }
 
-func readFrom(pathToYamlFile string) (*fileConfiguration, error) {
+// ReadFrom a YAML file and creates a configuration
+func ReadFrom(pathToYamlFile string) (*FileConfiguration, error) {
 	yamlConfiguration := new(yamlConfigurationFormat)
 
 	var err error
@@ -74,7 +85,7 @@ func readFrom(pathToYamlFile string) (*fileConfiguration, error) {
 		return nil, err
 	}
 
-	result := &fileConfiguration{parsedYaml: yamlConfiguration}
+	result := &FileConfiguration{parsedYaml: yamlConfiguration}
 
 	return result, nil
 }

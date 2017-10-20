@@ -4,6 +4,16 @@ type hierarchicalConfigurationFormat struct {
 	configurations []Configuration
 }
 
+func (conf hierarchicalConfigurationFormat) BaseURL() string {
+	var result string
+	for _, subConfig := range conf.configurations {
+		if subConfig.BaseURL() != "" {
+			result = subConfig.BaseURL()
+		}
+	}
+	return result
+}
+
 func (conf hierarchicalConfigurationFormat) Headers() map[string][]string {
 	result := make(map[string][]string)
 	for _, subConfig := range conf.configurations {

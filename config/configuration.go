@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/user"
 	"strings"
+
+	"github.com/visola/go-http-cli/config/yaml"
 )
 
 const (
@@ -16,6 +18,7 @@ const (
 
 // Configuration stores all the configuration that will be used to build the request.
 type Configuration interface {
+	BaseURL() string
 	Headers() map[string][]string
 	Body() string
 	Method() string
@@ -45,7 +48,7 @@ func loadConfigurations(paths []string) ([]Configuration, error) {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			return result, errors.New("Configuration file does not exist: " + path)
 		}
-		yamlConfig, err := readFrom(path)
+		yamlConfig, err := yaml.ReadFrom(path)
 		if err != nil {
 			return result, err
 		}
@@ -72,7 +75,7 @@ func loadProfiles(basePath string, profiles []string) ([]Configuration, error) {
 			}
 		}
 
-		yamlConfig, err := readFrom(fileNameWithExtension)
+		yamlConfig, err := yaml.ReadFrom(fileNameWithExtension)
 		if err != nil {
 			return result, err
 		}
