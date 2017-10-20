@@ -5,7 +5,7 @@ An HTTP client inspired by `curl` and `httpie` made in Go.
 
 ## Profiles
 
-** IMPORTANT! Please don't store your passwords on plain text files! Use this only for local/development environments. **
+**IMPORTANT! Please don't store your passwords on plain text files! Use this only for local/development environments.**
 
 `go-http-cli` can use profile files, which are just configuration files in a special location.
 The location by default points to `${user.home}/go-http-cli` but it can be configured through the
