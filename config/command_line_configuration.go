@@ -32,6 +32,10 @@ type commandLineConfiguration struct {
 	url                string
 }
 
+func (conf commandLineConfiguration) BaseURL() string {
+	return ""
+}
+
 func (conf commandLineConfiguration) Headers() map[string][]string {
 	return conf.headers
 }

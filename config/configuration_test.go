@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	data   = "Some Data"
-	method = "POST"
-	header = "SomeHeader"
-	value  = "SomeValue"
-	url    = "http://www.google.com"
+	testBaseURL = "http://www.test.com"
+	testData    = "Some Data"
+	testMethod  = "POST"
+	testHeader  = "SomeHeader"
+	testValue   = "SomeValue"
+	testURL     = "/somePath"
 )
 
 func TestParse(t *testing.T) {
@@ -31,30 +32,30 @@ func TestParse(t *testing.T) {
 }
 
 func testParsesShortNames(t *testing.T) {
-	args := []string{"--method", method, "--data", data, "--header", header + "=" + value, url}
+	args := []string{"--method", testMethod, "--data", testData, "--header", testHeader + "=" + testValue, testURL}
 	configuration, err := Parse(args)
 	assertCorrectlyParsed(t, configuration, err)
 }
 
 func testParsesLongNames(t *testing.T) {
-	args := []string{"-X", method, "-d", data, "-H", header + "=" + value, url}
+	args := []string{"-X", testMethod, "-d", testData, "-H", testHeader + "=" + testValue, testURL}
 	configuration, err := Parse(args)
 	assertCorrectlyParsed(t, configuration, err)
 }
 
 func testParsesMultipleValuesForHeader(t *testing.T) {
 	newValue := "AnotherValue"
-	args := []string{"--header", header + "=" + value, "--header", header + "=" + newValue, url}
+	args := []string{"--header", testHeader + "=" + testValue, "--header", testHeader + "=" + newValue, testURL}
 	configuration, err := Parse(args)
 
 	assert.Nil(t, err, "Should not return error")
 	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
-	assert.Equal(t, []string{value, newValue}, configuration.Headers()[header], "Should parse correct values for header")
-	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
+	assert.Equal(t, []string{testValue, newValue}, configuration.Headers()[testHeader], "Should parse correct values for header")
+	assert.Equal(t, testURL, configuration.URL(), "Should parse URL correctly")
 }
 
 func testFailToParseHeaderWithWrongSeparator(t *testing.T) {
-	args := []string{"--header", header + ":" + value, url}
+	args := []string{"--header", testHeader + ":" + testValue, testURL}
 	_, err := Parse(args)
 
 	assert.NotNil(t, err, "Should return error")
@@ -63,43 +64,43 @@ func testFailToParseHeaderWithWrongSeparator(t *testing.T) {
 
 func testParsesProfileCorrectly(t *testing.T) {
 	profileName := "profile"
-	tmpFile := writeToFile(profileName+".yaml", "headers:\n "+header+": "+value)
+	tmpFile := writeToFile(profileName+".yaml", "headers:\n "+testHeader+": "+testValue)
 	os.Setenv("GO_HTTP_PROFILES", filepath.Dir(tmpFile.Name()))
-	args := []string{"--method", method, "--data", data, "+" + profileName, url}
+	args := []string{"--method", testMethod, "--data", testData, "+" + profileName, testURL}
 	configuration, err := Parse(args)
 	assertCorrectlyParsed(t, configuration, err)
 	os.Unsetenv("GO_HTTP_PROFILES")
 }
 
 func testFailIfProfileFileDoesNotExist(t *testing.T) {
-	args := []string{"+profile", url}
+	args := []string{"+profile", testURL}
 	_, err := Parse(args)
 	assert.NotNil(t, err, "Should return error")
 }
 
 func testParsesConfigurationFromFileUsingHeaderString(t *testing.T) {
-	tmpFile := writeToFile("some_file.yml", "headers:\n  "+header+": "+value)
-	args := []string{"--method", method, "--data", data, "--config", tmpFile.Name(), url}
+	tmpFile := writeToFile("some_file.yml", "headers:\n  "+testHeader+": "+testValue)
+	args := []string{"--method", testMethod, "--data", testData, "--config", tmpFile.Name(), testURL}
 	configuration, err := Parse(args)
 	assertCorrectlyParsed(t, configuration, err)
 }
 
 func testParsesConfigurationFromFileUsingHeaderAsArray(t *testing.T) {
-	tmpFile := writeToFile("some_file.yml", "headers:\n  "+header+":\n    - "+value)
-	args := []string{"--method", method, "--data", data, "--config", tmpFile.Name(), url}
+	tmpFile := writeToFile("some_file.yml", "headers:\n  "+testHeader+":\n    - "+testValue)
+	args := []string{"--method", testMethod, "--data", testData, "--config", tmpFile.Name(), testURL}
 	configuration, err := Parse(args)
 	assertCorrectlyParsed(t, configuration, err)
 }
 
 func testConfigurationFileDoesNotExist(t *testing.T) {
-	args := []string{"--method", method, "--data", data, "--config", "fileThatDoesNotExist.yml", url}
+	args := []string{"--method", testMethod, "--data", testData, "--config", "fileThatDoesNotExist.yml", testURL}
 	_, err := Parse(args)
 	assert.NotNil(t, err, "Should return error")
 }
 
 func testFailToParseYamlFile(t *testing.T) {
 	tmpFile := writeToFile("some_file.yml", "bla bla")
-	args := []string{"--method", method, "--data", data, "--config", tmpFile.Name(), url}
+	args := []string{"--method", testMethod, "--data", testData, "--config", tmpFile.Name(), testURL}
 	_, err := Parse(args)
 	assert.NotNil(t, err, "Should return error")
 }
@@ -110,10 +111,10 @@ func assertCorrectlyParsed(t *testing.T, configuration Configuration, err error)
 		return
 	}
 	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
-	assert.Equal(t, []string{value}, configuration.Headers()[header], "Should parse the correct value for the header")
-	assert.Equal(t, method, configuration.Method(), "Should parse method correctly")
-	assert.Equal(t, url, configuration.URL(), "Should parse URL correctly")
-	assert.Equal(t, data, configuration.Body(), "Should parse data correctly")
+	assert.Equal(t, []string{testValue}, configuration.Headers()[testHeader], "Should parse the correct value for the header")
+	assert.Equal(t, testMethod, configuration.Method(), "Should parse method correctly")
+	assert.Equal(t, testURL, configuration.URL(), "Should parse URL correctly")
+	assert.Equal(t, testData, configuration.Body(), "Should parse data correctly")
 }
 
 func writeToFile(fileName string, content string) *os.File {

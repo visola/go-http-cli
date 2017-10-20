@@ -28,9 +28,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	color.Green("\n%s %s\n", configuration.Method(), configuration.URL())
+	url := configuration.URL()
+	if baseURL := configuration.BaseURL(); baseURL != "" {
+		if !strings.HasSuffix(baseURL, "/") {
+			baseURL = baseURL + "/"
+		}
 
-	req, reqErr := http.NewRequest(configuration.Method(), configuration.URL(), nil)
+		if strings.HasPrefix(url, "/") {
+			url = url[1:]
+		}
+
+		url = baseURL + url
+	}
+
+	color.Green("\n%s %s\n", configuration.Method(), url)
+	req, reqErr := http.NewRequest(configuration.Method(), url, nil)
 
 	if reqErr != nil {
 		color.Red("Error while creating request: %s", reqErr)
