@@ -99,12 +99,20 @@ func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	commandLine.StringVarP(&method, "method", "X", "GET", "HTTP method to be used")
+	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
 
 	commandLine.Parse(args)
+
+	if method == "" {
+		if body == "" {
+			method = "GET"
+		} else {
+			method = "POST"
+		}
+	}
 
 	result := new(commandLineConfiguration)
 	result.method = method
