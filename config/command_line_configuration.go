@@ -30,7 +30,7 @@ type commandLineConfiguration struct {
 	method             string
 	profiles           []string
 	url                string
-	variables          map[string][]string
+	variables          map[string]string
 }
 
 func (conf commandLineConfiguration) BaseURL() string {
@@ -53,11 +53,11 @@ func (conf commandLineConfiguration) URL() string {
 	return conf.url
 }
 
-func (conf commandLineConfiguration) Variables() map[string][]string {
+func (conf commandLineConfiguration) Variables() map[string]string {
 	return conf.variables
 }
 
-func parseValues(headers keyValuePair) (map[string][]string, error) {
+func parseMultiValues(headers keyValuePair) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	for _, kv := range headers {
@@ -74,6 +74,24 @@ func parseValues(headers keyValuePair) (map[string][]string, error) {
 		} else {
 			result[key] = []string{value}
 		}
+	}
+
+	return result, nil
+}
+
+func parseValues(headers keyValuePair) (map[string]string, error) {
+	result := make(map[string]string)
+
+	for _, kv := range headers {
+		s := strings.Split(kv, "=")
+		if len(s) != 2 {
+			return result, errors.New("Error while parsing key value pair '" + kv + "'\nShould be an '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
+		}
+
+		key := s[0]
+		value := s[1]
+
+		result[key] = value
 	}
 
 	return result, nil
@@ -135,7 +153,7 @@ func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 		return result, urlError
 	}
 
-	parsedHeaders, headerError := parseValues(headers)
+	parsedHeaders, headerError := parseMultiValues(headers)
 	result.headers = parsedHeaders
 
 	if headerError != nil {

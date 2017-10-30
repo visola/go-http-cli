@@ -77,7 +77,7 @@ func assertParsedHeaders(t *testing.T, err error, parsedConfiguration *FileConfi
 func assertParsedVariables(t *testing.T, err error, parsedConfiguration *FileConfiguration) {
 	assertNoError(t, err)
 	assert.Equal(t, len(parsedConfiguration.Variables()), 1, "Should have parsed one header")
-	assert.Equal(t, parsedConfiguration.Variables()[testVariableName], []string{testVariableValue}, "Should parse variable value correctly")
+	assert.Equal(t, parsedConfiguration.Variables()[testVariableName], testVariableValue, "Should parse variable value correctly")
 }
 
 func writeToFile(fileName string, content string) *os.File {

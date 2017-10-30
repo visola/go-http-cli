@@ -69,10 +69,10 @@ func (conf FileConfiguration) URL() string {
 }
 
 // Variables that were added to the configuration file
-func (conf FileConfiguration) Variables() map[string][]string {
-	result := make(map[string][]string)
+func (conf FileConfiguration) Variables() map[string]string {
+	result := make(map[string]string)
 	for name, values := range conf.parsedYaml.Variables {
-		result[name] = values
+		result[name] = values[0]
 	}
 	return result
 }
