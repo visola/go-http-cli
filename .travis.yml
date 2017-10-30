@@ -1,4 +1,7 @@
 language: go
 
+before_script:
+  - go get -u github.com/golang/lint/golint
+
 script:
-  - go test -cover ./...
+  - bin/build.sh
