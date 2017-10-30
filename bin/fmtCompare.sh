@@ -15,7 +15,7 @@ output_dir=$build_dir/fmt
 rm -Rf $output_dir/*
 
 # Ensure all directories exist
-dirs=("$build_dir" "$output_dir" "$output_dir/config" "$output_dir/config/yaml")
+dirs=("$build_dir" "$output_dir" "$output_dir/config" "$output_dir/config/yaml" "$output_dir/strings")
 for dir in "${dirs[@]}"; do
   if [ ! -d $dir ]; then
     mkdir $dir
@@ -30,6 +30,8 @@ done
 # Compare files
 diff $output_dir/main.go main.go
 diff -r $output_dir/config/ config/
+diff -r $output_dir/config/yaml config/yaml
+diff -r $output_dir/strings/ strings/
 
 rm -Rf $output_dir
 
