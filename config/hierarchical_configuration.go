@@ -53,3 +53,13 @@ func (conf hierarchicalConfigurationFormat) URL() string {
 	}
 	return result
 }
+
+func (conf hierarchicalConfigurationFormat) Variables() map[string][]string {
+	result := make(map[string][]string)
+	for _, subConfig := range conf.configurations {
+		for k, v := range subConfig.Variables() {
+			result[k] = v
+		}
+	}
+	return result
+}
