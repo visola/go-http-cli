@@ -2,6 +2,8 @@
 
 # Inspired by: https://mlafeldt.github.io/blog/test-coverage-in-go/
 
+set -e
+
 GO_PACKAGES=$(go list ./...)
 BUILD_DIR=build
 
