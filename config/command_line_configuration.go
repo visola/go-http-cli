@@ -8,19 +8,19 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-type arrayFlags []string
+type keyValuePair []string
 
-func (i *arrayFlags) String() string {
-	return "No String Representation"
+func (i *keyValuePair) String() string {
+	return ""
 }
 
-func (i *arrayFlags) Set(value string) error {
+func (i *keyValuePair) Set(value string) error {
 	*i = append(*i, value)
 	return nil
 }
 
-func (i *arrayFlags) Type() string {
-	return "arrayFlags"
+func (i *keyValuePair) Type() string {
+	return "keyValuePair"
 }
 
 type commandLineConfiguration struct {
@@ -30,6 +30,7 @@ type commandLineConfiguration struct {
 	method             string
 	profiles           []string
 	url                string
+	variables          map[string][]string
 }
 
 func (conf commandLineConfiguration) BaseURL() string {
@@ -52,13 +53,17 @@ func (conf commandLineConfiguration) URL() string {
 	return conf.url
 }
 
-func parseHeaders(headers arrayFlags) (map[string][]string, error) {
+func (conf commandLineConfiguration) Variables() map[string][]string {
+	return conf.variables
+}
+
+func parseValues(headers keyValuePair) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	for _, kv := range headers {
 		s := strings.Split(kv, "=")
 		if len(s) != 2 {
-			return result, errors.New("Error while parsing header '" + kv + "'\nShould be a '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
+			return result, errors.New("Error while parsing key value pair '" + kv + "'\nShould be an '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
 		}
 
 		key := s[0]
@@ -94,8 +99,9 @@ func parseArgs(args []string) (string, []string, error) {
 func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 	var method string
 	var body string
-	var headers arrayFlags
-	var configPaths arrayFlags
+	var headers keyValuePair
+	var configPaths keyValuePair
+	var variables keyValuePair
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
@@ -103,6 +109,7 @@ func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
+	commandLine.VarP(&variables, "variable", "V", "Variables to be used on substitutions")
 
 	commandLine.Parse(args)
 
@@ -128,11 +135,18 @@ func parseCommandLine(args []string) (*commandLineConfiguration, error) {
 		return result, urlError
 	}
 
-	parsedHeaders, headerError := parseHeaders(headers)
+	parsedHeaders, headerError := parseValues(headers)
 	result.headers = parsedHeaders
 
 	if headerError != nil {
 		return result, headerError
+	}
+
+	parsedVariables, variableError := parseValues(variables)
+	result.variables = parsedVariables
+
+	if variableError != nil {
+		return result, variableError
 	}
 
 	return result, nil

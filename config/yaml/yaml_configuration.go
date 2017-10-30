@@ -7,9 +7,9 @@ import (
 )
 
 // We want to accept headers as single string or array of strings
-type headerValue []string
+type arrayOrString []string
 
-func (v *headerValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (v *arrayOrString) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var multi []string
 	err := unmarshal(&multi)
 	if err != nil {
@@ -29,8 +29,9 @@ func (v *headerValue) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // Used to unmarshal data from YAML files
 type yamlConfigurationFormat struct {
-	BaseURL string `yaml:"baseURL"`
-	Headers map[string]headerValue
+	BaseURL   string `yaml:"baseURL"`
+	Headers   map[string]arrayOrString
+	Variables map[string]arrayOrString
 }
 
 // FileConfiguration represents a Configuration loaded from a YAML file
@@ -65,6 +66,15 @@ func (conf FileConfiguration) Method() string {
 // URL returns empty string  (not implemented)
 func (conf FileConfiguration) URL() string {
 	return ""
+}
+
+// Variables that were added to the configuration file
+func (conf FileConfiguration) Variables() map[string][]string {
+	result := make(map[string][]string)
+	for name, values := range conf.parsedYaml.Variables {
+		result[name] = values
+	}
+	return result
 }
 
 // ReadFrom a YAML file and creates a configuration

@@ -23,6 +23,7 @@ type Configuration interface {
 	Body() string
 	Method() string
 	URL() string
+	Variables() map[string][]string
 }
 
 func hasYAMLExtension(path string) bool {
