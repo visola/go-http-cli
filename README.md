@@ -23,20 +23,23 @@ headers:
     - application/json
   Authorization:
     - Bearer ${your-token-here}
+variables:
+  companyId: 123456
 ```
 
 And then you can just call the api like the following:
 
 ```bash
-$ go-http-cli +family people
+$ go-http-cli +family '${companyId}/people'
 
-GET https://family-menu.herokuapp.com/api/v1/people
+GET https://family-menu.herokuapp.com/api/v1/123456/people
 Content-Type: application/json
 Authorization: Bearer your-token-here
 ```
 
 The path can be a relative path or an absolute path. The algorithm is very simple, it just concatenates
-`baseURL` with `URL` making sure only one `/` will exist between the two.
+`baseURL` with `URL` making sure only one `/` will exist between the two. It will also use the variables
+set in the configuration file to replace the ones in the URL.
 
 ## Examples
 
