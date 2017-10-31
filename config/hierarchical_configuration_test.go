@@ -12,7 +12,7 @@ type testConfiguration struct {
 	body      string
 	method    string
 	url       string
-	variables map[string][]string
+	variables map[string]string
 }
 
 func (conf testConfiguration) BaseURL() string {
@@ -35,7 +35,7 @@ func (conf testConfiguration) URL() string {
 	return conf.url
 }
 
-func (conf testConfiguration) Variables() map[string][]string {
+func (conf testConfiguration) Variables() map[string]string {
 	return conf.variables
 }
 
@@ -86,14 +86,14 @@ func testOverrideHeaders(t *testing.T) {
 func testOverrideVariables(t *testing.T) {
 	variableName := "someVariable"
 
-	config1Variables := make(map[string][]string)
-	config1Variables[variableName] = []string{"value1"}
+	config1Variables := make(map[string]string)
+	config1Variables[variableName] = "value1"
 	config1 := testConfiguration{
 		variables: config1Variables,
 	}
 
-	config2Variables := make(map[string][]string)
-	config2Variables[variableName] = []string{"value2"}
+	config2Variables := make(map[string]string)
+	config2Variables[variableName] = "value2"
 	config2 := testConfiguration{
 		variables: config2Variables,
 	}
@@ -102,5 +102,5 @@ func testOverrideVariables(t *testing.T) {
 		configurations: []Configuration{config1, config2},
 	}
 
-	assert.Equal(t, "value2", underTest.Variables()[variableName][0])
+	assert.Equal(t, "value2", underTest.Variables()[variableName])
 }

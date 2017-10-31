@@ -10,6 +10,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/visola/go-http-cli/config"
+	"github.com/visola/go-http-cli/request"
 )
 
 type bodyBuffer struct {
@@ -28,18 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	url := configuration.URL()
-	if baseURL := configuration.BaseURL(); baseURL != "" {
-		if !strings.HasSuffix(baseURL, "/") {
-			baseURL = baseURL + "/"
-		}
-
-		if strings.HasPrefix(url, "/") {
-			url = url[1:]
-		}
-
-		url = baseURL + url
-	}
+	url := request.ParseURL(configuration.BaseURL(), configuration.URL(), configuration.Variables())
 
 	color.Green("\n%s %s\n", configuration.Method(), url)
 	req, reqErr := http.NewRequest(configuration.Method(), url, nil)
