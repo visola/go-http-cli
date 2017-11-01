@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,14 +12,6 @@ import (
 	"github.com/visola/go-http-cli/request"
 )
 
-type bodyBuffer struct {
-	*bytes.Buffer
-}
-
-func (bb *bodyBuffer) Close() error {
-	return nil
-}
-
 func main() {
 	configuration, err := config.Parse(os.Args[1:])
 
@@ -29,21 +20,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	url := request.ParseURL(configuration.BaseURL(), configuration.URL(), configuration.Variables())
-
-	color.Green("\n%s %s\n", configuration.Method(), url)
-	req, reqErr := http.NewRequest(configuration.Method(), url, nil)
-
+	req, reqErr := request.BuildRequest(configuration)
 	if reqErr != nil {
 		color.Red("Error while creating request: %s", reqErr)
 		os.Exit(10)
 	}
 
-	for k, vs := range configuration.Headers() {
-		for _, v := range vs {
-			req.Header.Add(k, v)
-		}
-	}
+	color.Green("\n%s %s\n", req.Method, req.URL)
 
 	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
 	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
@@ -57,8 +40,6 @@ func main() {
 		for _, line := range split {
 			fmt.Printf(">> %s\n", line)
 		}
-
-		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body())}
 	}
 
 	client := &http.Client{}
