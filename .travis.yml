@@ -4,4 +4,4 @@ before_script:
   - go get -u github.com/golang/lint/golint
 
 script:
-  - bin/build.sh
+  - ./gradlew build
