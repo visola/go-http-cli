@@ -1,24 +1,61 @@
 
-def GO_WORKSPACE = new File(project.projectDir, '../../../..').canonicalPath
-def GO_BINARIES = new File(GO_WORKSPACE, 'bin')
+ext.goWorkspace = new File(project.projectDir, '../../../..').canonicalPath
+ext.goBinariesDir = new File(goWorkspace, 'bin')
+ext.goSourceDir = new File(goWorkspace, 'src')
+ext.packages = 'go list ./...'.execute().text.split("\n")
 
 logger.info '-----------------'
-logger.info "GO WORKSPACE: ${GO_WORKSPACE}"
-logger.info "Binaries in: ${GO_BINARIES}"
+logger.info "Go workspace: ${goWorkspace}"
+logger.info "Binaries in: ${goBinariesDir}"
+logger.info "Packages: ${packages}"
 logger.info '-----------------'
+
+ext.sourceFiles = fileTree(dir: '.', include: '**/*.go') - fileTree(dir: buildDir)
+ext.binaryFile = file("${goBinariesDir}/${project.name}")
 
 task lint(type:Exec) {
+  inputs.files sourceFiles
+  outputs.files sourceFiles
+
   commandLine 'golint', '-set_exit_status', './...'
-  inputs.files files('**/*.go')
-  outputs.files files('**/*.go')
 }
 
 task compile(type:Exec) {
+  inputs.files sourceFiles
+  outputs.file goBinariesDir
+
   commandLine 'go', 'install'
-  inputs.files files('**/*.go')
-  outputs.file file("${GO_BINARIES}/${project.name}")
+}
+
+task fmtCompare {
+  def fmtOutput = "${buildDir}/fmtOut"
+
+  inputs.files sourceFiles
+  outputs.files fileTree(dir: fmtOutput, include: '/**/*.go')
+
+  doFirst {
+    packages.each {
+      mkdir "${fmtOutput}/${it}"
+    }
+  }
+
+  doLast {
+    sourceFiles.each {
+      def parentPath = it.parentFile.canonicalPath
+      def relativePath = parentPath.substring(goSourceDir.canonicalPath.length())
+
+      def outputFile = new File("${fmtOutput}/${relativePath}", it.name)
+      outputFile.createNewFile()
+      outputFile.text = "gofmt -s ${it}".execute().text
+
+      def diff = "diff ${it} ${outputFile}".execute().text
+      if (diff != '') {
+        throw new GradleException("gofmt -s found some differences:\n${diff}")
+      }
+    }
+  }
 }
 
 task build {
-  dependsOn lint, compile
+  dependsOn fmtCompare, lint, compile
 }
