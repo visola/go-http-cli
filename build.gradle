@@ -1,0 +1,24 @@
+
+def GO_WORKSPACE = new File(project.projectDir, '../../../..').canonicalPath
+def GO_BINARIES = new File(GO_WORKSPACE, 'bin')
+
+logger.info '-----------------'
+logger.info "GO WORKSPACE: ${GO_WORKSPACE}"
+logger.info "Binaries in: ${GO_BINARIES}"
+logger.info '-----------------'
+
+task lint(type:Exec) {
+  commandLine 'golint', '-set_exit_status', './...'
+  inputs.files files('**/*.go')
+  outputs.files files('**/*.go')
+}
+
+task compile(type:Exec) {
+  commandLine 'go', 'install'
+  inputs.files files('**/*.go')
+  outputs.file file("${GO_BINARIES}/${project.name}")
+}
+
+task build {
+  dependsOn lint, compile
+}
