@@ -1,13 +1,18 @@
-
 ext.goWorkspace = new File(project.projectDir, '../../../..').canonicalPath
 ext.goBinariesDir = new File(goWorkspace, 'bin')
 ext.goSourceDir = new File(goWorkspace, 'src')
-ext.packages = 'go list ./...'.execute().text.split("\n")
+
+ext.relativeBuildDir = buildDir.canonicalPath.substring(goSourceDir.canonicalPath.length() + 1)
+ext.relativeSourceDir = projectDir.canonicalPath.substring(goSourceDir.canonicalPath.length() + 1)
+
+ext.packages = 'go list ./...'.execute().text.split("\n").sort().findAll{ !it.startsWith(relativeBuildDir) }
 
 logger.info '-----------------'
 logger.info "Go workspace: ${goWorkspace}"
 logger.info "Binaries in: ${goBinariesDir}"
 logger.info "Packages: ${packages}"
+logger.info "Relative source dir: ${relativeSourceDir}"
+logger.info "Relative build dir: ${relativeBuildDir}"
 logger.info '-----------------'
 
 ext.sourceFiles = fileTree(dir: '.', include: '**/*.go') - fileTree(dir: buildDir)
@@ -20,7 +25,7 @@ task lint(type:Exec) {
   commandLine 'golint', '-set_exit_status', './...'
 }
 
-task compile(type:Exec) {
+task install(type:Exec) {
   inputs.files sourceFiles
   outputs.file goBinariesDir
 
@@ -56,6 +61,71 @@ task fmtCompare {
   }
 }
 
+task test {
+  def coverageOuptut = "${buildDir}/coverage"
+
+  inputs.files sourceFiles
+  outputs.files fileTree(dir: coverageOuptut)
+
+  doFirst {
+    packages.each {
+      mkdir "${coverageOuptut}/${it}"
+    }
+  }
+
+  doLast {
+    packages.reverse().each{
+      def outputFile = "${coverageOuptut}/${it}/package.cover"
+
+      def sout = new StringBuilder()
+      def serr = new StringBuilder()
+
+      def proc = "go test --coverprofile=${outputFile} ${it}".execute(["GOPATH=${goWorkspace}"], projectDir)
+      proc.consumeProcessOutput(sout, serr)
+      proc.waitForOrKill(10000)
+
+      if (proc.exitValue() != 0) {
+        throw new GradleException("Error while executing tests:\nStdOut:\n${sout}\nStdErr:\n${serr}")
+      }
+    }
+  }
+}
+
+task aggregateCoverateReports() {
+  ext.aggregatedCovarage = file("${buildDir}/all.cover")
+
+  dependsOn test
+  outputs.file aggregatedCovarage
+
+  doLast {
+    def aggregatedData = "mode: set\n"
+
+    test.outputs.files.each {
+      def content = it.text
+      def firstLineIndex = content.indexOf("\n")
+      aggregatedData += content.substring(firstLineIndex + 1).trim()
+      aggregatedData += "\n"
+    }
+
+    aggregatedCovarage.createNewFile()
+    aggregatedCovarage.text = aggregatedData
+  }
+}
+
+task generateCoverageReport(type: Exec) {
+  def coverageFile = file("${buildDir}/reportCoverage.html")
+
+  dependsOn aggregateCoverateReports
+  outputs.file coverageFile
+
+  commandLine 'go', 'tool', 'cover', "-html=${aggregateCoverateReports.aggregatedCovarage}", '-o', coverageFile
+}
+
+task clean(type: Delete) {
+  description "Delete the build folder and the generated binary"
+  delete buildDir, binaryFile
+}
+
 task build {
-  dependsOn fmtCompare, lint, compile
+  dependsOn fmtCompare, lint, test, install, generateCoverageReport
 }
