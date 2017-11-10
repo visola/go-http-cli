@@ -30,7 +30,7 @@ variables:
 And then you can just call the api like the following:
 
 ```bash
-$ go-http-cli +family '${companyId}/people'
+$ go-http-cli +family '{companyId}/people'
 
 GET https://family-menu.herokuapp.com/api/v1/123456/people
 Content-Type: application/json
