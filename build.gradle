@@ -1,22 +1,52 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'com.google.guava:guava:23.0'
+  }
+}
+
+import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+
 ext.goWorkspace = new File(project.projectDir, '../../../..').canonicalPath
 ext.goBinariesDir = new File(goWorkspace, 'bin')
 ext.goSourceDir = new File(goWorkspace, 'src')
+ext.binariesDir = new File(projectDir, 'binaries')
 
+ext.relativeBinariesdDir = binariesDir.canonicalPath.substring(goSourceDir.canonicalPath.length() + 1)
 ext.relativeBuildDir = buildDir.canonicalPath.substring(goSourceDir.canonicalPath.length() + 1)
 ext.relativeSourceDir = projectDir.canonicalPath.substring(goSourceDir.canonicalPath.length() + 1)
 
-ext.packages = 'go list ./...'.execute().text.split("\n").sort().findAll{ !it.startsWith(relativeBuildDir) }
+ext.packages = 'go list ./...'
+  .execute()
+  .text
+  .split("\n")
+  .sort()
+  .findAll{ !it.startsWith(relativeBuildDir) }
+  .findAll{ !it.startsWith(relativeBinariesdDir) }
+
+ext.sourceFiles = fileTree(dir: '.', include: '**/*.go') - fileTree(dir: buildDir)
+
+ext.binaries = binariesDir.listFiles()
+  .findAll{ it.isDirectory() }
+  .collect{ it.name }
+
+ext.binaryFiles = binaries.collect{ file("${goBinariesDir}/${it}") }
 
 logger.info '-----------------'
 logger.info "Go workspace: ${goWorkspace}"
-logger.info "Binaries in: ${goBinariesDir}"
+logger.info "Binaries output: ${goBinariesDir}"
 logger.info "Packages: ${packages}"
 logger.info "Relative source dir: ${relativeSourceDir}"
 logger.info "Relative build dir: ${relativeBuildDir}"
+logger.info "Relative binaries dir: ${relativeBinariesdDir}"
+logger.info "Binary names: ${binaries}"
+logger.info "Binary files that will be generated: ${binaryFiles}"
+logger.info "All source files: ${sourceFiles.collect{ it.canonicalPath }}"
 logger.info '-----------------'
-
-ext.sourceFiles = fileTree(dir: '.', include: '**/*.go') - fileTree(dir: buildDir)
-ext.binaryFile = file("${goBinariesDir}/${project.name}")
 
 task lint(type:Exec) {
   inputs.files sourceFiles
@@ -25,11 +55,21 @@ task lint(type:Exec) {
   commandLine 'golint', '-set_exit_status', './...'
 }
 
-task install(type:Exec) {
-  inputs.files sourceFiles
-  outputs.file goBinariesDir
+task install {}
 
-  commandLine 'go', 'install'
+binaries.each { binaryName ->
+  def binaryNameCamelCase = LOWER_HYPHEN.to(UPPER_CAMEL, binaryName)
+  def taskName = "install${binaryNameCamelCase}"
+
+  task "${taskName}" (type:Exec) {
+    inputs.files sourceFiles
+    outputs.file goBinariesDir
+
+    workingDir "${binariesDir}/${binaryName}"
+    commandLine 'go', 'install'
+  }
+
+  install.dependsOn taskName
 }
 
 task fmtCompare {
@@ -38,16 +78,12 @@ task fmtCompare {
   inputs.files sourceFiles
   outputs.files fileTree(dir: fmtOutput, include: '/**/*.go')
 
-  doFirst {
-    packages.each {
-      mkdir "${fmtOutput}/${it}"
-    }
-  }
-
   doLast {
     sourceFiles.each {
       def parentPath = it.parentFile.canonicalPath
       def relativePath = parentPath.substring(goSourceDir.canonicalPath.length())
+
+      mkdir "${fmtOutput}/${relativePath}"
 
       def outputFile = new File("${fmtOutput}/${relativePath}", it.name)
       outputFile.createNewFile()
@@ -123,7 +159,7 @@ task generateCoverageReport(type: Exec) {
 
 task clean(type: Delete) {
   description "Delete the build folder and the generated binary"
-  delete buildDir, binaryFile
+  delete buildDir, binaryFiles
 }
 
 task build {
