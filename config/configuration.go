@@ -5,10 +5,10 @@ package config
 import (
 	"errors"
 	"os"
-	"os/user"
 	"strings"
 
 	"github.com/visola/go-http-cli/config/yaml"
+	"github.com/visola/go-http-cli/profile"
 )
 
 const (
@@ -28,19 +28,6 @@ type Configuration interface {
 
 func hasYAMLExtension(path string) bool {
 	return strings.HasSuffix(path, yamlExtension) || strings.HasSuffix(path, ymlExtension)
-}
-
-// Get the directory where the user store his profiles
-func getProfilesDir() (string, error) {
-	profilesDir := os.Getenv("GO_HTTP_PROFILES")
-	if profilesDir == "" {
-		user, err := user.Current()
-		if err != nil {
-			return "", err
-		}
-		profilesDir = user.HomeDir + "/go-http-cli"
-	}
-	return profilesDir, nil
 }
 
 func loadConfigurations(paths []string) ([]Configuration, error) {
@@ -95,7 +82,7 @@ func Parse(args []string) (Configuration, error) {
 	configurations := []Configuration{}
 
 	if len(commandLineConfiguration.profiles) > 0 {
-		profilesDir, err := getProfilesDir()
+		profilesDir, err := profile.GetProfilesDir()
 		if err != nil {
 			return nil, err
 		}
