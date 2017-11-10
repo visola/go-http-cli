@@ -6,7 +6,7 @@ import (
 
 func ExampleParseURL() {
 	base := "http://localhost:3000/api/v1"
-	url := "/${companyId}/contacts"
+	url := "/{companyId}/contacts"
 	context := map[string]string{
 		"companyId": "123456",
 	}

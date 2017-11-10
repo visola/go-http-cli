@@ -5,7 +5,7 @@ import (
 )
 
 func ExampleParseExpression() {
-	template := "${name} was born in ${dob} in ${location}. ${name} hair is ${hairColor}."
+	template := "{name} was born in {dob} in {location}. {name} hair is {hairColor}."
 	context := map[string]string{
 		"dob":       "01/08/1956",
 		"hairColor": "black",

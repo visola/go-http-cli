@@ -16,7 +16,7 @@ func TestBuildRequest(t *testing.T) {
 			"Content-Type": {"application/json"},
 		},
 		TestMethod: "POST",
-		TestURL:    "/path/with/${someVariable}/something",
+		TestURL:    "/path/with/{someVariable}/something",
 		TestVariables: map[string]string{
 			"someVariable": "someValue",
 		},

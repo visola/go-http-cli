@@ -10,7 +10,7 @@ import (
 func ParseExpression(template string, context map[string]string) string {
 	result := template
 	for key, value := range context {
-		result = strings.Replace(result, "${"+key+"}", value, -1)
+		result = strings.Replace(result, "{"+key+"}", value, -1)
 	}
 	return result
 }
