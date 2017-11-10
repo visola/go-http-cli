@@ -30,7 +30,7 @@ variables:
 And then you can just call the api like the following:
 
 ```bash
-$ go-http-cli +family '{companyId}/people'
+$ http +my-profile '{companyId}/people'
 
 GET https://family-menu.herokuapp.com/api/v1/123456/people
 Content-Type: application/json
@@ -46,7 +46,7 @@ set in the configuration file to replace the ones in the URL.
 Example command pointing to a test server:
 
 ```bash
-go-http-cli \
+http \
   -H Content-Type=application/json \
   -X POST \
   -d "Some test data" \
@@ -55,4 +55,21 @@ go-http-cli \
 
 Output:
 
-![Output Example](README/output_sample.png)
+<p style="text-align:center">
+  <img style="width:600px" src="README/output_sample.png" />
+</p>
+
+## Running the Build
+
+This project uses [Gradle](https://www.gradle.org) as the build system. To run it, the only thing
+you'll need is to have Java installed. Then, just run `./gradlew build` and everything should happen.
+This command should execute all checks, tests and install all binaries.
+
+## Bash completion
+
+There's a `go-http-completion` command that can be used for completion using tabs in bash. For now
+it only supports profile names. To install it, just run (or add to your `~/.bash_profile`):
+
+```bash
+complete -f -C go-http-completion http
+```
