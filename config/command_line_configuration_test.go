@@ -12,6 +12,7 @@ func TestParseCommandLine(t *testing.T) {
 	t.Run("Parses all arguments using short names", testParsesShortNames)
 	t.Run("Parses all arguments using long names", testParsesLongNames)
 	t.Run("Parses multiple values for the same header", testParsesMultipleValuesForHeader)
+	t.Run("Parses header with = on the value", testParsesHeaderWithEqualOnValue)
 	t.Run("Parses profile correctly", testParsesProfileCorrectly)
 	t.Run("Fails to parse header with wrong separator", testFailToParseHeaderWithWrongSeparator)
 }
@@ -50,7 +51,7 @@ func testParsesLongNames(t *testing.T) {
 
 func testParsesMultipleValuesForHeader(t *testing.T) {
 	newValue := "AnotherValue"
-	args := []string{"--header", testHeader + "=" + testValue, "--header", testHeader + "=" + newValue, testURL}
+	args := []string{"--header", testHeader + ":" + testValue, "--header", testHeader + "=" + newValue, testURL}
 	configuration, err := parseCommandLine(args)
 
 	assert.Nil(t, err, "Should not return error")
@@ -59,10 +60,23 @@ func testParsesMultipleValuesForHeader(t *testing.T) {
 	assert.Equal(t, testURL, configuration.URL(), "Should parse URL correctly")
 }
 
+func testParsesHeaderWithEqualOnValue(t *testing.T) {
+	newValue := "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8"
+	args := []string{"--header", testHeader + "=" + newValue, testURL}
+	configuration, err := parseCommandLine(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, 1, len(configuration.Headers()), "Should parse one header correctly")
+	assert.Equal(t, []string{newValue}, configuration.Headers()[testHeader], "Should parse correct value for header")
+	assert.Equal(t, testURL, configuration.URL(), "Should parse URL correctly")
+}
+
 func testFailToParseHeaderWithWrongSeparator(t *testing.T) {
-	args := []string{"--header", testHeader + ":" + testValue, testURL}
+	args := []string{"--header", testHeader + "->" + testValue, testURL}
 	_, err := parseCommandLine(args)
 
 	assert.NotNil(t, err, "Should return error")
-	assert.Regexp(t, "^Error while parsing key value pair", err.Error())
+	if t != nil {
+		assert.Regexp(t, "^Error while parsing key value pair", err.Error())
+	}
 }
