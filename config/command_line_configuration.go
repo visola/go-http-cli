@@ -61,13 +61,24 @@ func parseMultiValues(headers keyValuePair) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	for _, kv := range headers {
-		s := strings.Split(kv, "=")
-		if len(s) != 2 {
-			return result, errors.New("Error while parsing key value pair '" + kv + "'\nShould be an '=' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
+		equalIndex := strings.Index(kv, "=")
+		colonIndex := strings.Index(kv, ":")
+		indexToSplit := -1
+
+		if equalIndex > 0 {
+			indexToSplit = equalIndex
 		}
 
-		key := s[0]
-		value := s[1]
+		if colonIndex > 0 && (indexToSplit == -1 || colonIndex < indexToSplit) {
+			indexToSplit = colonIndex
+		}
+
+		if indexToSplit <= 0 {
+			return result, errors.New("Error while parsing key value pair '" + kv + "'\nShould be an '=' or ':' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
+		}
+
+		key := kv[0:indexToSplit]
+		value := kv[indexToSplit+1:]
 
 		if existingValue, ok := result[key]; ok {
 			result[key] = append(existingValue, value)
