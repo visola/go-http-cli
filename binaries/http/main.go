@@ -13,12 +13,9 @@ import (
 )
 
 func main() {
-	version, connErr := daemon.Handshake()
-	if connErr != nil {
-		panic(connErr)
+	if daemonErr := daemon.EnsureDaemon(); daemonErr != nil {
+		panic(daemonErr)
 	}
-
-	fmt.Printf("Daemon running version %d\n", version)
 
 	configuration, err := config.Parse(os.Args[1:])
 

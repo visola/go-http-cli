@@ -21,6 +21,11 @@ func main() {
 	http.HandleFunc("/", handshake)
 
 	log.Debugf("Daemon version %d.%d started and waiting for connections on port %s", daemon.DaemonMajorVersion, daemon.DaemonMinorVersion, daemon.DaemonPort)
+
+	if writePIDError := daemon.WriteDaemonPID(); writePIDError != nil {
+		panic(writePIDError)
+	}
+
 	log.Fatal(http.ListenAndServe(":"+string(daemon.DaemonPort), nil))
 }
 

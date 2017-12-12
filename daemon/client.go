@@ -8,8 +8,8 @@ import (
 	"github.com/visola/go-http-cli/daemon/vo"
 )
 
-// Handshake connects and send a handshake command to the daemon, return the daemon that
-// responded if everything worked and if the running version is acceptable.
+// Handshake connects and sends a handshake request to the daemon. Return the version of the daemon
+// that answered.
 func Handshake() (int8, error) {
 	response, responseError := http.Get("http://localhost:" + string(DaemonPort))
 
