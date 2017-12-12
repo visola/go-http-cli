@@ -52,7 +52,7 @@ task lint(type:Exec) {
   inputs.files sourceFiles
   outputs.files sourceFiles
 
-  commandLine 'golint', '-set_exit_status', './...'
+  commandLine('golint', '-set_exit_status', *packages)
 }
 
 task install {}
