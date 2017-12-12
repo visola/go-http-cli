@@ -9,15 +9,15 @@ import (
 )
 
 func TestBuildRequest(t *testing.T) {
-	config := config.TestConfiguration{
-		TestBaseURL: "http://www.someserver.com/",
-		TestBody:    "Some data to be sent.",
-		TestHeaders: map[string][]string{
+	config := config.BasicConfiguration{
+		BaseURLField: "http://www.someserver.com/",
+		BodyField:    "Some data to be sent.",
+		HeadersField: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
-		TestMethod: "POST",
-		TestURL:    "/path/with/{someVariable}/something",
-		TestVariables: map[string]string{
+		MethodField: "POST",
+		URLField:    "/path/with/{someVariable}/something",
+		VariablesField: map[string]string{
 			"someVariable": "someValue",
 		},
 	}

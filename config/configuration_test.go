@@ -21,7 +21,7 @@ var (
 func TestParse(t *testing.T) {
 	t.Run("Parses profile correctly", testParsesProfileCorrectly)
 	t.Run("Fails if profile file does not exist", testFailIfProfileFileDoesNotExist)
-	t.Run("Failes if configuration file does not exist", testConfigurationFileDoesNotExist)
+	t.Run("Failes if configuration file does not exist", BasicConfigurationFileDoesNotExist)
 	t.Run("Handles failure to parse Yaml file", testFailToParseYamlFile)
 }
 
@@ -41,7 +41,7 @@ func testFailIfProfileFileDoesNotExist(t *testing.T) {
 	assert.NotNil(t, err, "Should return error")
 }
 
-func testConfigurationFileDoesNotExist(t *testing.T) {
+func BasicConfigurationFileDoesNotExist(t *testing.T) {
 	args := []string{"--method", testMethod, "--data", testData, "--config", "fileThatDoesNotExist.yml", testURL}
 	_, err := Parse(args)
 	assert.NotNil(t, err, "Should return error")
