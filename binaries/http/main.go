@@ -7,11 +7,19 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/visola/go-http-cli/config"
+	"github.com/visola/go-http-cli/daemon"
 	"github.com/visola/go-http-cli/output"
 	"github.com/visola/go-http-cli/request"
 )
 
 func main() {
+	version, connErr := daemon.Handshake()
+	if connErr != nil {
+		panic(connErr)
+	}
+
+	fmt.Printf("Daemon running version %d\n", version)
+
 	configuration, err := config.Parse(os.Args[1:])
 
 	if err != nil {
