@@ -1,4 +1,4 @@
-package vo
+package daemon
 
 // HandshakeResponse is the response sent by the daemon when someone is checking if it's up.
 type HandshakeResponse struct {

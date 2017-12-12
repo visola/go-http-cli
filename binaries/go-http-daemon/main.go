@@ -8,7 +8,6 @@ import (
 	"github.com/op/go-logging"
 
 	"github.com/visola/go-http-cli/daemon"
-	"github.com/visola/go-http-cli/daemon/vo"
 )
 
 var (
@@ -36,11 +35,12 @@ func configureLogging() {
 }
 
 func handshake(response http.ResponseWriter, request *http.Request) {
-	log.Debug("Responding to handshake request")
+	log.Debug("Handshake request")
 
-	handshake := &vo.HandshakeResponse{
+	handshake := &daemon.HandshakeResponse{
 		MajorVersion: daemon.DaemonMajorVersion,
 		MinorVersion: daemon.DaemonMinorVersion,
 	}
 	json.NewEncoder(response).Encode(handshake)
 }
+

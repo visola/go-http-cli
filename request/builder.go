@@ -2,19 +2,11 @@
 package request
 
 import (
-	"bytes"
 	"net/http"
 
 	"github.com/visola/go-http-cli/config"
+	"github.com/visola/go-http-cli/ioutil"
 )
-
-type bodyBuffer struct {
-	*bytes.Buffer
-}
-
-func (bb *bodyBuffer) Close() error {
-	return nil
-}
 
 // BuildRequest builds a Request from a Configuration.
 func BuildRequest(configuration config.Configuration) (*http.Request, error) {
@@ -32,7 +24,7 @@ func BuildRequest(configuration config.Configuration) (*http.Request, error) {
 	}
 
 	if configuration.Body() != "" {
-		req.Body = &bodyBuffer{bytes.NewBufferString(configuration.Body())}
+		req.Body = ioutil.CreateCloseableBufferString(configuration.Body())
 	}
 
 	return req, nil
