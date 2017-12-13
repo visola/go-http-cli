@@ -1,5 +1,6 @@
 package config
 
+/**
 import (
 	"io/ioutil"
 	"os"
@@ -85,3 +86,4 @@ func writeToFile(fileName string, content string) *os.File {
 
 	return tmpFile
 }
+**/

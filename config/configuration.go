@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/visola/go-http-cli/config/yaml"
+	"github.com/visola/go-http-cli/options"
 	"github.com/visola/go-http-cli/profile"
 )
 
@@ -28,21 +29,6 @@ type Configuration interface {
 
 func hasYAMLExtension(path string) bool {
 	return strings.HasSuffix(path, yamlExtension) || strings.HasSuffix(path, ymlExtension)
-}
-
-func loadConfigurations(paths []string) ([]Configuration, error) {
-	result := make([]Configuration, 0)
-	for _, path := range paths {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return result, errors.New("Configuration file does not exist: " + path)
-		}
-		yamlConfig, err := yaml.ReadFrom(path)
-		if err != nil {
-			return result, err
-		}
-		result = append(result, yamlConfig)
-	}
-	return result, nil
 }
 
 func loadProfiles(basePath string, profiles []string) ([]Configuration, error) {
@@ -73,35 +59,28 @@ func loadProfiles(basePath string, profiles []string) ([]Configuration, error) {
 }
 
 // Parse parses arguments and create a Configuration object.
-func Parse(args []string) (Configuration, error) {
-	commandLineConfiguration, err := parseCommandLine(args)
-	if err != nil {
-		return nil, err
-	}
-
+func Parse(options *options.CommandLineOptions) (Configuration, error) {
 	configurations := []Configuration{}
 
-	if len(commandLineConfiguration.profiles) > 0 {
+	if len(options.Profiles) > 0 {
 		profilesDir, err := profile.GetProfilesDir()
 		if err != nil {
 			return nil, err
 		}
-		yamlConfigurations, err := loadProfiles(profilesDir, commandLineConfiguration.profiles)
+		yamlConfigurations, err := loadProfiles(profilesDir, options.Profiles)
 		if err != nil {
 			return nil, err
 		}
 		configurations = append(configurations, yamlConfigurations...)
 	}
 
-	if len(commandLineConfiguration.configurationPaths) > 0 {
-		yamlConfigurations, err := loadConfigurations(commandLineConfiguration.configurationPaths)
-		if err != nil {
-			return nil, err
-		}
-		configurations = append(configurations, yamlConfigurations...)
-	}
-
-	configurations = append(configurations, commandLineConfiguration)
+	configurations = append(configurations, &BasicConfiguration{
+		BodyField:      options.Body,
+		HeadersField:   options.Headers,
+		MethodField:    options.Method,
+		URLField:       options.URL,
+		VariablesField: options.Variables,
+	})
 
 	result := hierarchicalConfigurationFormat{
 		configurations: configurations,

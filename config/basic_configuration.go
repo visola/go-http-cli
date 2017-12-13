@@ -40,3 +40,15 @@ func (conf BasicConfiguration) URL() string {
 func (conf BasicConfiguration) Variables() map[string]string {
 	return conf.VariablesField
 }
+
+// ToBasicConfiguration converts any configuration to a basic configuration
+func ToBasicConfiguration(configuration Configuration) *BasicConfiguration {
+	return &BasicConfiguration{
+		BaseURLField:   configuration.BaseURL(),
+		BodyField:      configuration.Body(),
+		HeadersField:   configuration.Headers(),
+		MethodField:    configuration.Method(),
+		URLField:       configuration.URL(),
+		VariablesField: configuration.Variables(),
+	}
+}

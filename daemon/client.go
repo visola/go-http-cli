@@ -2,11 +2,32 @@ package daemon
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/visola/go-http-cli/config"
 	"github.com/visola/go-http-cli/ioutil"
+	"github.com/visola/go-http-cli/options"
 )
+
+// ExecuteRequest request the daemon to execute a request
+func ExecuteRequest(options *options.CommandLineOptions) (*ExecuteRequestResponse, error) {
+	request := &ExecuteRequestRequest{
+		Options: options,
+	}
+
+	dataAsBytes, marshalError := json.Marshal(request)
+	if marshalError != nil {
+		return nil, marshalError
+	}
+
+	var executeRequestResponse ExecuteRequestResponse
+
+	if callDaemonError := callDaemon("/request", string(dataAsBytes), &executeRequestResponse); callDaemonError != nil {
+		return nil, callDaemonError
+	}
+
+	return &executeRequestResponse, nil
+}
 
 // Handshake connects and sends a handshake request to the daemon. Return the version of the daemon
 // that answered.
@@ -35,6 +56,7 @@ func callDaemon(path string, data string, unmarshalTo interface{}) error {
 	}
 
 	if data != "" {
+		req.Header.Add("Content-Type", "application/json")
 		req.Body = ioutil.CreateCloseableBufferString(data)
 	}
 
@@ -43,6 +65,10 @@ func callDaemon(path string, data string, unmarshalTo interface{}) error {
 
 	if responseErr != nil {
 		return responseErr
+	}
+
+	if response.StatusCode != 200 {
+		panic(fmt.Sprintf("Daemon responded with unexpected status code: %d - %s\nURL: %s, Method: %s", response.StatusCode, response.Status, url, method))
 	}
 
 	if unmarshalError := json.NewDecoder(response.Body).Decode(unmarshalTo); unmarshalError != nil {

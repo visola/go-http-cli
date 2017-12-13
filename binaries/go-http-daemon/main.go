@@ -1,13 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
 
+	"github.com/labstack/echo"
 	"github.com/op/go-logging"
-
+	"github.com/visola/go-http-cli/config"
 	"github.com/visola/go-http-cli/daemon"
+	"github.com/visola/go-http-cli/request"
 )
 
 var (
@@ -17,7 +18,10 @@ var (
 func main() {
 	configureLogging()
 
-	http.HandleFunc("/", handshake)
+	server := echo.New()
+
+	server.GET("/", handshake)
+	server.POST("/request", executeRequest)
 
 	log.Debugf("Daemon version %d.%d started and waiting for connections on port %s", daemon.DaemonMajorVersion, daemon.DaemonMinorVersion, daemon.DaemonPort)
 
@@ -25,22 +29,58 @@ func main() {
 		panic(writePIDError)
 	}
 
-	log.Fatal(http.ListenAndServe(":"+string(daemon.DaemonPort), nil))
+	log.Fatal(server.Start(":" + string(daemon.DaemonPort)))
 }
 
 func configureLogging() {
-	format := logging.MustStringFormatter(`%{color:bold}%{level:.4s} %{shortfunc} [%{time}]:%{color:reset} %{message}`)
+	format := logging.MustStringFormatter(`%{color:bold}%{level} %{shortfunc} [%{time}]:%{color:reset} %{message}`)
 	backend := logging.NewBackendFormatter(logging.NewLogBackend(os.Stdout, "", 0), format)
 	logging.SetBackend(backend)
 }
 
-func handshake(response http.ResponseWriter, request *http.Request) {
+func executeRequest(c echo.Context) error {
+	log.Debug("Execute request")
+
+	executeRequestRequest := new(daemon.ExecuteRequestRequest)
+
+	if executeRequestRequestErr := c.Bind(executeRequestRequest); executeRequestRequestErr != nil {
+		log.Error(executeRequestRequestErr)
+		return executeRequestRequestErr
+	}
+
+	configuration, configError := config.Parse(executeRequestRequest.Options)
+	if configError != nil {
+		log.Error(configError)
+		return configError
+	}
+
+	log.Debugf("Requesting %s %s", configuration.Method(), configuration.BaseURL())
+	request, requestErr := request.BuildRequest(configuration)
+	if requestErr != nil {
+		log.Error(requestErr)
+		return requestErr
+	}
+
+	client := &http.Client{}
+	resp, respErr := client.Do(request)
+	if respErr != nil {
+		log.Error(respErr)
+		return respErr
+	}
+
+	c.JSON(http.StatusOK, &daemon.ExecuteRequestResponse{resp.StatusCode})
+
+	return nil
+}
+
+func handshake(c echo.Context) error {
 	log.Debug("Handshake request")
 
 	handshake := &daemon.HandshakeResponse{
 		MajorVersion: daemon.DaemonMajorVersion,
 		MinorVersion: daemon.DaemonMinorVersion,
 	}
-	json.NewEncoder(response).Encode(handshake)
-}
 
+	c.JSON(http.StatusOK, handshake)
+	return nil
+}
