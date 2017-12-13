@@ -56,7 +56,7 @@ http \
 Output:
 
 <p style="text-align:center">
-  <img style="width:600px" src="README/output_sample.png" />
+  <img width="600px" src="README/output_sample.png" />
 </p>
 
 ## Running the Build
