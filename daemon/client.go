@@ -10,12 +10,17 @@ import (
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(options *options.CommandLineOptions) (*ExecuteRequestResponse, error) {
-	request := &ExecuteRequestRequest{
-		Options: options,
+func ExecuteRequest(commandLineOptions *options.CommandLineOptions) (*ExecuteRequestResponse, error) {
+	requestOptions := &options.RequestOptions{
+		Body:      commandLineOptions.Body,
+		Headers:   commandLineOptions.Headers,
+		Method:    commandLineOptions.Method,
+		Profiles:  commandLineOptions.Profiles,
+		URL:       commandLineOptions.URL,
+		Variables: commandLineOptions.Variables,
 	}
 
-	dataAsBytes, marshalError := json.Marshal(request)
+	dataAsBytes, marshalError := json.Marshal(requestOptions)
 	if marshalError != nil {
 		return nil, marshalError
 	}

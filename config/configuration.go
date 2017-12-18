@@ -59,7 +59,7 @@ func loadProfiles(basePath string, profiles []string) ([]Configuration, error) {
 }
 
 // Parse parses arguments and create a Configuration object.
-func Parse(options *options.CommandLineOptions) (Configuration, error) {
+func Parse(options options.RequestOptions) (Configuration, error) {
 	configurations := []Configuration{}
 
 	if len(options.Profiles) > 0 {

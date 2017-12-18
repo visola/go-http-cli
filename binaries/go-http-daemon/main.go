@@ -6,8 +6,8 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
-	"github.com/visola/go-http-cli/config"
 	"github.com/visola/go-http-cli/daemon"
+	"github.com/visola/go-http-cli/options"
 	"github.com/visola/go-http-cli/request"
 )
 
@@ -41,34 +41,24 @@ func configureLogging() {
 func executeRequest(c echo.Context) error {
 	log.Debug("Execute request")
 
-	executeRequestRequest := new(daemon.ExecuteRequestRequest)
+	requestOptions := new(options.RequestOptions)
 
-	if executeRequestRequestErr := c.Bind(executeRequestRequest); executeRequestRequestErr != nil {
-		log.Error(executeRequestRequestErr)
-		return executeRequestRequestErr
+	if parseRequestError := c.Bind(requestOptions); parseRequestError != nil {
+		log.Error(parseRequestError)
+		return parseRequestError
 	}
 
-	configuration, configError := config.Parse(executeRequestRequest.Options)
-	if configError != nil {
-		log.Error(configError)
-		return configError
+	response, responseErr := request.ExecuteRequest(*requestOptions)
+
+	if responseErr != nil {
+		log.Error(responseErr)
+		return responseErr
 	}
 
-	log.Debugf("Requesting %s %s", configuration.Method(), configuration.BaseURL())
-	request, requestErr := request.BuildRequest(configuration)
-	if requestErr != nil {
-		log.Error(requestErr)
-		return requestErr
-	}
-
-	client := &http.Client{}
-	resp, respErr := client.Do(request)
-	if respErr != nil {
-		log.Error(respErr)
-		return respErr
-	}
-
-	c.JSON(http.StatusOK, &daemon.ExecuteRequestResponse{resp.StatusCode})
+	c.JSON(http.StatusOK, &daemon.ExecuteRequestResponse{
+		RequestOptions: requestOptions,
+		HTTPResponse:   response,
+	})
 
 	return nil
 }

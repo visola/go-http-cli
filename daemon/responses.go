@@ -1,12 +1,15 @@
 package daemon
 
-// ExecuteRequestResponse is the response from the daemon after executing a request
+import (
+	"github.com/visola/go-http-cli/options"
+	"github.com/visola/go-http-cli/request"
+)
+
+// ExecuteRequestResponse stores the request and response to be passed back when the daemon executes
+// an HTTP request.
 type ExecuteRequestResponse struct {
-	Body       string
-	Headers    map[string][]string
-	Protocol   string
-	StatusCode int
-	Status     string
+	RequestOptions *options.RequestOptions
+	HTTPResponse   *request.HTTPResponse
 }
 
 // HandshakeResponse is the response sent by the daemon when someone is checking if it's up.
