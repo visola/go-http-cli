@@ -28,5 +28,6 @@ func main() {
 		os.Exit(10)
 	}
 
+	output.PrintRequest(executeRequestResponse.RequestOptions)
 	output.PrintResponse(executeRequestResponse.HTTPResponse)
 }
