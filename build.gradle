@@ -48,6 +48,14 @@ logger.info "Binary files that will be generated: ${binaryFiles}"
 logger.info "All source files: ${sourceFiles.collect{ it.canonicalPath }}"
 logger.info '-----------------'
 
+task updateDependencies(type:Exec) {
+  commandLine('go', 'get', '-t', '-v', './...')
+}
+
+task updateLinter(type:Exec) {
+  commandLine('go', 'get', '-u', '-v', 'github.com/golang/lint/golint')
+}
+
 task lint(type:Exec) {
   inputs.files sourceFiles
   outputs.files sourceFiles
@@ -160,6 +168,10 @@ task generateCoverageReport(type: Exec) {
 task clean(type: Delete) {
   description "Delete the build folder and the generated binary"
   delete buildDir, binaryFiles
+}
+
+task update() {
+  dependsOn updateLinter, updateDependencies
 }
 
 task build {
