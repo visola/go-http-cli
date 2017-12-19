@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
@@ -12,7 +13,8 @@ import (
 )
 
 var (
-	log = logging.MustGetLogger("go-http-daemon")
+	log             = logging.MustGetLogger("go-http-daemon")
+	lastInteraction = time.Now().UnixNano()
 )
 
 func main() {
@@ -29,6 +31,7 @@ func main() {
 		panic(writePIDError)
 	}
 
+	go checkInteratcion()
 	log.Fatal(server.Start(":" + string(daemon.DaemonPort)))
 }
 
@@ -38,8 +41,20 @@ func configureLogging() {
 	logging.SetBackend(backend)
 }
 
+func checkInteratcion() {
+	for {
+		now := time.Now().UnixNano()
+		if now-lastInteraction > (30 * time.Minute).Nanoseconds() {
+			log.Info("Too quiet around here, shutting down.")
+			os.Exit(0)
+		}
+		time.Sleep(1000 * time.Millisecond)
+	}
+}
+
 func executeRequest(c echo.Context) error {
 	log.Debug("Execute request")
+	lastInteraction = time.Now().UnixNano()
 
 	requestOptions := new(options.RequestOptions)
 
@@ -65,6 +80,7 @@ func executeRequest(c echo.Context) error {
 
 func handshake(c echo.Context) error {
 	log.Debug("Handshake request")
+	lastInteraction = time.Now().UnixNano()
 
 	handshake := &daemon.HandshakeResponse{
 		MajorVersion: daemon.DaemonMajorVersion,
