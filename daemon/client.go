@@ -76,9 +76,5 @@ func callDaemon(path string, data string, unmarshalTo interface{}) error {
 		panic(fmt.Sprintf("Daemon responded with unexpected status code: %d - %s\nURL: %s, Method: %s", response.StatusCode, response.Status, url, method))
 	}
 
-	if unmarshalError := json.NewDecoder(response.Body).Decode(unmarshalTo); unmarshalError != nil {
-		return unmarshalError
-	}
-
-	return nil
+	return json.NewDecoder(response.Body).Decode(unmarshalTo)
 }
