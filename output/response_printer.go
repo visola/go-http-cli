@@ -2,34 +2,33 @@ package output
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"github.com/fatih/color"
+	"github.com/visola/go-http-cli/request"
 )
 
 // PrintResponse outputs a http.Response
-func PrintResponse(response *http.Response) error {
-	defer response.Body.Close()
-
-	color.Green("\n%s\n", response.Status)
+func PrintResponse(response request.Response) error {
+	color.Green("\n%s %s\n", response.Status, response.Protocol)
 
 	receivedHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
 	receivedHeaderValueColor := color.New(color.FgBlack).PrintfFunc()
-	for k, vs := range response.Header {
-		receivedHeaderKeyColor("%s:", k)
-		receivedHeaderValueColor(" %s\n", strings.Join(vs, ", "))
+
+	for headerName, values := range response.Headers {
+		receivedHeaderKeyColor("%s:", headerName)
+		if len(values) > 1 {
+			for _, val := range values {
+				receivedHeaderValueColor("\n  %s", val)
+			}
+			fmt.Println("")
+		} else {
+			receivedHeaderValueColor(" %s\n", values[0])
+		}
 	}
 
-	bodyBytes, readErr := ioutil.ReadAll(response.Body)
-
-	if readErr != nil {
-		return readErr
-	}
-
-	if len(bodyBytes) != 0 {
-		split := strings.Split(string(bodyBytes), "\n")
+	if len(response.Body) != 0 {
+		split := strings.Split(response.Body, "\n")
 		fmt.Println("")
 
 		receivedBodyColor := color.New(color.Bold).PrintfFunc()
