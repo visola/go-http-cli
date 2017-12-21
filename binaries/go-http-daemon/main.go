@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
 	"github.com/visola/go-http-cli/daemon"
-	"github.com/visola/go-http-cli/options"
 	"github.com/visola/go-http-cli/request"
 )
 
@@ -56,25 +55,21 @@ func executeRequest(c echo.Context) error {
 	log.Debug("Execute request")
 	lastInteraction = time.Now().UnixNano()
 
-	requestOptions := new(options.RequestOptions)
+	daemonRequest := new(daemon.Request)
 
-	if parseRequestError := c.Bind(requestOptions); parseRequestError != nil {
+	if parseRequestError := c.Bind(daemonRequest); parseRequestError != nil {
 		log.Error(parseRequestError)
 		return parseRequestError
 	}
 
-	response, responseErr := request.ExecuteRequest(*requestOptions)
+	requestResponsePair, responseErr := request.ExecuteRequest(daemonRequest.ToRequest(), daemonRequest.Profiles, daemonRequest.Variables)
 
 	if responseErr != nil {
 		log.Error(responseErr)
 		return responseErr
 	}
 
-	c.JSON(http.StatusOK, &daemon.ExecuteRequestResponse{
-		RequestOptions: requestOptions,
-		HTTPResponse:   response,
-	})
-
+	c.JSON(http.StatusOK, requestResponsePair)
 	return nil
 }
 

@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/visola/go-http-cli/cli"
 	"github.com/visola/go-http-cli/ioutil"
-	"github.com/visola/go-http-cli/options"
+	"github.com/visola/go-http-cli/request"
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(commandLineOptions *options.CommandLineOptions) (*ExecuteRequestResponse, error) {
-	requestOptions := &options.RequestOptions{
+func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*request.ExecutedRequestResponse, error) {
+	daemonRequest := &Request{
 		Body:      commandLineOptions.Body,
 		Headers:   commandLineOptions.Headers,
 		Method:    commandLineOptions.Method,
@@ -20,18 +21,18 @@ func ExecuteRequest(commandLineOptions *options.CommandLineOptions) (*ExecuteReq
 		Variables: commandLineOptions.Variables,
 	}
 
-	dataAsBytes, marshalError := json.Marshal(requestOptions)
+	dataAsBytes, marshalError := json.Marshal(daemonRequest)
 	if marshalError != nil {
 		return nil, marshalError
 	}
 
-	var executeRequestResponse ExecuteRequestResponse
+	var executedRequestResponse request.ExecutedRequestResponse
 
-	if callDaemonError := callDaemon("/request", string(dataAsBytes), &executeRequestResponse); callDaemonError != nil {
+	if callDaemonError := callDaemon("/request", string(dataAsBytes), &executedRequestResponse); callDaemonError != nil {
 		return nil, callDaemonError
 	}
 
-	return &executeRequestResponse, nil
+	return &executedRequestResponse, nil
 }
 
 // Handshake connects and sends a handshake request to the daemon. Return the version of the daemon

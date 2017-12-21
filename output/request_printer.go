@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/visola/go-http-cli/options"
+	"github.com/visola/go-http-cli/request"
 )
 
 type bodyBuffer struct {
@@ -17,13 +17,13 @@ func (bb *bodyBuffer) Close() error {
 }
 
 // PrintRequest outputs the http.Request
-func PrintRequest(options *options.RequestOptions) error {
-	color.Green("\n%s %s\n", options.Method, options.URL)
+func PrintRequest(request request.Request) error {
+	color.Green("\n%s %s\n", request.Method, request.URL)
 
 	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
 	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
 
-	for headerName, values := range options.Headers {
+	for headerName, values := range request.Headers {
 		sentHeaderKeyColor("%s:", headerName)
 		if len(values) > 1 {
 			for _, val := range values {
@@ -35,8 +35,8 @@ func PrintRequest(options *options.RequestOptions) error {
 		}
 	}
 
-	if options.Body != "" {
-		split := strings.Split(options.Body, "\n")
+	if request.Body != "" {
+		split := strings.Split(request.Body, "\n")
 		for _, line := range split {
 			fmt.Printf(">> %s\n", line)
 		}

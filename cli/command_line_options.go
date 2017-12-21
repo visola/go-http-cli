@@ -1,4 +1,4 @@
-package options
+package cli
 
 import (
 	"errors"
@@ -8,8 +8,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// CommandLineOptions stores information that was requested by the user from the CLI and will be used
-// to carry this data around between the CLI executable and the daemon.
+// CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
 	Body      string
 	Headers   map[string][]string
