@@ -6,12 +6,13 @@ import (
 
 // Request represents the data that needs to be passed to the daemon in order to execute an HTTP request.
 type Request struct {
-	Body      string
-	Headers   map[string][]string
-	Method    string
-	Profiles  []string
-	URL       string
-	Variables map[string]string
+	Body        string
+	Headers     map[string][]string
+	Method      string
+	Profiles    []string
+	RequestName string
+	URL         string
+	Variables   map[string]string
 }
 
 // ToRequest transform a daemon.Request into a request.Request

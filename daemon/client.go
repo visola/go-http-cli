@@ -13,12 +13,13 @@ import (
 // ExecuteRequest request the daemon to execute a request
 func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*request.ExecutedRequestResponse, error) {
 	daemonRequest := &Request{
-		Body:      commandLineOptions.Body,
-		Headers:   commandLineOptions.Headers,
-		Method:    commandLineOptions.Method,
-		Profiles:  commandLineOptions.Profiles,
-		URL:       commandLineOptions.URL,
-		Variables: commandLineOptions.Variables,
+		Body:        commandLineOptions.Body,
+		Headers:     commandLineOptions.Headers,
+		Method:      commandLineOptions.Method,
+		Profiles:    commandLineOptions.Profiles,
+		RequestName: commandLineOptions.RequestName,
+		URL:         commandLineOptions.URL,
+		Variables:   commandLineOptions.Variables,
 	}
 
 	dataAsBytes, marshalError := json.Marshal(daemonRequest)

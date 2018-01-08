@@ -38,6 +38,16 @@ func BuildRequest(unconfiguredRequest Request, profileNames []string, variables 
 func configureRequest(unconfiguredRequest Request, profiles []profile.Options, passedVariables map[string]string) Request {
 	mergedProfile := profile.MergeOptions(profiles)
 
+	method := unconfiguredRequest.Method
+
+	if method == "" {
+		if unconfiguredRequest.Body == "" {
+			method = "GET"
+		} else {
+			method = "POST"
+		}
+	}
+
 	// Merge the passed in variables
 	for variable, value := range passedVariables {
 		mergedProfile.Variables[variable] = value
@@ -53,7 +63,7 @@ func configureRequest(unconfiguredRequest Request, profiles []profile.Options, p
 	return Request{
 		Body:    unconfiguredRequest.Body,
 		Headers: mergedProfile.Headers,
-		Method:  unconfiguredRequest.Method,
+		Method:  method,
 		URL:     url,
 	}
 }

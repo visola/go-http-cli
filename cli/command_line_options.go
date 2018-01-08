@@ -10,12 +10,13 @@ import (
 
 // CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
-	Body      string
-	Headers   map[string][]string
-	Method    string
-	Profiles  []string
-	URL       string
-	Variables map[string]string
+	Body        string
+	Headers     map[string][]string
+	Method      string
+	Profiles    []string
+	RequestName string
+	URL         string
+	Variables   map[string]string
 }
 
 type keyValuePair []string
@@ -51,20 +52,13 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 
 	commandLine.Parse(args)
 
-	if method == "" {
-		if body == "" {
-			method = "GET"
-		} else {
-			method = "POST"
-		}
-	}
-
 	result := new(CommandLineOptions)
 	result.Method = method
 	result.Body = body
 
-	url, profiles, urlError := parseArgs(commandLine.Args())
+	url, requestName, profiles, urlError := parseArgs(commandLine.Args())
 	result.URL = url
+	result.RequestName = requestName
 	result.Profiles = profiles
 
 	if urlError != nil {
@@ -139,19 +133,21 @@ func parseValues(headers keyValuePair) (map[string]string, error) {
 	return result, nil
 }
 
-func parseArgs(args []string) (string, []string, error) {
+func parseArgs(args []string) (string, string, []string, error) {
 	if len(args) == 0 {
-		return "", nil, errors.New("no arguments passed in")
+		return "", "", nil, errors.New("no arguments passed in")
 	}
 
 	profiles := make([]string, 0)
-	var url string
+	var requestName, url string
 	for _, arg := range args {
 		if arg[0] == '+' { // Found a profile to activate
 			profiles = append(profiles, arg[1:])
+		} else if arg[0] == '@' {
+			requestName = arg[1:]
 		} else {
 			url = arg
 		}
 	}
-	return url, profiles, nil
+	return url, requestName, profiles, nil
 }
