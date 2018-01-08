@@ -8,6 +8,26 @@ type Request struct {
 	URL     string
 }
 
+// Merge merges information from another request into the original request, overwriting any data
+// that is provided in toMerge.
+func (original *Request) Merge(toMerge Request) {
+	if toMerge.Body != "" {
+		original.Body = toMerge.Body
+	}
+
+	for header, values := range toMerge.Headers {
+		original.Headers[header] = values
+	}
+
+	if toMerge.Method != "" {
+		original.Method = toMerge.Method
+	}
+
+	if toMerge.URL != "" {
+		original.URL = toMerge.URL
+	}
+}
+
 // Response is the response from the daemon after executing a request
 type Response struct {
 	Body       string

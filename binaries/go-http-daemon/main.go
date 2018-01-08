@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
 	"github.com/visola/go-http-cli/daemon"
+	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/request"
 )
 
@@ -62,7 +63,27 @@ func executeRequest(c echo.Context) error {
 		return parseRequestError
 	}
 
-	requestResponsePair, responseErr := request.ExecuteRequest(daemonRequest.ToRequest(), daemonRequest.Profiles, daemonRequest.Variables)
+	var req request.Request
+	if daemonRequest.RequestName != "" {
+		requestOptions, err := profile.LoadRequestOptions(daemonRequest.RequestName, daemonRequest.Profiles)
+
+		if err != nil {
+			return err
+		}
+
+		req = request.Request{
+			Body:    requestOptions.Body,
+			Headers: requestOptions.Headers,
+			Method:  requestOptions.Method,
+			URL:     requestOptions.URL,
+		}
+
+		req.Merge(daemonRequest.ToRequest())
+	} else {
+		req = daemonRequest.ToRequest()
+	}
+
+	requestResponsePair, responseErr := request.ExecuteRequest(req, daemonRequest.Profiles, daemonRequest.Variables)
 
 	if responseErr != nil {
 		log.Error(responseErr)
