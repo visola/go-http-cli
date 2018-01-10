@@ -42,9 +42,9 @@ func configureRequest(unconfiguredRequest Request, profiles []profile.Options, p
 
 	if method == "" {
 		if unconfiguredRequest.Body == "" {
-			method = "GET"
+			method = http.MethodGet
 		} else {
-			method = "POST"
+			method = http.MethodPost
 		}
 	}
 

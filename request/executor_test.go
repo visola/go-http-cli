@@ -1,6 +1,7 @@
 package request
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,7 +9,7 @@ import (
 
 func TestExecuteRequest(t *testing.T) {
 	request := Request{
-		Method: "GET",
+		Method: http.MethodGet,
 		URL:    "https://www.google.com",
 	}
 

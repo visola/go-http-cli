@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,7 @@ func TestMashalUnmarshalExecutedRequestResponse(t *testing.T) {
 		Headers: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
-		Method: "GET",
+		Method: http.MethodGet,
 		URL:    "http://www.google.com",
 	}
 

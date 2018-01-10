@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 var (
 	testBaseURL = "http://www.test.com"
 	testData    = "Some Data"
-	testMethod  = "POST"
+	testMethod  = http.MethodPost
 	testHeader  = "SomeHeader"
 	testValue   = "SomeValue"
 	testURL     = "/somePath"
