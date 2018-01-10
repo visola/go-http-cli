@@ -10,7 +10,7 @@ import (
 
 // PrintResponse outputs a http.Response
 func PrintResponse(response request.Response) error {
-	color.Green("\n%s %s\n", response.Status, response.Protocol)
+	color.Green("%s %s\n", response.Status, response.Protocol)
 
 	receivedHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
 	receivedHeaderValueColor := color.New(color.FgBlack).PrintfFunc()

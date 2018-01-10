@@ -21,13 +21,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	executedRequestResponse, executeRequestError := daemon.ExecuteRequest(options)
+	executedRequestResponses, executeRequestError := daemon.ExecuteRequest(options)
 
 	if executeRequestError != nil {
 		color.Red("Error while executing request: %s", executeRequestError)
 		os.Exit(10)
 	}
 
-	output.PrintRequest(executedRequestResponse.Request)
-	output.PrintResponse(executedRequestResponse.Response)
+	for _, executedRequestResponse := range executedRequestResponses {
+		output.PrintRequest(executedRequestResponse.Request)
+		output.PrintResponse(executedRequestResponse.Response)
+	}
 }
