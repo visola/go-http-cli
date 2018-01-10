@@ -1,6 +1,7 @@
 package request
 
 import (
+	"net/http"
 	"net/http/httputil"
 	"testing"
 
@@ -13,7 +14,7 @@ func TestBuildRequest(t *testing.T) {
 		Headers: map[string][]string{
 			"Content-Type": {"application/json"},
 		},
-		Method: "POST",
+		Method: http.MethodPost,
 		URL:    "http://www.someserver.com/{companyId}/employee",
 	}
 

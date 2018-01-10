@@ -49,10 +49,10 @@ func Handshake() (int8, error) {
 }
 
 func callDaemon(path string, data string, unmarshalTo interface{}) error {
-	method := "POST"
+	method := http.MethodPost
 
 	if data == "" {
-		method = "GET"
+		method = http.MethodGet
 	}
 
 	url := "http://localhost:" + string(DaemonPort) + path
