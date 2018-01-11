@@ -61,7 +61,7 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 			Response: response,
 		})
 
-		if response.StatusCode == http.StatusMovedPermanently || response.StatusCode == http.StatusFound || response.StatusCode == http.StatusSeeOther {
+		if shouldRedirect(response.StatusCode) {
 			redirectCount++
 
 			if redirectCount > maxRedirect {
@@ -92,4 +92,10 @@ func buildRedirect(response http.Response) (*Request, error) {
 	return &Request{
 		URL: newLocation.String(),
 	}, nil
+}
+
+func shouldRedirect(statusCode int) bool {
+	return statusCode == http.StatusMovedPermanently ||
+		statusCode == http.StatusFound ||
+		statusCode == http.StatusSeeOther
 }
