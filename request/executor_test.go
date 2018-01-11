@@ -1,6 +1,7 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 func TestExecuteRequest(t *testing.T) {
 	t.Run("Request httpbin should return 200", testBasicGet)
 	t.Run("Request httpbin redirect should follow redirect", testFollowsRedirect)
+	t.Run("Should bail if max number of redirects happens", testMaxRedirects)
 }
 
 func testBasicGet(t *testing.T) {
@@ -42,4 +44,17 @@ func testFollowsRedirect(t *testing.T) {
 		assert.Equal(t, http.StatusFound, executedRequestResponses[0].Response.StatusCode, "First response should be 302")
 		assert.Equal(t, http.StatusOK, executedRequestResponses[1].Response.StatusCode, "Second response should be 200")
 	}
+}
+
+func testMaxRedirects(t *testing.T) {
+	request := Request{
+		URL: fmt.Sprintf("https://httpbin.org/redirect/%d", maxRedirect+1),
+	}
+
+	executedRequestResponses, err := ExecuteRequest(request, nil, nil)
+
+	assert.NotNil(t, err, "Should return an error")
+
+	// It should still return the requests that were executed and their responses
+	assert.Equal(t, 11, len(executedRequestResponses), "Should have executed 11 requests")
 }

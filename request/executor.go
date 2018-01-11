@@ -6,10 +6,13 @@ import (
 	"net/http"
 )
 
+const maxRedirect = 10
+
 // ExecuteRequest executes an HTTP request based on the specified options.
 func ExecuteRequest(request Request, profileNames []string, variables map[string]string) ([]ExecutedRequestResponse, error) {
-	toExecute := make([]Request, 1)
-	toExecute[0] = request
+	requestsToExecute := make([]Request, 1)
+	requestsToExecute[0] = request
+	redirectCount := 0
 
 	client := &http.Client{
 		// Do not auto-follow redirects
@@ -21,10 +24,10 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 	result := make([]ExecutedRequestResponse, 0)
 
 	for {
-		executing := toExecute[0]
-		toExecute = toExecute[1:]
+		currentRequest := requestsToExecute[0]
+		requestsToExecute = requestsToExecute[1:]
 
-		httpRequest, configuredRequest, httpRequestErr := BuildRequest(executing, profileNames, variables)
+		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, profileNames, variables)
 		if httpRequestErr != nil {
 			return nil, httpRequestErr
 		}
@@ -40,11 +43,6 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 			return nil, readErr
 		}
 
-		body := ""
-		if len(bodyBytes) != 0 {
-			body = string(bodyBytes)
-		}
-
 		headers := make(map[string][]string)
 		for k, vs := range httpResponse.Header {
 			headers[k] = append(headers[k], vs...)
@@ -54,25 +52,31 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 			StatusCode: httpResponse.StatusCode,
 			Status:     httpResponse.Status,
 			Headers:    headers,
-			Body:       body,
+			Body:       string(bodyBytes),
 			Protocol:   fmt.Sprintf("%d.%d", httpResponse.ProtoMajor, httpResponse.ProtoMinor),
 		}
 
 		result = append(result, ExecutedRequestResponse{
-			Request:  *configuredRequest,
+			Request:  *currentConfiguredRequest,
 			Response: response,
 		})
 
 		if response.StatusCode == http.StatusMovedPermanently || response.StatusCode == http.StatusFound || response.StatusCode == http.StatusSeeOther {
+			redirectCount++
+
+			if redirectCount > maxRedirect {
+				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirect)
+			}
+
 			redirectRequest, redirectError := buildRedirect(*httpResponse)
 			if redirectError != nil {
 				return result, redirectError
 			}
-			toExecute = append(toExecute, *redirectRequest)
+			requestsToExecute = append(requestsToExecute, *redirectRequest)
 		}
 
 		// If nothing else to execute, break
-		if len(toExecute) == 0 {
+		if len(requestsToExecute) == 0 {
 			break
 		}
 	}
