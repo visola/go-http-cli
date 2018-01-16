@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-const maxRedirect = 10
+const maxRedirectCount = 10
 
 // ExecuteRequest executes an HTTP request based on the specified options.
 func ExecuteRequest(request Request, profileNames []string, variables map[string]string) ([]ExecutedRequestResponse, error) {
@@ -64,8 +64,8 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 		if shouldRedirect(response.StatusCode) {
 			redirectCount++
 
-			if redirectCount > maxRedirect {
-				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirect)
+			if redirectCount > maxRedirectCount {
+				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirectCount)
 			}
 
 			redirectRequest, redirectError := buildRedirect(*httpResponse)

@@ -48,7 +48,7 @@ func testFollowsRedirect(t *testing.T) {
 
 func testMaxRedirects(t *testing.T) {
 	request := Request{
-		URL: fmt.Sprintf("https://httpbin.org/redirect/%d", maxRedirect+1),
+		URL: fmt.Sprintf("https://httpbin.org/redirect/%d", maxRedirectCount+1),
 	}
 
 	executedRequestResponses, err := ExecuteRequest(request, nil, nil)
