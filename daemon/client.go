@@ -27,13 +27,13 @@ func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) ([]request.Execu
 		return nil, marshalError
 	}
 
-	var executedRequestResponses []request.ExecutedRequestResponse
+	var requestResponses []request.ExecutedRequestResponse
 
-	if callDaemonError := callDaemon("/request", string(dataAsBytes), &executedRequestResponses); callDaemonError != nil {
+	if callDaemonError := callDaemon("/request", string(dataAsBytes), &requestResponses); callDaemonError != nil {
 		return nil, callDaemonError
 	}
 
-	return executedRequestResponses, nil
+	return requestResponses, nil
 }
 
 // Handshake connects and sends a handshake request to the daemon. Return the version of the daemon
