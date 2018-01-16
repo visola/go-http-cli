@@ -18,10 +18,11 @@ func (bb *bodyBuffer) Close() error {
 
 // PrintRequest outputs the http.Request
 func PrintRequest(request request.Request) error {
-	color.Green("\n%s %s\n", request.Method, request.URL)
+	boldGreen := color.New(color.Bold, color.FgGreen).PrintfFunc()
+	boldGreen("\n%s %s\n", request.Method, request.URL)
 
-	sentHeaderKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
-	sentHeaderValueColor := color.New(color.FgBlue).PrintfFunc()
+	sentHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
+	sentHeaderValueColor := color.New(color.FgBlack).PrintfFunc()
 
 	for headerName, values := range request.Headers {
 		sentHeaderKeyColor("%s:", headerName)
@@ -40,6 +41,7 @@ func PrintRequest(request request.Request) error {
 		for _, line := range split {
 			fmt.Printf(">> %s\n", line)
 		}
+		fmt.Println("")
 	}
 
 	return nil

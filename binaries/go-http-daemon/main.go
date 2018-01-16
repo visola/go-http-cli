@@ -83,14 +83,14 @@ func executeRequest(c echo.Context) error {
 		req = daemonRequest.ToRequest()
 	}
 
-	requestResponsePair, responseErr := request.ExecuteRequest(req, daemonRequest.Profiles, daemonRequest.Variables)
+	requestResponses, responseErr := request.ExecuteRequest(req, daemonRequest.Profiles, daemonRequest.Variables)
 
 	if responseErr != nil {
 		log.Error(responseErr)
 		return responseErr
 	}
 
-	c.JSON(http.StatusOK, requestResponsePair)
+	c.JSON(http.StatusOK, requestResponses)
 	return nil
 }
 

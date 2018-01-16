@@ -11,7 +11,7 @@ import (
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*request.ExecutedRequestResponse, error) {
+func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) ([]request.ExecutedRequestResponse, error) {
 	daemonRequest := &Request{
 		Body:        commandLineOptions.Body,
 		Headers:     commandLineOptions.Headers,
@@ -27,13 +27,13 @@ func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*request.Execut
 		return nil, marshalError
 	}
 
-	var executedRequestResponse request.ExecutedRequestResponse
+	var requestResponses []request.ExecutedRequestResponse
 
-	if callDaemonError := callDaemon("/request", string(dataAsBytes), &executedRequestResponse); callDaemonError != nil {
+	if callDaemonError := callDaemon("/request", string(dataAsBytes), &requestResponses); callDaemonError != nil {
 		return nil, callDaemonError
 	}
 
-	return &executedRequestResponse, nil
+	return requestResponses, nil
 }
 
 // Handshake connects and sends a handshake request to the daemon. Return the version of the daemon
