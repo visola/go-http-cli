@@ -5,7 +5,7 @@ type yamlProfileFormat struct {
 	BaseURL   string `yaml:"baseURL"`
 	Headers   map[string]arrayOrString
 	Variables map[string]string
-	Requests  []requestConfiguration
+	Requests  map[string]requestConfiguration
 }
 
 // Used to unmarshal request options from yaml files
@@ -13,7 +13,6 @@ type requestConfiguration struct {
 	Body    string
 	Headers map[string]arrayOrString
 	Method  string
-	Name    string
 	URL     string
 }
 
@@ -26,10 +25,10 @@ func (loadedProfile yamlProfileFormat) toOptions() *Options {
 	}
 }
 
-func toMapOfRequestOptions(requestConfigurations []requestConfiguration) map[string]RequestOptions {
+func toMapOfRequestOptions(requestConfigurations map[string]requestConfiguration) map[string]RequestOptions {
 	result := make(map[string]RequestOptions)
-	for _, requestConfiguration := range requestConfigurations {
-		result[requestConfiguration.Name] = RequestOptions{
+	for name, requestConfiguration := range requestConfigurations {
+		result[name] = RequestOptions{
 			Body:    requestConfiguration.Body,
 			Headers: toMapOfArrayOfStrings(requestConfiguration.Headers),
 			Method:  requestConfiguration.Method,
