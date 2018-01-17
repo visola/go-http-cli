@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/visola/go-http-cli/session"
 )
 
 const maxRedirectCount = 10
@@ -35,6 +37,12 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 		httpResponse, httpResponseErr := client.Do(httpRequest)
 		if httpResponseErr != nil {
 			return nil, httpResponseErr
+		}
+
+		cookieErr := storeCookies(*httpRequest, *httpResponse)
+
+		if cookieErr != nil {
+			return nil, cookieErr
 		}
 
 		bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
@@ -98,4 +106,16 @@ func shouldRedirect(statusCode int) bool {
 	return statusCode == http.StatusMovedPermanently ||
 		statusCode == http.StatusFound ||
 		statusCode == http.StatusSeeOther
+}
+
+func storeCookies(httpRequest http.Request, httpResponse http.Response) error {
+	session, sessionErr := session.Get(*httpRequest.URL)
+
+	if sessionErr != nil {
+		return sessionErr
+	}
+
+	session.Jar.SetCookies(httpRequest.URL, httpResponse.Cookies())
+
+	return nil
 }
