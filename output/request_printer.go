@@ -36,6 +36,18 @@ func PrintRequest(request request.Request) error {
 		}
 	}
 
+	if len(request.Cookies) > 0 {
+		sentCookieKeyColor := color.New(color.Bold, color.FgBlue).PrintfFunc()
+		sentCookieValueColor := color.New(color.FgBlue).PrintfFunc()
+
+		sentCookieKeyColor("Cookies:")
+		for _, cookie := range request.Cookies {
+			sentCookieKeyColor("\n  %s: ", cookie.Name)
+			sentCookieValueColor("%s", cookie.Value)
+		}
+		fmt.Println("")
+	}
+
 	if request.Body != "" {
 		split := strings.Split(request.Body, "\n")
 		for _, line := range split {

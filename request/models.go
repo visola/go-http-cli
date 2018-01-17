@@ -1,8 +1,11 @@
 package request
 
+import "net/http"
+
 // Request stores data required to configure a request to be executed
 type Request struct {
 	Body    string
+	Cookies []*http.Cookie
 	Headers map[string][]string
 	Method  string
 	URL     string
@@ -14,6 +17,8 @@ func (original *Request) Merge(toMerge Request) {
 	if toMerge.Body != "" {
 		original.Body = toMerge.Body
 	}
+
+	original.Cookies = append(original.Cookies, toMerge.Cookies...)
 
 	for header, values := range toMerge.Headers {
 		original.Headers[header] = values
