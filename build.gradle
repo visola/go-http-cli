@@ -174,6 +174,11 @@ task update() {
   dependsOn updateLinter, updateDependencies
 }
 
+task killDaemon(type: Exec) {
+  ignoreExitValue true
+  commandLine 'go-http-daemon', '--kill'
+}
+
 task build {
-  dependsOn fmtCompare, lint, test, install, generateCoverageReport
+  dependsOn fmtCompare, lint, test, killDaemon, install, generateCoverageReport
 }
