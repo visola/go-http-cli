@@ -27,7 +27,7 @@ func EnsureDaemon() error {
 	version, connErr := Handshake()
 
 	if connErr != nil || version != DaemonMajorVersion {
-		killDaemon()
+		KillDaemon()
 		startDaemon()
 		startDaemonTries++
 
@@ -39,6 +39,21 @@ func EnsureDaemon() error {
 	}
 
 	return nil
+}
+
+// KillDaemon will kill the process with the PID stored in the daemon.pid file
+func KillDaemon() {
+	pid, pidError := getDaemonPID()
+	if pidError != nil {
+		panic(pidError)
+	}
+
+	process, processErr := os.FindProcess(pid)
+	if processErr != nil {
+		panic(processErr)
+	}
+
+	process.Kill()
 }
 
 // WriteDaemonPID writes the PID of the current process to a file in the go-http-cli process dir
@@ -82,20 +97,6 @@ func getProcessDirectory() (string, error) {
 		return "", err
 	}
 	return user.HomeDir + goHTTPCLIDirectory, nil
-}
-
-func killDaemon() {
-	pid, pidError := getDaemonPID()
-	if pidError != nil {
-		panic(pidError)
-	}
-
-	process, processErr := os.FindProcess(pid)
-	if processErr != nil {
-		panic(processErr)
-	}
-
-	process.Kill()
 }
 
 func startDaemon() {
