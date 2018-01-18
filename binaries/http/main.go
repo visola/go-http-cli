@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -30,6 +31,7 @@ func main() {
 
 	for _, requestResponse := range requestResponses {
 		output.PrintRequest(requestResponse.Request)
+		fmt.Println("")
 		output.PrintResponse(requestResponse.Response)
 	}
 }
