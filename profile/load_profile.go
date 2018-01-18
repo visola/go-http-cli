@@ -56,7 +56,7 @@ func readFrom(pathToYamlFile string) (*Options, error) {
 		return nil, err
 	}
 
-	return loadedOptions.toOptions(), nil
+	return loadedOptions.toOptions()
 }
 
 func hasYAMLExtension(path string) bool {
