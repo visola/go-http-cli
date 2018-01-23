@@ -21,14 +21,14 @@ func PrintRequest(request request.Request) {
 
 // PrintResponse outputs a http.Response
 func PrintResponse(response request.Response) {
-	if response.StatusCode < 300 {
-		color.Green("%s %s\n", response.Status, response.Protocol)
-	} else if response.StatusCode < 400 {
-		color.Yellow("%s %s\n", response.Status, response.Protocol)
+	printSummaryFunction := color.Green
+	if response.StatusCode >= 300 && response.StatusCode < 400 {
+		printSummaryFunction = color.Yellow
 	} else {
-		color.Red("%s %s\n", response.Status, response.Protocol)
+		printSummaryFunction = color.Red
 	}
 
+	printSummaryFunction("%s %s\n", response.Status, response.Protocol)
 	printHeaders(response.Headers)
 	printBody(response.Body, "<<")
 }
@@ -36,8 +36,7 @@ func PrintResponse(response request.Response) {
 func printBody(body string, linePrefix string) {
 	if body != "" {
 		bodyColor := color.New(color.Bold).PrintfFunc()
-		split := strings.Split(body, "\n")
-		for _, line := range split {
+		for _, line := range strings.Split(body, "\n") {
 			bodyColor("%s %s\n", linePrefix, line)
 		}
 	}
@@ -58,18 +57,18 @@ func printCookies(cookies []*http.Cookie) {
 }
 
 func printHeaders(headers map[string][]string) {
-	sentHeaderKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
-	sentHeaderValueColor := color.New(color.FgBlack).PrintfFunc()
+	headerKeyColor := color.New(color.Bold, color.FgBlack).PrintfFunc()
+	headerValueColor := color.New(color.FgBlack).PrintfFunc()
 
 	for headerName, values := range headers {
-		sentHeaderKeyColor("%s:", headerName)
-		if len(values) > 1 {
+		headerKeyColor("%s:", headerName)
+		if len(values) == 1 {
+			headerValueColor(" %s\n", values[0])
+		} else if len(values) > 1 {
 			for _, val := range values {
-				sentHeaderValueColor("\n  %s", val)
+				headerValueColor("\n  %s", val)
 			}
 			fmt.Println("")
-		} else {
-			sentHeaderValueColor(" %s\n", values[0])
 		}
 	}
 }
