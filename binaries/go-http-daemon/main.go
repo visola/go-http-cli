@@ -62,11 +62,14 @@ func executeRequest(c echo.Context) error {
 	log.Debug("Execute request")
 	lastInteraction = time.Now().UnixNano()
 
+	requestExecution := daemon.RequestExecution{}
 	daemonRequest := new(daemon.Request)
 
 	if parseRequestError := c.Bind(daemonRequest); parseRequestError != nil {
 		log.Error(parseRequestError)
-		return parseRequestError
+		requestExecution.ErrorMessage = parseRequestError.Error()
+		c.JSON(http.StatusOK, requestExecution)
+		return nil
 	}
 
 	var req request.Request
@@ -74,7 +77,9 @@ func executeRequest(c echo.Context) error {
 		requestOptions, err := profile.LoadRequestOptions(daemonRequest.RequestName, daemonRequest.Profiles)
 
 		if err != nil {
-			return err
+			requestExecution.ErrorMessage = err.Error()
+			c.JSON(http.StatusOK, requestExecution)
+			return nil
 		}
 
 		req = request.Request{
@@ -90,13 +95,14 @@ func executeRequest(c echo.Context) error {
 	}
 
 	requestResponses, responseErr := request.ExecuteRequest(req, daemonRequest.Profiles, daemonRequest.Variables)
+	requestExecution.RequestResponses = requestResponses
 
 	if responseErr != nil {
 		log.Error(responseErr)
-		return responseErr
+		requestExecution.ErrorMessage = responseErr.Error()
 	}
 
-	c.JSON(http.StatusOK, requestResponses)
+	c.JSON(http.StatusOK, requestExecution)
 	return nil
 }
 
