@@ -7,11 +7,10 @@ import (
 
 	"github.com/visola/go-http-cli/cli"
 	"github.com/visola/go-http-cli/ioutil"
-	"github.com/visola/go-http-cli/request"
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) ([]request.ExecutedRequestResponse, error) {
+func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*RequestExecution, error) {
 	daemonRequest := &Request{
 		Body:        commandLineOptions.Body,
 		Headers:     commandLineOptions.Headers,
@@ -27,13 +26,13 @@ func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) ([]request.Execu
 		return nil, marshalError
 	}
 
-	var requestResponses []request.ExecutedRequestResponse
+	var requestExecution RequestExecution
 
-	if callDaemonError := callDaemon("/request", string(dataAsBytes), &requestResponses); callDaemonError != nil {
+	if callDaemonError := callDaemon("/request", string(dataAsBytes), &requestExecution); callDaemonError != nil {
 		return nil, callDaemonError
 	}
 
-	return requestResponses, nil
+	return &requestExecution, nil
 }
 
 // Handshake connects and sends a handshake request to the daemon. Return the version of the daemon
