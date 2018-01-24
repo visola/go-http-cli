@@ -10,13 +10,15 @@ import (
 
 // CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
-	Body        string
-	Headers     map[string][]string
-	Method      string
-	Profiles    []string
-	RequestName string
-	URL         string
-	Variables   map[string]string
+	Body           string
+	Headers        map[string][]string
+	FollowLocation bool
+	MaxRedirect    int
+	Method         string
+	Profiles       []string
+	RequestName    string
+	URL            string
+	Variables      map[string]string
 }
 
 type keyValuePair []string
@@ -41,9 +43,12 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	var headers keyValuePair
 	var configPaths keyValuePair
 	var variables keyValuePair
+	var followLocation bool
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
+	maxRedirect := commandLine.Int("max-redirs", 50, "Maximum number of redirects to follow")
+	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
 	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
@@ -53,6 +58,9 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	commandLine.Parse(args)
 
 	result := new(CommandLineOptions)
+
+	result.FollowLocation = followLocation
+	result.MaxRedirect = *maxRedirect
 	result.Method = method
 	result.Body = body
 

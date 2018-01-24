@@ -5,15 +5,28 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
 )
 
-const maxRedirectCount = 10
+const defaultMaxRedirectCount = 10
 
 // ExecuteRequest executes an HTTP request based on the specified options.
-func ExecuteRequest(request Request, profileNames []string, variables map[string]string) ([]ExecutedRequestResponse, error) {
+func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
+	reqToExecute, getRequestError := getRequestFrom(executionOptions)
+
+	maxRedirectCount := executionOptions.MaxRedirect
+	if maxRedirectCount == 0 {
+		maxRedirectCount = defaultMaxRedirectCount
+	}
+
+	if getRequestError != nil {
+		return nil, getRequestError
+	}
+
 	requestsToExecute := make([]Request, 1)
-	requestsToExecute[0] = request
+	requestsToExecute[0] = reqToExecute
+
 	redirectCount := 0
 
 	client := &http.Client{
@@ -29,7 +42,7 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 		currentRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, profileNames, variables)
+		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, executionOptions.ProfileNames, executionOptions.Variables)
 		if httpRequestErr != nil {
 			return nil, httpRequestErr
 		}
@@ -69,7 +82,7 @@ func ExecuteRequest(request Request, profileNames []string, variables map[string
 			Response: response,
 		})
 
-		if shouldRedirect(response.StatusCode) {
+		if shouldRedirect(response.StatusCode) && executionOptions.FollowLocation == true {
 			redirectCount++
 
 			if redirectCount > maxRedirectCount {
@@ -100,6 +113,30 @@ func buildRedirect(response http.Response) (*Request, error) {
 	return &Request{
 		URL: newLocation.String(),
 	}, nil
+}
+
+func getRequestFrom(executionOptions ExecutionOptions) (Request, error) {
+	var req Request
+	if executionOptions.RequestName != "" {
+		requestOptions, err := profile.LoadRequestOptions(executionOptions.RequestName, executionOptions.ProfileNames)
+
+		if err != nil {
+			return req, err
+		}
+
+		req = Request{
+			Body:    requestOptions.Body,
+			Headers: requestOptions.Headers,
+			Method:  requestOptions.Method,
+			URL:     requestOptions.URL,
+		}
+
+		req.Merge(executionOptions.Request)
+	} else {
+		req = executionOptions.Request
+	}
+
+	return req, nil
 }
 
 func shouldRedirect(statusCode int) bool {
