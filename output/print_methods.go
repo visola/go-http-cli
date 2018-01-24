@@ -24,7 +24,7 @@ func PrintResponse(response request.Response) {
 	printSummaryFunction := color.Green
 	if response.StatusCode >= 300 && response.StatusCode < 400 {
 		printSummaryFunction = color.Yellow
-	} else {
+	} else if response.StatusCode >= 400 {
 		printSummaryFunction = color.Red
 	}
 
