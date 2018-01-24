@@ -6,8 +6,9 @@ before_script:
   - git config --local user.email "viniciusisola@gmail.com"
   - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
 
-after_script:
+after_success:
   - cp build/go-http-cli.zip $TRAVIS_BUILD_DIR
+  - cd $TRAVIS_BUILD_DIR
 
 script:
   - ./gradlew --no-daemon -i build
