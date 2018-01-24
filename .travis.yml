@@ -5,3 +5,11 @@ before_script:
 
 script:
   - ./gradlew --no-daemon build
+
+deploy:
+  provider: releases
+  api_key:
+    secure: DJXBAe1es8Wc+0cyUw1J6E4jUukWyjlZr7ZyeqTIHJ2I3YFhmu7fPbipOiA/Ev0Ut/s05E5DpjPq/XKVXzKpmqiVqxW2ECuD3b/E2g1cnmmIbaxdC/iWrYmK/uJHhS1QbIvzm0+C6RHrop3N7bqklVFOTN/B5Mnmtv0rQkbTRFOIUL6rvqIn7qc7ghKw+GwUFfUkxUjrNK7cWRCby9Nkk2E9oNJmLwhQa2UyHH5dBO7m2Wbh85KhgqzWveVYqsdAWEGDU/Jd9f4eA8XCJAc0Nhr6QRc4tgmmGdlzlYN+HMNWn2ao0XZR6YIiytgWJxeheBo1mGYZq9ECXN3P9z5SllVQ4obRT+hjwBHNuEj+wOeqFKVEKC5T3n4/nOXZoU4Nfo/OkdERBdEpOYEo7ZAk4F4Uq9JeOWS8AawGWXDFKcXlIt6AozEJr2j/NVcFjDsNNN2UXvYBkyjkeAqEMfonvdwRaq7qQHxwGjv2s3Jki10W2IgEPVwMuFL7MqbvGU9qqfp2qadqGqrTPE4K+fIw8IBZ05Ki05Tp6fRgjh9vNey7xtkHjJFPcfCmAlNusrhNbDXjk0LOlJFFfwgqtk5TdltRM8x3LMlWHNlL6vVZTVzol76EcXDmufAquOQ9oxmA76umxk9zCE9sW0UtHdLVteOsWK5OMWgVlNBJUqX4Ymw=
+  file: build/go-http-cli.zip
+  on:
+    repo: visola/go-http-cli

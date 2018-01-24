@@ -179,6 +179,14 @@ task killDaemon(type: Exec) {
   commandLine 'go-http-daemon', '--kill'
 }
 
+task buildZip(type: Zip) {
+  archiveName 'go-http-cli.zip'
+  dependsOn install
+  destinationDir buildDir
+  from goBinariesDir
+  include binaries
+}
+
 task build {
-  dependsOn fmtCompare, lint, test, killDaemon, install, generateCoverageReport
+  dependsOn fmtCompare, lint, test, killDaemon, install, buildZip, generateCoverageReport
 }
