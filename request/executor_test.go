@@ -20,7 +20,9 @@ func testBasicGet(t *testing.T) {
 		URL:    "https://httpbin.org/",
 	}
 
-	executedRequestResponses, err := ExecuteRequest(request, nil, nil)
+	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+		Request: request,
+	})
 
 	assert.Nil(t, err, "Should execute request correctly")
 
@@ -35,7 +37,10 @@ func testFollowsRedirect(t *testing.T) {
 		URL: "https://httpbin.org/redirect/1",
 	}
 
-	executedRequestResponses, err := ExecuteRequest(request, nil, nil)
+	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+		FollowLocation: true,
+		Request:        request,
+	})
 
 	assert.Nil(t, err, "Should execute request correctly")
 
@@ -47,11 +52,17 @@ func testFollowsRedirect(t *testing.T) {
 }
 
 func testMaxRedirects(t *testing.T) {
+	const maxRedirectCount = 10
+
 	request := Request{
 		URL: fmt.Sprintf("https://httpbin.org/redirect/%d", maxRedirectCount+1),
 	}
 
-	executedRequestResponses, err := ExecuteRequest(request, nil, nil)
+	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+		FollowLocation: true,
+		MaxRedirect:    maxRedirectCount,
+		Request:        request,
+	})
 
 	assert.NotNil(t, err, "Should return an error")
 

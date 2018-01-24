@@ -8,7 +8,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
 	"github.com/visola/go-http-cli/daemon"
-	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/request"
 )
 
@@ -63,38 +62,16 @@ func executeRequest(c echo.Context) error {
 	lastInteraction = time.Now().UnixNano()
 
 	requestExecution := daemon.RequestExecution{}
-	daemonRequest := new(daemon.Request)
+	executionOptions := new(request.ExecutionOptions)
 
-	if parseRequestError := c.Bind(daemonRequest); parseRequestError != nil {
+	if parseRequestError := c.Bind(executionOptions); parseRequestError != nil {
 		log.Error(parseRequestError)
 		requestExecution.ErrorMessage = parseRequestError.Error()
 		c.JSON(http.StatusOK, requestExecution)
 		return nil
 	}
 
-	var req request.Request
-	if daemonRequest.RequestName != "" {
-		requestOptions, err := profile.LoadRequestOptions(daemonRequest.RequestName, daemonRequest.Profiles)
-
-		if err != nil {
-			requestExecution.ErrorMessage = err.Error()
-			c.JSON(http.StatusOK, requestExecution)
-			return nil
-		}
-
-		req = request.Request{
-			Body:    requestOptions.Body,
-			Headers: requestOptions.Headers,
-			Method:  requestOptions.Method,
-			URL:     requestOptions.URL,
-		}
-
-		req.Merge(daemonRequest.ToRequest())
-	} else {
-		req = daemonRequest.ToRequest()
-	}
-
-	requestResponses, responseErr := request.ExecuteRequest(req, daemonRequest.Profiles, daemonRequest.Variables)
+	requestResponses, responseErr := request.ExecuteRequest(*executionOptions)
 	requestExecution.RequestResponses = requestResponses
 
 	if responseErr != nil {

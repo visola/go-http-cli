@@ -5,23 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/visola/go-http-cli/cli"
 	"github.com/visola/go-http-cli/ioutil"
+	"github.com/visola/go-http-cli/request"
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(commandLineOptions *cli.CommandLineOptions) (*RequestExecution, error) {
-	daemonRequest := &Request{
-		Body:        commandLineOptions.Body,
-		Headers:     commandLineOptions.Headers,
-		Method:      commandLineOptions.Method,
-		Profiles:    commandLineOptions.Profiles,
-		RequestName: commandLineOptions.RequestName,
-		URL:         commandLineOptions.URL,
-		Variables:   commandLineOptions.Variables,
-	}
-
-	dataAsBytes, marshalError := json.Marshal(daemonRequest)
+func ExecuteRequest(executionOptions request.ExecutionOptions) (*RequestExecution, error) {
+	dataAsBytes, marshalError := json.Marshal(executionOptions)
 	if marshalError != nil {
 		return nil, marshalError
 	}

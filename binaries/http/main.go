@@ -8,6 +8,7 @@ import (
 	"github.com/visola/go-http-cli/cli"
 	"github.com/visola/go-http-cli/daemon"
 	"github.com/visola/go-http-cli/output"
+	"github.com/visola/go-http-cli/request"
 )
 
 func main() {
@@ -22,7 +23,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	requestExecution, requestError := daemon.ExecuteRequest(options)
+	executionOptions := request.ExecutionOptions{
+		FollowLocation: options.FollowLocation,
+		MaxRedirect:    options.MaxRedirect,
+		ProfileNames:   options.Profiles,
+		RequestName:    options.RequestName,
+		Request: request.Request{
+			Body:    options.Body,
+			Headers: options.Headers,
+			Method:  options.Method,
+			URL:     options.URL,
+		},
+		Variables: options.Variables,
+	}
+
+	requestExecution, requestError := daemon.ExecuteRequest(executionOptions)
 
 	if requestError != nil {
 		color.Red("Error while executing request: %s", requestError)

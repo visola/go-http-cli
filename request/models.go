@@ -48,3 +48,13 @@ type ExecutedRequestResponse struct {
 	Request  Request
 	Response Response
 }
+
+// ExecutionOptions represent the options to be passed for the request executor.
+type ExecutionOptions struct {
+	FollowLocation bool
+	MaxRedirect    int
+	ProfileNames   []string
+	RequestName    string
+	Request        Request
+	Variables      map[string]string
+}
