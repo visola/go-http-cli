@@ -179,14 +179,47 @@ task killDaemon(type: Exec) {
   commandLine 'go-http-daemon', '--kill'
 }
 
-task buildZip(type: Zip) {
-  archiveName 'go-http-cli.zip'
-  dependsOn install
-  destinationDir buildDir
-  from goBinariesDir
-  include binaries
+task compileBinaries() {}
+task buildPackages() {}
+
+def OPERATING_SYSTEMS = ['Darwin', 'Linux', 'Windows'];
+def ARCHITECTURES = ['AMD64']
+
+OPERATING_SYSTEMS.each { os ->
+  ARCHITECTURES.each { arch ->
+    def packageTaskName = "pack${os}${arch}"
+    def outputDir = file("${buildDir}/compiled/${os}-${arch}")
+    def compileTasks = []
+
+    binaries.each { binaryName ->
+      def binaryNameCamelCase = LOWER_HYPHEN.to(UPPER_CAMEL, binaryName)
+      def compileTaskName = "compile${binaryNameCamelCase}${os}${arch}"
+      compileTasks << compileTaskName
+
+      task "${compileTaskName}" (type:Exec) {
+        inputs.files sourceFiles
+        outputs.file outputDir
+
+        workingDir "${binariesDir}/${binaryName}"
+        environment GOOS: os.toLowerCase(), GOARCH: arch.toLowerCase()
+        commandLine 'go', 'build', '-o', "${outputDir}/${binaryName}", "${binariesDir}/${binaryName}/main.go"
+      }
+
+      compileBinaries.dependsOn compileTaskName
+    }
+
+    task "${packageTaskName}"(type: Zip) {
+      archiveName "go-http-cli-${os}-${arch}.zip"
+      dependsOn compileTasks
+      destinationDir file("${buildDir}/packages")
+      from outputDir
+      include '*'
+    }
+
+    buildPackages.dependsOn packageTaskName
+  }
 }
 
 task build {
-  dependsOn fmtCompare, lint, test, killDaemon, install, buildZip, generateCoverageReport
+  dependsOn fmtCompare, lint, test, killDaemon, install, generateCoverageReport
 }
