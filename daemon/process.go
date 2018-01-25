@@ -44,6 +44,11 @@ func EnsureDaemon() error {
 // KillDaemon will kill the process with the PID stored in the daemon.pid file
 func KillDaemon() {
 	pid, pidError := getDaemonPID()
+
+	if os.IsNotExist(pidError) {
+		return
+	}
+
 	if pidError != nil {
 		panic(pidError)
 	}
@@ -58,7 +63,7 @@ func KillDaemon() {
 
 // WriteDaemonPID writes the PID of the current process to a file in the go-http-cli process dir
 func WriteDaemonPID() error {
-	processDir, dirError := getProcessDirectory()
+	processDir, dirError := ensureProcessDirectory()
 	if dirError != nil {
 		return dirError
 	}
@@ -78,7 +83,7 @@ func WriteDaemonPID() error {
 }
 
 func getDaemonPID() (int, error) {
-	processDir, dirError := getProcessDirectory()
+	processDir, dirError := ensureProcessDirectory()
 	if dirError != nil {
 		return 0, dirError
 	}
@@ -91,16 +96,22 @@ func getDaemonPID() (int, error) {
 	return strconv.Atoi(strings.TrimSpace(string(buffer)))
 }
 
-func getProcessDirectory() (string, error) {
+func ensureProcessDirectory() (string, error) {
 	user, err := user.Current()
 	if err != nil {
 		return "", err
 	}
-	return user.HomeDir + goHTTPCLIDirectory, nil
+
+	processDirPath := user.HomeDir + goHTTPCLIDirectory
+	if _, err := os.Stat(processDirPath); os.IsNotExist(err) {
+		os.Mkdir(processDirPath, 0700)
+	}
+
+	return processDirPath, nil
 }
 
 func startDaemon() {
-	processDir, dirError := getProcessDirectory()
+	processDir, dirError := ensureProcessDirectory()
 	if dirError != nil {
 		panic(dirError)
 	}
