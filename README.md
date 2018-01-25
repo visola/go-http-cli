@@ -1,7 +1,23 @@
 # go-http-cli
 [![Build Status](https://travis-ci.org/visola/go-http-cli.svg?branch=master)](https://travis-ci.org/visola/go-http-cli) [![Go Report Card](https://goreportcard.com/badge/github.com/visola/go-http-cli)](https://goreportcard.com/report/github.com/visola/go-http-cli)
 
-An HTTP client inspired by `curl` and `httpie` made in Go.
+An HTTP client inspired by [Curl](https://github.com/curl/curl), [Postman](https://www.getpostman.com/) and [httpie](https://github.com/jakubroztocil/httpie) made with :heart: in Go.
+
+## Getting Started
+
+Download the latest [release](https://github.com/visola/go-http-cli/releases) for your platform.
+
+Unzip it and put all three binaries in you path adding something like this to your `~/.bash_profile`:
+
+```bash
+export PATH=$PATH:/path/to/extracted/root
+```
+
+There's also an auto-completion helper for bash. You can add the following to your `~/.bash_profile`:
+
+```bash
+complete -f -C go-http-completion http
+```
 
 ## Profiles
 
@@ -64,12 +80,3 @@ Output:
 This project uses [Gradle](https://www.gradle.org) as the build system. To run it, the only thing
 you'll need is to have Java installed. Then, just run `./gradlew build` and everything should happen.
 This command should execute all checks, tests and install all binaries.
-
-## Bash completion
-
-There's a `go-http-completion` command that can be used for completion using tabs in bash. For now
-it only supports profile names. To install it, just run (or add to your `~/.bash_profile`):
-
-```bash
-complete -f -C go-http-completion http
-```
