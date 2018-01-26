@@ -13,11 +13,11 @@ func TestLoadRequestOptions(t *testing.T) {
 }
 
 func testLoadsCorrectRequest(t *testing.T) {
-	tempProfilesDir := setupTestProfilesDir()
+	tempProfilesDir := SetupTestProfilesDir()
 
 	profileName := "myProfile"
 	profileContent := "requests:\n  myRequest:\n    url: some/path\n  anotherRequest:\n    url: another/path\n"
-	createProfile(profileName, profileContent, tempProfilesDir)
+	CreateTestProfile(profileName, profileContent, tempProfilesDir)
 
 	request, requestErr := LoadRequestOptions("myRequest", []string{profileName})
 
@@ -30,11 +30,11 @@ func testLoadsCorrectRequest(t *testing.T) {
 }
 
 func testErrorOnRequestNotFound(t *testing.T) {
-	tempProfilesDir := setupTestProfilesDir()
+	tempProfilesDir := SetupTestProfilesDir()
 
 	profileName := "myProfile"
 	profileContent := "requests:\n  myRequest:\n    url: some/path\n"
-	createProfile(profileName, profileContent, tempProfilesDir)
+	CreateTestProfile(profileName, profileContent, tempProfilesDir)
 
 	_, requestErr := LoadRequestOptions("anotherRequest", []string{profileName})
 
