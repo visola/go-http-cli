@@ -1,7 +1,7 @@
 package daemon
 
 const (
-	// DaemonPort is the port the daemon uses to accept connections
+	// DaemonPort is the port the daemon uses to accept connections
 	DaemonPort = "4321"
 
 	// DaemonMajorVersion current version of the daemon
