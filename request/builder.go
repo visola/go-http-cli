@@ -7,6 +7,7 @@ import (
 	"github.com/visola/go-http-cli/ioutil"
 	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
+	"github.com/visola/go-http-cli/strings"
 )
 
 // BuildRequest builds a Request from a Configuration.
@@ -68,7 +69,7 @@ func configureRequest(unconfiguredRequest Request, profiles []profile.Options, p
 		mergedProfile.Headers[header] = append(mergedProfile.Headers[header], values...)
 	}
 
-	urlString := ParseURL(mergedProfile.BaseURL, unconfiguredRequest.URL, mergedProfile.Variables)
+	urlString := replaceVariables(ParseURL(mergedProfile.BaseURL, unconfiguredRequest.URL), mergedProfile.Variables)
 
 	url, urlError := url.Parse(urlString)
 
@@ -83,9 +84,9 @@ func configureRequest(unconfiguredRequest Request, profiles []profile.Options, p
 	}
 
 	return &Request{
-		Body:    unconfiguredRequest.Body,
+		Body:    replaceVariables(unconfiguredRequest.Body, mergedProfile.Variables),
 		Cookies: session.Jar.Cookies(url),
-		Headers: mergedProfile.Headers,
+		Headers: replaceVariablesInHeaders(mergedProfile.Headers, mergedProfile.Variables),
 		Method:  method,
 		URL:     urlString,
 	}, nil
@@ -103,4 +104,20 @@ func loadProfiles(profileNames []string) ([]profile.Options, error) {
 	}
 
 	return profiles, nil
+}
+
+func replaceVariablesInHeaders(headers map[string][]string, variables map[string]string) map[string][]string {
+	result := make(map[string][]string)
+	for header, values := range headers {
+		newValues := make([]string, len(values))
+		for index, value := range values {
+			newValues[index] = strings.ParseExpression(value, variables)
+		}
+		result[header] = newValues
+	}
+	return result
+}
+
+func replaceVariables(value string, variables map[string]string) string {
+	return strings.ParseExpression(value, variables)
 }
