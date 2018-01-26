@@ -4,5 +4,5 @@ echo --- Running the build ---
 ./gradlew test buildPackages
 
 echo --- Tagging commit ---
-git tag "v0.8.1"
+git tag "v0.9.0"
 git push --tags
