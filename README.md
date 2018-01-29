@@ -27,8 +27,9 @@ Example command pointing to a test server:
 http \
   -H Content-Type=application/json \
   -X POST \
-  -d "Some test data" \
-  http://localhost:3000/test
+  -d '{ "name": "John Doe" }' \
+  -V companyId=123456 \
+  http://localhost:3000/api/v1/{companyId}/people
 ```
 
 Output:
