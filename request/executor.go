@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
 )
 
@@ -13,21 +12,14 @@ const defaultMaxRedirectCount = 10
 
 // ExecuteRequest executes an HTTP request based on the specified options.
 func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
-	reqToExecute, getRequestError := getRequestFrom(executionOptions)
-
 	maxRedirectCount := executionOptions.MaxRedirect
 	if maxRedirectCount == 0 {
 		maxRedirectCount = defaultMaxRedirectCount
 	}
 
-	if getRequestError != nil {
-		return nil, getRequestError
-	}
-
+	requestName := executionOptions.RequestName
 	requestsToExecute := make([]Request, 1)
-	requestsToExecute[0] = reqToExecute
-
-	redirectCount := 0
+	requestsToExecute[0] = executionOptions.Request
 
 	client := &http.Client{
 		// Do not auto-follow redirects
@@ -37,15 +29,18 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 	}
 
 	result := make([]ExecutedRequestResponse, 0)
-
+	redirectCount := 0
 	for {
 		currentRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, executionOptions.ProfileNames, executionOptions.Variables)
+		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, requestName, executionOptions)
 		if httpRequestErr != nil {
 			return nil, httpRequestErr
 		}
+
+		// Request name only applies to the first one
+		requestName = ""
 
 		httpResponse, httpResponseErr := client.Do(httpRequest)
 		if httpResponseErr != nil {
@@ -113,30 +108,6 @@ func buildRedirect(response http.Response) (*Request, error) {
 	return &Request{
 		URL: newLocation.String(),
 	}, nil
-}
-
-func getRequestFrom(executionOptions ExecutionOptions) (Request, error) {
-	var req Request
-	if executionOptions.RequestName != "" {
-		requestOptions, err := profile.LoadRequestOptions(executionOptions.RequestName, executionOptions.ProfileNames)
-
-		if err != nil {
-			return req, err
-		}
-
-		req = Request{
-			Body:    requestOptions.Body,
-			Headers: requestOptions.Headers,
-			Method:  requestOptions.Method,
-			URL:     requestOptions.URL,
-		}
-
-		req.Merge(executionOptions.Request)
-	} else {
-		req = executionOptions.Request
-	}
-
-	return req, nil
 }
 
 func shouldRedirect(statusCode int) bool {

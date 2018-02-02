@@ -23,10 +23,11 @@ type authConfiguration struct {
 
 // Used to unmarshal request options from yaml files
 type requestConfiguration struct {
-	Body    string
-	Headers map[string]arrayOrString
-	Method  string
-	URL     string
+	Body         string
+	FileToUpload string `yaml:"fileToUpload"`
+	Headers      map[string]arrayOrString
+	Method       string
+	URL          string
 }
 
 func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
@@ -71,10 +72,11 @@ func toMapOfRequestOptions(requestConfigurations map[string]requestConfiguration
 	result := make(map[string]RequestOptions)
 	for name, requestConfiguration := range requestConfigurations {
 		result[name] = RequestOptions{
-			Body:    requestConfiguration.Body,
-			Headers: toMapOfArrayOfStrings(requestConfiguration.Headers),
-			Method:  requestConfiguration.Method,
-			URL:     requestConfiguration.URL,
+			Body:         requestConfiguration.Body,
+			FileToUpload: requestConfiguration.FileToUpload,
+			Headers:      toMapOfArrayOfStrings(requestConfiguration.Headers),
+			Method:       requestConfiguration.Method,
+			URL:          requestConfiguration.URL,
 		}
 	}
 

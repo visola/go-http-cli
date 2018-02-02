@@ -24,6 +24,7 @@ func main() {
 	}
 
 	executionOptions := request.ExecutionOptions{
+		FileToUpload:   options.FileToUpload,
 		FollowLocation: options.FollowLocation,
 		MaxRedirect:    options.MaxRedirect,
 		ProfileNames:   options.Profiles,
