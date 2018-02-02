@@ -1,24 +1,26 @@
 package request
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 
-	"github.com/visola/go-http-cli/ioutil"
+	myioutil "github.com/visola/go-http-cli/ioutil"
 	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
-	"github.com/visola/go-http-cli/strings"
+	mystrings "github.com/visola/go-http-cli/strings"
 )
 
 // BuildRequest builds a Request from a Configuration.
-func BuildRequest(unconfiguredRequest Request, profileNames []string, variables map[string]string) (*http.Request, *Request, error) {
-	profiles, profileError := loadProfiles(profileNames)
+func BuildRequest(unconfiguredRequest Request, requestName string, executionOptions ExecutionOptions) (*http.Request, *Request, error) {
+	profiles, profileError := loadProfiles(executionOptions.ProfileNames)
 
 	if profileError != nil {
 		return nil, nil, profileError
 	}
 
-	configuredRequest, configError := configureRequest(unconfiguredRequest, profiles, variables)
+	configuredRequest, configError := configureRequest(unconfiguredRequest, requestName, profiles, executionOptions)
 
 	if configError != nil {
 		return nil, nil, configError
@@ -40,56 +42,80 @@ func BuildRequest(unconfiguredRequest Request, profileNames []string, variables 
 	}
 
 	if configuredRequest.Body != "" {
-		req.Body = ioutil.CreateCloseableBufferString(configuredRequest.Body)
+		req.Body = myioutil.CreateCloseableBufferString(configuredRequest.Body)
 	}
 
 	return req, configuredRequest, nil
 }
 
-func configureRequest(unconfiguredRequest Request, profiles []profile.Options, passedVariables map[string]string) (*Request, error) {
+func configureRequest(unconfiguredRequest Request, requestName string, profiles []profile.Options, executionOptions ExecutionOptions) (*Request, error) {
 	mergedProfile := profile.MergeOptions(profiles)
+	mergeWithPassedIn(executionOptions, unconfiguredRequest, mergedProfile)
+
+	var requestOptions profile.RequestOptions
+	if requestName != "" {
+		if _, exists := mergedProfile.RequestOptions[requestName]; !exists {
+			return nil, fmt.Errorf("Request with name %s not found", requestName)
+		}
+	}
+
+	unconfiguredRequest = mergeRequests(unconfiguredRequest, requestOptions)
+
+	body, loadBodyErr := loadBody(unconfiguredRequest, requestOptions, executionOptions)
+	if loadBodyErr != nil {
+		return nil, loadBodyErr
+	}
 
 	method := unconfiguredRequest.Method
-
 	if method == "" {
-		if unconfiguredRequest.Body == "" {
+		if body == "" {
 			method = http.MethodGet
 		} else {
 			method = http.MethodPost
 		}
 	}
 
-	// Merge the passed in variables
-	for variable, value := range passedVariables {
-		mergedProfile.Variables[variable] = value
-	}
-
-	// Merge all headers
-	for header, values := range unconfiguredRequest.Headers {
-		mergedProfile.Headers[header] = append(mergedProfile.Headers[header], values...)
-	}
-
 	urlString := replaceVariables(ParseURL(mergedProfile.BaseURL, unconfiguredRequest.URL), mergedProfile.Variables)
 
 	url, urlError := url.Parse(urlString)
-
 	if urlError != nil {
 		return nil, urlError
 	}
 
 	session, sessionErr := session.Get(*url)
-
 	if sessionErr != nil {
 		return nil, sessionErr
 	}
 
 	return &Request{
-		Body:    replaceVariables(unconfiguredRequest.Body, mergedProfile.Variables),
+		Body:    replaceVariables(body, mergedProfile.Variables),
 		Cookies: session.Jar.Cookies(url),
 		Headers: replaceVariablesInHeaders(mergedProfile.Headers, mergedProfile.Variables),
 		Method:  method,
 		URL:     urlString,
 	}, nil
+}
+
+func loadBody(unconfiguredRequest Request, requestOptions profile.RequestOptions, executionOptions ExecutionOptions) (string, error) {
+	// Passed in body overrides everything
+	if unconfiguredRequest.Body != "" {
+		return unconfiguredRequest.Body, nil
+	}
+
+	if requestOptions.Body != "" {
+		return requestOptions.Body, nil
+	}
+
+	if executionOptions.FileToUpload != "" {
+		data, loadError := ioutil.ReadFile(executionOptions.FileToUpload)
+		if loadError != nil {
+			return "", loadError
+		}
+
+		return string(data), nil
+	}
+
+	return "", nil
 }
 
 func loadProfiles(profileNames []string) ([]profile.Options, error) {
@@ -106,12 +132,38 @@ func loadProfiles(profileNames []string) ([]profile.Options, error) {
 	return profiles, nil
 }
 
+func mergeRequests(unconfiguredRequest Request, requestOptions profile.RequestOptions) Request {
+	loadedRequest := Request{
+		Body:    requestOptions.Body,
+		Headers: requestOptions.Headers,
+		Method:  requestOptions.Method,
+		URL:     requestOptions.URL,
+	}
+
+	newRequest := Request{}
+	newRequest.Merge(loadedRequest)
+	newRequest.Merge(unconfiguredRequest)
+	return newRequest
+}
+
+func mergeWithPassedIn(executionOptions ExecutionOptions, unconfiguredRequest Request, profile profile.Options) {
+	// Merge the passed in variables
+	for variable, value := range executionOptions.Variables {
+		profile.Variables[variable] = value
+	}
+
+	// Merge all headers
+	for header, values := range unconfiguredRequest.Headers {
+		profile.Headers[header] = append(profile.Headers[header], values...)
+	}
+}
+
 func replaceVariablesInHeaders(headers map[string][]string, variables map[string]string) map[string][]string {
 	result := make(map[string][]string)
 	for header, values := range headers {
 		newValues := make([]string, len(values))
 		for index, value := range values {
-			newValues[index] = strings.ParseExpression(value, variables)
+			newValues[index] = mystrings.ParseExpression(value, variables)
 		}
 		result[header] = newValues
 	}
@@ -119,5 +171,5 @@ func replaceVariablesInHeaders(headers map[string][]string, variables map[string
 }
 
 func replaceVariables(value string, variables map[string]string) string {
-	return strings.ParseExpression(value, variables)
+	return mystrings.ParseExpression(value, variables)
 }

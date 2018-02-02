@@ -20,6 +20,10 @@ func (original *Request) Merge(toMerge Request) {
 
 	original.Cookies = append(original.Cookies, toMerge.Cookies...)
 
+	if original.Headers == nil {
+		original.Headers = make(map[string][]string)
+	}
+
 	for header, values := range toMerge.Headers {
 		original.Headers[header] = values
 	}
@@ -51,6 +55,7 @@ type ExecutedRequestResponse struct {
 
 // ExecutionOptions represent the options to be passed for the request executor.
 type ExecutionOptions struct {
+	FileToUpload   string
 	FollowLocation bool
 	MaxRedirect    int
 	ProfileNames   []string

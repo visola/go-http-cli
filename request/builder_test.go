@@ -28,7 +28,7 @@ func testRequestBuilder(t *testing.T) {
 		"username":  "John Doe",
 	}
 
-	httpReq, _, reqErr := BuildRequest(request, nil, variables)
+	httpReq, _, reqErr := BuildRequest(request, "", ExecutionOptions{Variables: variables})
 	assert.Nil(t, reqErr, "Should create request")
 
 	dump, dumpErr := httputil.DumpRequest(httpReq, true)
@@ -55,7 +55,7 @@ func testRequestWithProfile(t *testing.T) {
 	testProfileDir := profile.SetupTestProfilesDir()
 	profile.CreateTestProfile(profileName, profileContent, testProfileDir)
 
-	httpReq, _, reqErr := BuildRequest(request, []string{profileName}, nil)
+	httpReq, _, reqErr := BuildRequest(request, "", ExecutionOptions{ProfileNames: []string{profileName}})
 	assert.Nil(t, reqErr, "Should create request")
 
 	if reqErr != nil {

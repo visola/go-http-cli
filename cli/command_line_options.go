@@ -13,6 +13,7 @@ type CommandLineOptions struct {
 	Body           string
 	Headers        map[string][]string
 	FollowLocation bool
+	FileToUpload   string
 	MaxRedirect    int
 	Method         string
 	Profiles       []string
@@ -40,6 +41,7 @@ func (i *keyValuePair) Type() string {
 func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	var method string
 	var body string
+	var fileToUpload string
 	var headers keyValuePair
 	var configPaths keyValuePair
 	var variables keyValuePair
@@ -51,6 +53,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
 	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
+	commandLine.StringVarP(&fileToUpload, "upload-file", "T", "", "Path to the file to be uploaded")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
 	commandLine.VarP(&variables, "variable", "V", "Variables to be used on substitutions")
@@ -63,6 +66,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	result.MaxRedirect = *maxRedirect
 	result.Method = method
 	result.Body = body
+	result.FileToUpload = fileToUpload
 
 	url, requestName, profiles, urlError := parseArgs(commandLine.Args())
 	result.URL = url
