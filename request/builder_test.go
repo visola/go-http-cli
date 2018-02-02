@@ -10,7 +10,7 @@ import (
 
 func TestBuildRequest(t *testing.T) {
 	t.Run("Build request works", testRequestBuilder)
-	t.Run("Build request with data from Profile", testRequestWithProfile)
+	t.Run("Build request loading body from profile", testRequestFromProfile)
 }
 
 func testRequestBuilder(t *testing.T) {
@@ -41,21 +41,23 @@ func testRequestBuilder(t *testing.T) {
 	)
 }
 
-func testRequestWithProfile(t *testing.T) {
+func testRequestFromProfile(t *testing.T) {
 	profileName := "testProfile"
 	profileContent := "baseURL: http://www.someserver.com/"
 	profileContent = profileContent + "\n\nheaders:\n  Content-Type: application/json\n  Company-Id: '{companyId}'"
 	profileContent = profileContent + "\n\nvariables:\n  companyId: 1234\n  username: John Doe"
-
-	request := Request{
-		Body: `{"name":"{username},"companyId":{companyId}}`,
-		URL:  "/{companyId}/employee",
-	}
+	profileContent = profileContent + "\n\nrequests:"
+	profileContent = profileContent + "\n  withFile:\n"
+	profileContent = profileContent + "\n    url: '/{companyId}/employee'"
+	profileContent = profileContent + "\n    fileToUpload: test-body.yml"
 
 	testProfileDir := profile.SetupTestProfilesDir()
 	profile.CreateTestProfile(profileName, profileContent, testProfileDir)
 
-	httpReq, _, reqErr := BuildRequest(request, "", ExecutionOptions{ProfileNames: []string{profileName}})
+	jsonBody := `{"name":"John Doe","companyId":{companyId}}`
+	profile.CreateTestProfile("test-body", jsonBody, testProfileDir)
+
+	httpReq, _, reqErr := BuildRequest(Request{}, "withFile", ExecutionOptions{ProfileNames: []string{profileName}})
 	assert.Nil(t, reqErr, "Should create request")
 
 	if reqErr != nil {
@@ -66,7 +68,7 @@ func testRequestWithProfile(t *testing.T) {
 	assert.Nil(t, dumpErr, "Dump should work")
 	assert.Equal(
 		t,
-		"POST /1234/employee HTTP/1.1\r\nHost: www.someserver.com\r\nCompany-Id: 1234\r\nContent-Type: application/json\r\n\r\n{\"name\":\"John Doe,\"companyId\":1234}",
+		"POST /1234/employee HTTP/1.1\r\nHost: www.someserver.com\r\nCompany-Id: 1234\r\nContent-Type: application/json\r\n\r\n{\"name\":\"John Doe\",\"companyId\":1234}",
 		string(dump),
 		"Should generate the expected dump",
 	)

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path/filepath"
 
 	myioutil "github.com/visola/go-http-cli/ioutil"
 	"github.com/visola/go-http-cli/profile"
@@ -53,18 +54,17 @@ func configureRequest(unconfiguredRequest Request, requestName string, profiles 
 	mergeWithPassedIn(executionOptions, unconfiguredRequest, mergedProfile)
 
 	var requestOptions profile.RequestOptions
-	if requestName != "" {
-		if _, exists := mergedProfile.RequestOptions[requestName]; !exists {
-			return nil, fmt.Errorf("Request with name %s not found", requestName)
-		}
+	var exists bool
+	if requestOptions, exists = mergedProfile.RequestOptions[requestName]; requestName != "" && !exists {
+		return nil, fmt.Errorf("Request with name %s not found", requestName)
 	}
-
-	unconfiguredRequest = mergeRequests(unconfiguredRequest, requestOptions)
 
 	body, loadBodyErr := loadBody(unconfiguredRequest, requestOptions, executionOptions)
 	if loadBodyErr != nil {
 		return nil, loadBodyErr
 	}
+
+	unconfiguredRequest = mergeRequests(unconfiguredRequest, requestOptions)
 
 	method := unconfiguredRequest.Method
 	if method == "" {
@@ -102,14 +102,36 @@ func loadBody(unconfiguredRequest Request, requestOptions profile.RequestOptions
 		return unconfiguredRequest.Body, nil
 	}
 
-	if requestOptions.Body != "" {
-		return requestOptions.Body, nil
-	}
-
+	// Passed in file to upload overrides everything
 	if executionOptions.FileToUpload != "" {
 		data, loadError := ioutil.ReadFile(executionOptions.FileToUpload)
 		if loadError != nil {
 			return "", loadError
+		}
+
+		return string(data), nil
+	}
+
+	if requestOptions.Body != "" {
+		return requestOptions.Body, nil
+	}
+
+	// If there's a file to upload from profile, load it
+	if requestOptions.FileToUpload != "" {
+		path := requestOptions.FileToUpload
+		// If not absolute, it's relative to the profiles dir
+		if !filepath.IsAbs(path) {
+			profileDir, profileDirError := profile.GetProfilesDir()
+			if profileDirError != nil {
+				return "", profileDirError
+			}
+
+			path = filepath.Join(profileDir, requestOptions.FileToUpload)
+		}
+
+		data, loadErr := ioutil.ReadFile(path)
+		if loadErr != nil {
+			return "", loadErr
 		}
 
 		return string(data), nil
@@ -121,12 +143,12 @@ func loadBody(unconfiguredRequest Request, requestOptions profile.RequestOptions
 func loadProfiles(profileNames []string) ([]profile.Options, error) {
 	profiles := make([]profile.Options, len(profileNames))
 
-	for _, profileName := range profileNames {
+	for index, profileName := range profileNames {
 		profile, profileError := profile.LoadProfile(profileName)
 		if profileError != nil {
 			return nil, profileError
 		}
-		profiles = append(profiles, *profile)
+		profiles[index] = *profile
 	}
 
 	return profiles, nil
