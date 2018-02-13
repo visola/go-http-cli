@@ -9,6 +9,7 @@ type yamlProfileFormat struct {
 	Auth      authConfiguration `yaml:"auth"`
 	BaseURL   string            `yaml:"baseURL"`
 	Headers   map[string]arrayOrString
+	Import    arrayOrString `yaml:"import"`
 	Variables map[string]string
 	Requests  map[string]requestConfiguration
 }
