@@ -15,10 +15,10 @@ const (
 )
 
 // LoadProfile loads Options for a specific profile by name.
-func LoadProfile(profileName string) (*Options, error) {
+func LoadProfile(profileName string) (loadedOptions Options, err error) {
 	profilesDir, profilesDirErr := GetProfilesDir()
 	if profilesDirErr != nil {
-		return nil, profilesDirErr
+		return loadedOptions, profilesDirErr
 	}
 
 	fileName := profilesDir + "/" + profileName
@@ -31,7 +31,7 @@ func LoadProfile(profileName string) (*Options, error) {
 			fileNameWithExtension = fileName + yamlExtension
 			// If file still doesn't exist
 			if _, err := os.Stat(fileNameWithExtension); os.IsNotExist(err) {
-				return nil, errors.New("Configuration file does not exist: " + fileNameWithExtension)
+				return loadedOptions, errors.New("Configuration file does not exist: " + fileNameWithExtension)
 			}
 		}
 	}
@@ -39,24 +39,38 @@ func LoadProfile(profileName string) (*Options, error) {
 	return readFrom(fileNameWithExtension)
 }
 
-func readFrom(pathToYamlFile string) (*Options, error) {
+func readFrom(pathToYamlFile string) (finalOptions Options, err error) {
 	loadedOptions := new(yamlProfileFormat)
 
-	var err error
 	var yamlContent []byte
 	yamlContent, err = ioutil.ReadFile(pathToYamlFile)
 
 	if err != nil {
-		return nil, err
+		return finalOptions, err
 	}
 
 	err = yaml.Unmarshal(yamlContent, &loadedOptions)
 
 	if err != nil {
-		return nil, err
+		return finalOptions, err
 	}
 
-	return loadedOptions.toOptions()
+	importedOptions := make([]Options, 0)
+	for _, toImport := range loadedOptions.Import {
+		imported, importErr := LoadProfile(toImport)
+		if importErr != nil {
+			return finalOptions, err
+		}
+		importedOptions = append(importedOptions, imported)
+	}
+
+	readOption, conversionErr := loadedOptions.toOptions()
+	if conversionErr != nil {
+		return finalOptions, conversionErr
+	}
+
+	importedOptions = append(importedOptions, *readOption)
+	return MergeOptions(importedOptions), err
 }
 
 func hasYAMLExtension(path string) bool {

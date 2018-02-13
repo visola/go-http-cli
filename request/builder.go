@@ -148,7 +148,7 @@ func loadProfiles(profileNames []string) ([]profile.Options, error) {
 		if profileError != nil {
 			return nil, profileError
 		}
-		profiles[index] = *profile
+		profiles[index] = profile
 	}
 
 	return profiles, nil
