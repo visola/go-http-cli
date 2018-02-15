@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/fatih/color"
@@ -49,6 +50,12 @@ func main() {
 		output.PrintRequest(requestResponse.Request)
 		fmt.Println("")
 		output.PrintResponse(requestResponse.Response)
+		if options.OutputFile != "" && requestResponse.Response.Body != "" {
+			outWriteErr := ioutil.WriteFile(options.OutputFile, []byte(requestResponse.Response.Body), 0644)
+			if outWriteErr != nil {
+				color.Red("Error while writing to output file: %s", outWriteErr)
+			}
+		}
 	}
 
 	if requestExecution.ErrorMessage != "" {
