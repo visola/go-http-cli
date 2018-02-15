@@ -16,6 +16,7 @@ type CommandLineOptions struct {
 	FileToUpload   string
 	MaxRedirect    int
 	Method         string
+	OutputFile     string
 	Profiles       []string
 	RequestName    string
 	URL            string
@@ -39,39 +40,37 @@ func (i *keyValuePair) Type() string {
 
 // ParseCommandLineOptions parses the arguments received on the command line and generate a basic configuration.
 func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
-	var method string
-	var body string
-	var fileToUpload string
-	var headers keyValuePair
-	var configPaths keyValuePair
-	var variables keyValuePair
+	var body, fileToUpload, method, outputFile string
+	var configPaths, headers, variables keyValuePair
 	var followLocation bool
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
-	maxRedirect := commandLine.Int("max-redirs", 50, "Maximum number of redirects to follow")
-	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
-	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
-	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
-	commandLine.StringVarP(&fileToUpload, "upload-file", "T", "", "Path to the file to be uploaded")
-	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
+	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
+	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
+	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
+	maxRedirect := commandLine.Int("max-redirs", 50, "Maximum number of redirects to follow")
+	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
+	commandLine.StringVarP(&outputFile, "output", "o", "", "File to save the response")
+	commandLine.StringVarP(&fileToUpload, "upload-file", "T", "", "Path to the file to be uploaded")
 	commandLine.VarP(&variables, "variable", "V", "Variables to be used on substitutions")
 
 	commandLine.Parse(args)
 
 	result := new(CommandLineOptions)
 
+	result.Body = body
+	result.FileToUpload = fileToUpload
 	result.FollowLocation = followLocation
 	result.MaxRedirect = *maxRedirect
 	result.Method = method
-	result.Body = body
-	result.FileToUpload = fileToUpload
+	result.OutputFile = outputFile
 
 	url, requestName, profiles, urlError := parseArgs(commandLine.Args())
-	result.URL = url
-	result.RequestName = requestName
 	result.Profiles = profiles
+	result.RequestName = requestName
+	result.URL = url
 
 	if urlError != nil {
 		return result, urlError
