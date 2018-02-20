@@ -23,6 +23,12 @@ func TestLoadProfile(t *testing.T) {
 	profileName := "profile"
 	profileContent := "import:\n  - json\n  - auth"
 	profileContent = profileContent + "\n\nbaseURL: http://www.someserver.com"
+	profileContent = profileContent + "\n\nheaders:"
+	profileContent = profileContent + "\n  X-Some-Header: '4321-4321-4321'"
+	profileContent = profileContent + "\n\nrequests:"
+	profileContent = profileContent + "\n  testRequest:"
+	profileContent = profileContent + "\n    headers:"
+	profileContent = profileContent + "\n      X-Some-Header: '1234-1234-1234'"
 	CreateTestProfile(profileName, profileContent, tempProfilesDir)
 
 	profile, requestErr := LoadProfile(profileName)
@@ -43,4 +49,9 @@ func TestLoadProfile(t *testing.T) {
 	assert.True(t, exists, "Should have Content-Type header")
 	assert.Equal(t, 1, len(contentTypeValue), "Should have only one value")
 	assert.Equal(t, "application/json", contentTypeValue[0], "Should set the value correctly")
+
+	testRequest, hasRequest := profile.RequestOptions["testRequest"]
+	assert.True(t, hasRequest, "Should load request data")
+	assert.Equal(t, 1, len(testRequest.Headers["X-Some-Header"]), "Should load header correctly")
+	assert.Equal(t, "1234-1234-1234", testRequest.Headers["X-Some-Header"][0], "Should load header correctly")
 }

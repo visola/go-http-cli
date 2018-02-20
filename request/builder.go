@@ -51,13 +51,16 @@ func BuildRequest(unconfiguredRequest Request, requestName string, executionOpti
 
 func configureRequest(unconfiguredRequest Request, requestName string, profiles []profile.Options, executionOptions ExecutionOptions) (*Request, error) {
 	mergedProfile := profile.MergeOptions(profiles)
-	mergeWithPassedIn(executionOptions, unconfiguredRequest, mergedProfile)
+	mergeVariablesIn(mergedProfile, executionOptions)
+	mergeHeadersIn(mergedProfile, unconfiguredRequest.Headers)
 
 	var requestOptions profile.RequestOptions
 	var exists bool
 	if requestOptions, exists = mergedProfile.RequestOptions[requestName]; requestName != "" && !exists {
 		return nil, fmt.Errorf("Request with name %s not found", requestName)
 	}
+
+	mergeHeadersIn(mergedProfile, requestOptions.Headers)
 
 	body, loadBodyErr := loadBody(unconfiguredRequest, requestOptions, executionOptions)
 	if loadBodyErr != nil {
@@ -168,15 +171,15 @@ func mergeRequests(unconfiguredRequest Request, requestOptions profile.RequestOp
 	return newRequest
 }
 
-func mergeWithPassedIn(executionOptions ExecutionOptions, unconfiguredRequest Request, profile profile.Options) {
-	// Merge the passed in variables
+func mergeVariablesIn(profile profile.Options, executionOptions ExecutionOptions) {
 	for variable, value := range executionOptions.Variables {
 		profile.Variables[variable] = value
 	}
+}
 
-	// Merge all headers
-	for header, values := range unconfiguredRequest.Headers {
-		profile.Headers[header] = append(profile.Headers[header], values...)
+func mergeHeadersIn(profile profile.Options, headers map[string][]string) {
+	for header, values := range headers {
+		profile.Headers[header] = values
 	}
 }
 
