@@ -44,12 +44,22 @@ func testRequestBuilder(t *testing.T) {
 func testRequestFromProfile(t *testing.T) {
 	profileName := "testProfile"
 	profileContent := "baseURL: http://www.someserver.com/"
-	profileContent = profileContent + "\n\nheaders:\n  Content-Type: application/json\n  Company-Id: '{companyId}'"
-	profileContent = profileContent + "\n\nvariables:\n  companyId: 1234\n  username: John Doe"
-	profileContent = profileContent + "\n\nrequests:"
+
+	profileContent = profileContent + "\nheaders:"
+	profileContent = profileContent + "\n  Content-Type: application/json"
+	profileContent = profileContent + "\n  Company-Id: '{companyId}'"
+	profileContent = profileContent + "\n  X-Some-Header: '4321-4321-4321'" // This header will be overriden
+
+	profileContent = profileContent + "\nvariables:"
+	profileContent = profileContent + "\n  companyId: 1234"
+	profileContent = profileContent + "\n  username: John Doe"
+
+	profileContent = profileContent + "\nrequests:"
 	profileContent = profileContent + "\n  withFile:\n"
 	profileContent = profileContent + "\n    url: '/{companyId}/employee'"
 	profileContent = profileContent + "\n    fileToUpload: test-body.yml"
+	profileContent = profileContent + "\n    headers:"
+	profileContent = profileContent + "\n      X-Some-Header: '1234-1234-1234'" // This will override the previously header
 
 	testProfileDir := profile.SetupTestProfilesDir()
 	profile.CreateTestProfile(profileName, profileContent, testProfileDir)
@@ -68,7 +78,7 @@ func testRequestFromProfile(t *testing.T) {
 	assert.Nil(t, dumpErr, "Dump should work")
 	assert.Equal(
 		t,
-		"POST /1234/employee HTTP/1.1\r\nHost: www.someserver.com\r\nCompany-Id: 1234\r\nContent-Type: application/json\r\n\r\n{\"name\":\"John Doe\",\"companyId\":1234}",
+		"POST /1234/employee HTTP/1.1\r\nHost: www.someserver.com\r\nCompany-Id: 1234\r\nContent-Type: application/json\r\nX-Some-Header: 1234-1234-1234\r\n\r\n{\"name\":\"John Doe\",\"companyId\":1234}",
 		string(dump),
 		"Should generate the expected dump",
 	)
