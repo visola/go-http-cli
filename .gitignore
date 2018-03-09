@@ -2,5 +2,6 @@ build/
 .DS_Store
 .gradle/
 .project
+.settings/
 *.test
 .vscode/
