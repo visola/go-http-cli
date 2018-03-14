@@ -9,6 +9,7 @@ type Request struct {
 	Headers map[string][]string
 	Method  string
 	URL     string
+	Values  map[string][]string
 }
 
 // Merge merges information from another request into the original request, overwriting any data
@@ -26,6 +27,14 @@ func (original *Request) Merge(toMerge Request) {
 
 	for header, values := range toMerge.Headers {
 		original.Headers[header] = values
+	}
+
+	if original.Values == nil {
+		original.Values = make(map[string][]string)
+	}
+
+	for name, values := range toMerge.Values {
+		original.Values[name] = values
 	}
 
 	if toMerge.Method != "" {
