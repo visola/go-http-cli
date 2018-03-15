@@ -35,6 +35,7 @@ func main() {
 			Headers: options.Headers,
 			Method:  options.Method,
 			URL:     options.URL,
+			Values:  options.Values,
 		},
 		Variables: options.Variables,
 	}
