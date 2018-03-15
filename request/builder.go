@@ -1,17 +1,27 @@
 package request
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	myioutil "github.com/visola/go-http-cli/ioutil"
 	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
 	mystrings "github.com/visola/go-http-cli/strings"
 )
+
+const jsonMimeType = "application/json"
+const urlEncodedMimeType = "application/x-www-form-urlencoded"
+
+var bodyBuilderContentTypes = [...]string{
+	urlEncodedMimeType,
+	jsonMimeType,
+}
 
 // BuildRequest builds a Request from a Configuration.
 func BuildRequest(unconfiguredRequest Request, requestName string, executionOptions ExecutionOptions) (*http.Request, *Request, error) {
@@ -68,35 +78,82 @@ func configureRequest(unconfiguredRequest Request, requestName string, profiles 
 	}
 
 	unconfiguredRequest = mergeRequests(unconfiguredRequest, requestOptions)
-
-	method := unconfiguredRequest.Method
-	if method == "" {
-		if body == "" {
-			method = http.MethodGet
-		} else {
-			method = http.MethodPost
-		}
-	}
+	method := setMethod(unconfiguredRequest.Method, mergedProfile.Headers, len(unconfiguredRequest.Values) > 0, body)
 
 	urlString := replaceVariables(ParseURL(mergedProfile.BaseURL, unconfiguredRequest.URL), mergedProfile.Variables)
 
-	url, urlError := url.Parse(urlString)
+	parsedURL, urlError := url.Parse(urlString)
 	if urlError != nil {
 		return nil, urlError
 	}
 
-	session, sessionErr := session.Get(*url)
+	if len(unconfiguredRequest.Values) > 0 {
+		replacedValues := replaceVariablesInMapOfArrayOfStrings(unconfiguredRequest.Values, mergedProfile.Variables)
+		if method == http.MethodGet {
+			parsedURL.RawQuery = encodeValues(replacedValues)
+		} else {
+			contentType := getContentType(mergedProfile.Headers)
+			body = createBody(contentType, replacedValues)
+			if contentType == "" {
+				mergedProfile.Headers["Content-Type"] = []string{jsonMimeType}
+			}
+		}
+	}
+
+	session, sessionErr := session.Get(*parsedURL)
 	if sessionErr != nil {
 		return nil, sessionErr
 	}
 
 	return &Request{
 		Body:    replaceVariables(body, mergedProfile.Variables),
-		Cookies: session.Jar.Cookies(url),
-		Headers: replaceVariablesInHeaders(mergedProfile.Headers, mergedProfile.Variables),
+		Cookies: session.Jar.Cookies(parsedURL),
+		Headers: replaceVariablesInMapOfArrayOfStrings(mergedProfile.Headers, mergedProfile.Variables),
 		Method:  method,
-		URL:     urlString,
+		URL:     parsedURL.String(),
 	}, nil
+}
+
+func buildJSON(values map[string][]string) string {
+	toEncode := make(map[string]string)
+	for key, valuesForKey := range values {
+		for _, value := range valuesForKey {
+			toEncode[key] = value
+		}
+	}
+
+	// Ignore this error, encoding map to JSON should never fail
+	jsonBytes, _ := json.Marshal(toEncode)
+	return string(jsonBytes)
+}
+
+func createBody(contentType string, values map[string][]string) string {
+	if contentType == "" || strings.HasSuffix(strings.TrimSpace(contentType), jsonMimeType) {
+		return buildJSON(values)
+	} else if strings.HasSuffix(strings.TrimSpace(contentType), urlEncodedMimeType) {
+		return encodeValues(values)
+	}
+
+	return fmt.Sprintf("Unsupported body type: %s", contentType)
+}
+
+func encodeValues(values map[string][]string) string {
+	vals := url.Values{}
+	for name, valuesForKey := range values {
+		for _, value := range valuesForKey {
+			vals.Add(name, value)
+		}
+	}
+	return vals.Encode()
+}
+
+func getContentType(headers map[string][]string) string {
+	for name, values := range headers {
+		if strings.ToLower(strings.TrimSpace(name)) == "content-type" {
+			return strings.TrimSpace(values[0])
+		}
+	}
+	return ""
 }
 
 func loadBody(unconfiguredRequest Request, requestOptions profile.RequestOptions, executionOptions ExecutionOptions) (string, error) {
@@ -183,7 +240,7 @@ func mergeHeadersIn(profile profile.Options, headers map[string][]string) {
 	}
 }
 
-func replaceVariablesInHeaders(headers map[string][]string, variables map[string]string) map[string][]string {
+func replaceVariablesInMapOfArrayOfStrings(headers map[string][]string, variables map[string]string) map[string][]string {
 	result := make(map[string][]string)
 	for header, values := range headers {
 		newValues := make([]string, len(values))
@@ -197,4 +254,31 @@ func replaceVariablesInHeaders(headers map[string][]string, variables map[string
 
 func replaceVariables(value string, variables map[string]string) string {
 	return mystrings.ParseExpression(value, variables)
+}
+
+func setMethod(initialMethod string, headers map[string][]string, hasValues bool, body string) string {
+	method := initialMethod
+
+	if method == "" {
+		if body == "" {
+			method = http.MethodGet
+		} else {
+			method = http.MethodPost
+		}
+	}
+
+	// If still empty
+	if method == "" || method == http.MethodGet {
+		// If there are values, check if they should go in the body
+		if hasValues {
+			contenType := getContentType(headers)
+			for _, knownType := range bodyBuilderContentTypes {
+				if strings.HasPrefix(contenType, knownType) {
+					return http.MethodPost
+				}
+			}
+		}
+	}
+
+	return method
 }

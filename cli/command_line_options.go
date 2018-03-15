@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -20,6 +21,7 @@ type CommandLineOptions struct {
 	Profiles       []string
 	RequestName    string
 	URL            string
+	Values         map[string][]string
 	Variables      map[string]string
 }
 
@@ -67,10 +69,11 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	result.Method = method
 	result.OutputFile = outputFile
 
-	url, requestName, profiles, urlError := parseArgs(commandLine.Args())
+	url, requestName, profiles, values, urlError := parseArgs(commandLine.Args())
 	result.Profiles = profiles
 	result.RequestName = requestName
 	result.URL = url
+	result.Values = values
 
 	if urlError != nil {
 		return result, urlError
@@ -93,22 +96,73 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	return result, nil
 }
 
+func extractKeyValuePair(arg string) (string, string) {
+	indexToSplit := getIndexToSplit(arg)
+	questionMarkIndex := strings.Index(arg, "?")
+
+	// If no separator found or if there's a question mark before the separator
+	// question mark before the separator, for now assume it's a partial URL
+	if indexToSplit < 0 || (questionMarkIndex >= 0 && questionMarkIndex < indexToSplit) {
+		return "", ""
+	}
+
+	key := arg[0:indexToSplit]
+	value := arg[indexToSplit+1:]
+	if value == "" {
+		value = fmt.Sprintf("{%s}", key)
+	}
+
+	return key, value
+}
+
+func getIndexToSplit(keyValuePair string) int {
+	equalIndex := strings.Index(keyValuePair, "=")
+	colonIndex := strings.Index(keyValuePair, ":")
+	indexToSplit := -1
+
+	if equalIndex > 0 {
+		indexToSplit = equalIndex
+	}
+
+	if colonIndex > 0 && (indexToSplit == -1 || colonIndex < indexToSplit) {
+		indexToSplit = colonIndex
+	}
+
+	return indexToSplit
+}
+
+func parseArgs(args []string) (string, string, []string, map[string][]string, error) {
+	if len(args) == 0 {
+		return "", "", nil, nil, errors.New("no arguments passed in")
+	}
+
+	profiles := make([]string, 0)
+	values := make(map[string][]string)
+	var requestName, url string
+	for _, arg := range args {
+		key, value := extractKeyValuePair(arg)
+		if arg[0] == '+' { // Found a profile to activate
+			profiles = append(profiles, arg[1:])
+		} else if arg[0] == '@' {
+			requestName = arg[1:]
+		} else if key != "" {
+			if existingValue, ok := values[key]; ok {
+				values[key] = append(existingValue, value)
+			} else {
+				values[key] = []string{value}
+			}
+		} else {
+			url = arg
+		}
+	}
+	return url, requestName, profiles, values, nil
+}
+
 func parseMultiValues(headers keyValuePair) (map[string][]string, error) {
 	result := make(map[string][]string)
 
 	for _, kv := range headers {
-		equalIndex := strings.Index(kv, "=")
-		colonIndex := strings.Index(kv, ":")
-		indexToSplit := -1
-
-		if equalIndex > 0 {
-			indexToSplit = equalIndex
-		}
-
-		if colonIndex > 0 && (indexToSplit == -1 || colonIndex < indexToSplit) {
-			indexToSplit = colonIndex
-		}
-
+		indexToSplit := getIndexToSplit(kv)
 		if indexToSplit <= 0 {
 			return result, errors.New("Error while parsing key value pair '" + kv + "'\nShould be an '=' or ':' separated key/value, e.g.: Content-type=application/x-www-form-urlencoded")
 		}
@@ -142,23 +196,4 @@ func parseValues(headers keyValuePair) (map[string]string, error) {
 	}
 
 	return result, nil
-}
-
-func parseArgs(args []string) (string, string, []string, error) {
-	if len(args) == 0 {
-		return "", "", nil, errors.New("no arguments passed in")
-	}
-
-	profiles := make([]string, 0)
-	var requestName, url string
-	for _, arg := range args {
-		if arg[0] == '+' { // Found a profile to activate
-			profiles = append(profiles, arg[1:])
-		} else if arg[0] == '@' {
-			requestName = arg[1:]
-		} else {
-			url = arg
-		}
-	}
-	return url, requestName, profiles, nil
 }
