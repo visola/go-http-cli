@@ -78,7 +78,7 @@ func configureRequest(unconfiguredRequest Request, requestName string, profiles 
 	}
 
 	unconfiguredRequest = mergeRequests(unconfiguredRequest, requestOptions)
-	method := setMethod(unconfiguredRequest, body)
+	method := setMethod(unconfiguredRequest.Method, mergedProfile.Headers, len(unconfiguredRequest.Values) > 0, body)
 
 	urlString := replaceVariables(ParseURL(mergedProfile.BaseURL, unconfiguredRequest.URL), mergedProfile.Variables)
 
@@ -256,8 +256,8 @@ func replaceVariables(value string, variables map[string]string) string {
 	return mystrings.ParseExpression(value, variables)
 }
 
-func setMethod(req Request, body string) string {
-	method := req.Method
+func setMethod(initialMethod string, headers map[string][]string, hasValues bool, body string) string {
+	method := initialMethod
 
 	if method == "" {
 		if body == "" {
@@ -270,8 +270,8 @@ func setMethod(req Request, body string) string {
 	// If still empty
 	if method == "" || method == http.MethodGet {
 		// If there are values, check if they should go in the body
-		if len(req.Values) != 0 {
-			contenType := getContentType(req.Headers)
+		if hasValues {
+			contenType := getContentType(headers)
 			for _, knownType := range bodyBuilderContentTypes {
 				if strings.HasPrefix(contenType, knownType) {
 					return http.MethodPost
