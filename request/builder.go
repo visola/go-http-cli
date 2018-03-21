@@ -220,6 +220,7 @@ func mergeRequests(unconfiguredRequest Request, requestOptions profile.RequestOp
 		Headers: requestOptions.Headers,
 		Method:  requestOptions.Method,
 		URL:     requestOptions.URL,
+		Values:  requestOptions.Values,
 	}
 
 	newRequest := Request{}

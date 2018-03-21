@@ -29,6 +29,7 @@ type requestConfiguration struct {
 	Headers      map[string]arrayOrString
 	Method       string
 	URL          string
+	Values       map[string]arrayOrString
 }
 
 func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
@@ -78,6 +79,7 @@ func toMapOfRequestOptions(requestConfigurations map[string]requestConfiguration
 			Headers:      toMapOfArrayOfStrings(requestConfiguration.Headers),
 			Method:       requestConfiguration.Method,
 			URL:          requestConfiguration.URL,
+			Values:       toMapOfArrayOfStrings(requestConfiguration.Values),
 		}
 	}
 
