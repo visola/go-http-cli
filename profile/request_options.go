@@ -7,4 +7,5 @@ type RequestOptions struct {
 	Headers      map[string][]string
 	Method       string
 	URL          string
+	Values       map[string][]string
 }
