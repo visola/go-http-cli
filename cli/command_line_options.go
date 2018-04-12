@@ -145,6 +145,8 @@ func parseArgs(args []string) (string, string, []string, map[string][]string, er
 			profiles = append(profiles, arg[1:])
 		} else if arg[0] == '@' {
 			requestName = arg[1:]
+		} else if strings.HasPrefix(arg, "http://") || strings.HasPrefix(arg, "https://") {
+			url = arg
 		} else if key != "" {
 			if existingValue, ok := values[key]; ok {
 				values[key] = append(existingValue, value)
