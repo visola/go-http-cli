@@ -2,7 +2,7 @@ language: go
 
 env:
   global:
-    - CC_TEST_REPORTER_ID=43609087b6bca966af7bb9bd588db1f2b53676b04dabe082169920af27b2982f
+    - CC_TEST_REPORTER_ID=5075ccf1031ef51a0513d7610e5db799d62e8de4a8474e7196ea6991b4e1eaa0
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
