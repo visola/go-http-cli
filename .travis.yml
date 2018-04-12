@@ -1,7 +1,18 @@
 language: go
 
+env:
+  global:
+    - CC_TEST_REPORTER_ID=8e52a3da9f8a6b4f4c362c39c79b8f04c718c61e42d430a24f1e0550c58865de
+
 before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
   - go get -u github.com/golang/lint/golint
 
 script:
   - ./gradlew --no-daemon -i build
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

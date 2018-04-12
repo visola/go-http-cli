@@ -136,10 +136,14 @@ task test {
 }
 
 task aggregateCoverateReports() {
-  ext.aggregatedCovarage = file("${buildDir}/all.cover")
+  ext.aggregatedCovarage = file("${projectDir}/c.out")
 
   dependsOn test
   outputs.file aggregatedCovarage
+
+  doFirst {
+    delete aggregatedCovarage
+  }
 
   doLast {
     def aggregatedData = "mode: set\n"

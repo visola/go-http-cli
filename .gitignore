@@ -1,4 +1,5 @@
 build/
+c.out
 .DS_Store
 .gradle/
 .project
