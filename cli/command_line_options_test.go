@@ -17,11 +17,68 @@ var (
 )
 
 func TestParseCommandLineOptions(t *testing.T) {
+	t.Run("Parses a full URL correctly", testParsesFullURLCorrectly)
+	t.Run("Parses a full URL with query string correctly", testParsesFullURLWithQueryStringCorrectly)
+
+	t.Run("Parses a path correctly", testParsesPath)
+	t.Run("Parses a path with query string", testParsesPathWithQueryString)
+
+	t.Run("Parses values correctly", testParsesValuesCorrectly)
+
 	t.Run("Parses all arguments using short names", testParsesShortNames)
 	t.Run("Parses all arguments using long names", testParsesLongNames)
+
 	t.Run("Parses multiple values for the same header", testParsesMultipleValuesForHeader)
 	t.Run("Parses header with = on the value", testParsesHeaderWithEqualOnValue)
 	t.Run("Fails to parse header with wrong separator", testFailToParseHeaderWithWrongSeparator)
+}
+
+func testParsesFullURLCorrectly(t *testing.T) {
+	url := testBaseURL + testURL
+	args := []string{url}
+	configuration, err := ParseCommandLineOptions(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, url, configuration.URL, "Should parse URL correctly")
+}
+
+func testParsesFullURLWithQueryStringCorrectly(t *testing.T) {
+	url := testBaseURL + testURL + "?someKey=someValue"
+	args := []string{url}
+	configuration, err := ParseCommandLineOptions(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, url, configuration.URL, "Should parse URL correctly")
+}
+
+func testParsesPath(t *testing.T) {
+	url := testURL
+	args := []string{url}
+	configuration, err := ParseCommandLineOptions(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, url, configuration.URL, "Should parse URL correctly")
+}
+
+func testParsesPathWithQueryString(t *testing.T) {
+	url := testURL + "?someKey=someValue"
+	args := []string{url}
+	configuration, err := ParseCommandLineOptions(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, url, configuration.URL, "Should parse URL correctly")
+}
+
+func testParsesValuesCorrectly(t *testing.T) {
+	value := "value with spaces"
+	key := "key$%bla"
+	args := []string{key + "=" + value}
+	configuration, err := ParseCommandLineOptions(args)
+
+	assert.Nil(t, err, "Should not return error")
+	assert.Equal(t, 1, len(configuration.Values), "Parsed one key")
+	assert.Equal(t, 1, len(configuration.Values[key]), "Parsed one value")
+	assert.Equal(t, value, configuration.Values[key][0], "Parses values correctly")
 }
 
 func testParsesShortNames(t *testing.T) {
