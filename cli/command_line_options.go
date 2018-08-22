@@ -11,18 +11,19 @@ import (
 
 // CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
-	Body           string
-	Headers        map[string][]string
-	FollowLocation bool
-	FileToUpload   string
-	MaxRedirect    int
-	Method         string
-	OutputFile     string
-	Profiles       []string
-	RequestName    string
-	URL            string
-	Values         map[string][]string
-	Variables      map[string]string
+	Body            string
+	Headers         map[string][]string
+	FollowLocation  bool
+	FileToUpload    string
+	MaxRedirect     int
+	Method          string
+	OutputFile      string
+	PostProcessFile string
+	Profiles        []string
+	RequestName     string
+	URL             string
+	Values          map[string][]string
+	Variables       map[string]string
 }
 
 type keyValuePair []string
@@ -42,7 +43,7 @@ func (i *keyValuePair) Type() string {
 
 // ParseCommandLineOptions parses the arguments received on the command line and generate a basic configuration.
 func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
-	var body, fileToUpload, method, outputFile string
+	var body, fileToUpload, method, outputFile, postProcessFile string
 	var configPaths, headers, variables keyValuePair
 	var followLocation bool
 
@@ -55,6 +56,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	maxRedirect := commandLine.Int("max-redirs", 50, "Maximum number of redirects to follow")
 	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
 	commandLine.StringVarP(&outputFile, "output", "o", "", "File to save the response")
+	commandLine.StringVarP(&postProcessFile, "post-process", "", "", "Javascript file to post process the request/response")
 	commandLine.StringVarP(&fileToUpload, "upload-file", "T", "", "Path to the file to be uploaded")
 	commandLine.VarP(&variables, "variable", "V", "Variables to be used on substitutions")
 
@@ -68,6 +70,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	result.MaxRedirect = *maxRedirect
 	result.Method = method
 	result.OutputFile = outputFile
+	result.PostProcessFile = postProcessFile
 
 	url, requestName, profiles, values, urlError := parseArgs(commandLine.Args())
 	result.Profiles = profiles
