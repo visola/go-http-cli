@@ -25,11 +25,12 @@ func main() {
 	}
 
 	executionOptions := request.ExecutionOptions{
-		FileToUpload:   options.FileToUpload,
-		FollowLocation: options.FollowLocation,
-		MaxRedirect:    options.MaxRedirect,
-		ProfileNames:   options.Profiles,
-		RequestName:    options.RequestName,
+		FileToUpload:    options.FileToUpload,
+		FollowLocation:  options.FollowLocation,
+		MaxRedirect:     options.MaxRedirect,
+		PostProcessFile: options.PostProcessFile,
+		ProfileNames:    options.Profiles,
+		RequestName:     options.RequestName,
 		Request: request.Request{
 			Body:    options.Body,
 			Headers: options.Headers,
@@ -62,5 +63,10 @@ func main() {
 	if requestExecution.ErrorMessage != "" {
 		color.Red("Error while executing request: %s", requestExecution.ErrorMessage)
 		os.Exit(20)
+	}
+
+	if requestExecution.PostProcessError != "" {
+		color.Red("Error post processing request: %s", requestExecution.PostProcessError)
+		os.Exit(30)
 	}
 }

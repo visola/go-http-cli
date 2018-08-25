@@ -79,6 +79,12 @@ func executeRequest(c echo.Context) error {
 		requestExecution.ErrorMessage = responseErr.Error()
 	}
 
+	postProcessError := request.PostProcess(executionOptions, requestResponses, responseErr)
+	if postProcessError != nil {
+		log.Error(postProcessError)
+		requestExecution.PostProcessError = postProcessError.Error()
+	}
+
 	c.JSON(http.StatusOK, requestExecution)
 	return nil
 }
