@@ -135,7 +135,7 @@ task test {
   }
 }
 
-task aggregateCoverateReports() {
+task aggregateCoverageReports() {
   ext.aggregatedCovarage = file("${projectDir}/c.out")
 
   dependsOn test
@@ -163,10 +163,10 @@ task aggregateCoverateReports() {
 task generateCoverageReport(type: Exec) {
   def coverageFile = file("${buildDir}/reportCoverage.html")
 
-  dependsOn aggregateCoverateReports
+  dependsOn aggregateCoverageReports
   outputs.file coverageFile
 
-  commandLine 'go', 'tool', 'cover', "-html=${aggregateCoverateReports.aggregatedCovarage}", '-o', coverageFile
+  commandLine 'go', 'tool', 'cover', "-html=${aggregateCoverageReports.aggregatedCovarage}", '-o', coverageFile
 }
 
 task clean(type: Delete) {
