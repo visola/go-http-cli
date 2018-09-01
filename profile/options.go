@@ -8,6 +8,11 @@ type Options struct {
 	Variables      map[string]string
 }
 
+// GetHeaders returns the headers set in this option
+func (ops Options) GetHeaders() map[string][]string {
+	return ops.Headers
+}
+
 // MergeOptions merges all options passed in into a final Options object.
 func MergeOptions(profiles []Options) Options {
 	baseURL := ""
