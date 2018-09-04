@@ -17,7 +17,6 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 		maxRedirectCount = defaultMaxRedirectCount
 	}
 
-	requestName := executionOptions.RequestName
 	requestsToExecute := make([]Request, 1)
 	requestsToExecute[0] = executionOptions.Request
 
@@ -31,16 +30,13 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
 	for {
-		currentRequest := requestsToExecute[0]
+		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		httpRequest, currentConfiguredRequest, httpRequestErr := BuildRequest(currentRequest, requestName, executionOptions)
+		httpRequest, httpRequestErr := BuildRequest(currentConfiguredRequest)
 		if httpRequestErr != nil {
 			return nil, httpRequestErr
 		}
-
-		// Request name only applies to the first one
-		requestName = ""
 
 		httpResponse, httpResponseErr := client.Do(httpRequest)
 		if httpResponseErr != nil {
@@ -73,7 +69,7 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 		}
 
 		result = append(result, ExecutedRequestResponse{
-			Request:  *currentConfiguredRequest,
+			Request:  currentConfiguredRequest,
 			Response: response,
 		})
 

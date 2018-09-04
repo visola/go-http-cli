@@ -1,6 +1,8 @@
 package request
 
 import (
+	"errors"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/visola/go-http-cli/base"
@@ -30,6 +32,25 @@ func (req *Request) GetHeaders() map[string][]string {
 // GetValues returns the values for this request
 func (req *Request) GetValues() map[string][]string {
 	return req.Values
+}
+
+// LoadBodyFromFile loads data from a file and set it to the body, if not already set
+func (req *Request) LoadBodyFromFile(fileName string) error {
+	if fileName == "" {
+		return nil
+	}
+
+	data, loadError := ioutil.ReadFile(fileName)
+	if loadError != nil {
+		return loadError
+	}
+
+	if req.Body != "" {
+		return errors.New("Cannot set body and try to load from file at the same time")
+	}
+
+	req.Body = string(data)
+	return nil
 }
 
 // Merge merges information from something compatible with a request into this request

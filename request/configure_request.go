@@ -7,8 +7,8 @@ import (
 )
 
 // ConfigureRequest configures a request to be executed based on the provided options
-func ConfigureRequest(unconfiguredRequest Request, requestName string, executionOptions ExecutionOptions) (*Request, error) {
-	mergedProfile, profileError := loadAndMergeProfiles(executionOptions.ProfileNames)
+func ConfigureRequest(unconfiguredRequest Request, requestName string, profileNames []string) (*Request, error) {
+	mergedProfile, profileError := loadAndMergeProfiles(profileNames)
 	if profileError != nil {
 		return nil, profileError
 	}
