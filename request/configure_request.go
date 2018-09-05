@@ -8,7 +8,7 @@ import (
 
 // ConfigureRequest configures a request to be executed based on the provided options
 func ConfigureRequest(unconfiguredRequest Request, requestName string, profileNames []string) (*Request, error) {
-	mergedProfile, profileError := loadAndMergeProfiles(profileNames)
+	mergedProfile, profileError := profile.LoadAndMergeProfiles(profileNames)
 	if profileError != nil {
 		return nil, profileError
 	}
@@ -42,18 +42,4 @@ func findNamedRequest(mergedProfile profile.Options, requestName string) (profil
 	}
 
 	return requestOptions, nil
-}
-
-func loadAndMergeProfiles(profileNames []string) (profile.Options, error) {
-	profiles := make([]profile.Options, len(profileNames))
-
-	for index, profileName := range profileNames {
-		loadedProfile, profileError := profile.LoadProfile(profileName)
-		if profileError != nil {
-			return profile.Options{}, profileError
-		}
-		profiles[index] = loadedProfile
-	}
-
-	return profile.MergeOptions(profiles), nil
 }

@@ -34,7 +34,7 @@ func TestConfigureRequest(t *testing.T) {
 	jsonBody := `{"name":"John Doe","companyId":{companyId}}`
 	profile.CreateTestProfile("test-body", jsonBody, testProfileDir)
 
-	configureRequest, err := ConfigureRequest(Request{}, "withFile", ExecutionOptions{ProfileNames: []string{profileName}})
+	configureRequest, err := ConfigureRequest(Request{}, "withFile", []string{profileName})
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {

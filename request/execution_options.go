@@ -5,6 +5,7 @@ type ExecutionOptions struct {
 	FollowLocation  bool
 	MaxRedirect     int
 	PostProcessFile string
+	ProfileNames    []string
 	Request         Request
 	Variables       map[string]string
 }

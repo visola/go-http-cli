@@ -46,6 +46,7 @@ func main() {
 		FollowLocation:  options.FollowLocation,
 		MaxRedirect:     options.MaxRedirect,
 		PostProcessFile: options.PostProcessFile,
+		ProfileNames:    options.Profiles,
 		Request:         *configuredRequest,
 		Variables:       options.Variables,
 	}
