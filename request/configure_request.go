@@ -18,7 +18,7 @@ func ConfigureRequest(unconfiguredRequest Request, requestName string, profileNa
 		return nil, requestOptionsErr
 	}
 
-	configuredRequest := Request{}
+	configuredRequest := unconfiguredRequest
 
 	configuredRequest.Merge(mergedProfile)
 	configuredRequest.Merge(requestOptions)

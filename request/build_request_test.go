@@ -10,7 +10,7 @@ import (
 func TestBuildRequest(t *testing.T) {
 	t.Run("Build request works", testRequestBuilder)
 	t.Run("Build GET request with values", testGetRequestWithValues)
-	t.Run("Build POST with JSON from values", testPostRequestWithJSONFromValues)
+	t.Run("Build PUT with JSON from values", testPutRequestWithJSONFromValues)
 	t.Run("Build POST with URL Encoded from values", testPostRequestWithURLEncodedFromValues)
 }
 
@@ -44,7 +44,7 @@ func testGetRequestWithValues(t *testing.T) {
 	)
 }
 
-func testPostRequestWithJSONFromValues(t *testing.T) {
+func testPutRequestWithJSONFromValues(t *testing.T) {
 	request := Request{
 		Headers: map[string][]string{
 			"Company-Id": {"{companyId}"},

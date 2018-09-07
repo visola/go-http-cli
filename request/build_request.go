@@ -27,9 +27,7 @@ func BuildRequest(configuredRequest Request, profileNames []string, passedInVari
 		return nil, processError
 	}
 
-	fmt.Printf("Method before: %s\n", processedRequest.Method)
 	processedRequest.Method = getMethod(processedRequest)
-	fmt.Printf("Method after: %s\n", processedRequest.Method)
 
 	parsedURL, urlError := url.Parse(processedRequest.URL)
 	if urlError != nil {
@@ -53,6 +51,11 @@ func BuildRequest(configuredRequest Request, profileNames []string, passedInVari
 		for _, v := range vs {
 			req.Header.Add(k, v)
 		}
+	}
+
+	fmt.Printf("Values: %d\n", processedRequest.Values)
+	if len(processedRequest.Values) > 0 && getContentType(processedRequest.Headers) == "" && req.Method != http.MethodGet {
+		req.Header.Add("Content-Type", "application/json")
 	}
 
 	req.Body = getBody(processedRequest)
