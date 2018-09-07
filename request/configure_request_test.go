@@ -15,7 +15,7 @@ func TestConfigureRequest(t *testing.T) {
 	profileContent = profileContent + "\nheaders:"
 	profileContent = profileContent + "\n  Content-Type: application/json"
 	profileContent = profileContent + "\n  Company-Id: '{companyId}'"
-	profileContent = profileContent + "\n  X-Some-Header: '4321-4321-4321'" // This header will be overriden
+	profileContent = profileContent + "\n  X-Some-Header: '4321-4321-4321'" // This header will be overridden
 
 	profileContent = profileContent + "\nvariables:"
 	profileContent = profileContent + "\n  companyId: 1234"
