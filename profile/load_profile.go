@@ -14,6 +14,21 @@ const (
 	ymlExtension  = ".yml"
 )
 
+// LoadAndMergeProfiles loads all profiles and merge them in the order passed in
+func LoadAndMergeProfiles(profileNames []string) (Options, error) {
+	profiles := make([]Options, len(profileNames))
+
+	for index, profileName := range profileNames {
+		loadedProfile, profileError := LoadProfile(profileName)
+		if profileError != nil {
+			return Options{}, profileError
+		}
+		profiles[index] = loadedProfile
+	}
+
+	return MergeOptions(profiles), nil
+}
+
 // LoadProfile loads Options for a specific profile by name.
 func LoadProfile(profileName string) (loadedOptions Options, err error) {
 	profilesDir, profilesDirErr := GetProfilesDir()

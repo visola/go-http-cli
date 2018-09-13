@@ -24,21 +24,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	unconfiguredRequest := request.Request{
+		Body:    options.Body,
+		Headers: options.Headers,
+		Method:  options.Method,
+		URL:     options.URL,
+	}
+
+	loadBodyError := unconfiguredRequest.LoadBodyFromFile(options.FileToUpload)
+	if loadBodyError != nil {
+		panic(loadBodyError)
+	}
+
+	configuredRequest, configureError := request.ConfigureRequest(
+		unconfiguredRequest,
+		request.AddProfiles(options.Profiles...),
+		request.AddValues(options.Values),
+		request.SetRequestName(options.RequestName),
+	)
+
+	if configureError != nil {
+		panic(configureError)
+	}
+
 	executionOptions := request.ExecutionOptions{
-		FileToUpload:    options.FileToUpload,
 		FollowLocation:  options.FollowLocation,
 		MaxRedirect:     options.MaxRedirect,
 		PostProcessFile: options.PostProcessFile,
 		ProfileNames:    options.Profiles,
-		RequestName:     options.RequestName,
-		Request: request.Request{
-			Body:    options.Body,
-			Headers: options.Headers,
-			Method:  options.Method,
-			URL:     options.URL,
-			Values:  options.Values,
-		},
-		Variables: options.Variables,
+		Request:         *configuredRequest,
+		Variables:       options.Variables,
 	}
 
 	requestExecution, requestError := daemon.ExecuteRequest(executionOptions)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo --- Running the build ---
-./gradlew test buildPackages
+bin/build.sh
 
 echo --- Tagging commit ---
 git tag "v1.0.1"

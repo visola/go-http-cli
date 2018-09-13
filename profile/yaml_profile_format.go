@@ -40,10 +40,10 @@ func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
 	}
 
 	return &Options{
-		BaseURL:        loadedProfile.BaseURL,
-		Headers:        headers,
-		RequestOptions: toMapOfRequestOptions(loadedProfile.Requests),
-		Variables:      loadedProfile.Variables,
+		BaseURL:      loadedProfile.BaseURL,
+		Headers:      headers,
+		NamedRequest: toMapOfNamedRequest(loadedProfile.Requests),
+		Variables:    loadedProfile.Variables,
 	}, nil
 }
 
@@ -70,10 +70,10 @@ func generateHeaders(loadedProfile yamlProfileFormat) (map[string][]string, erro
 	return result, nil
 }
 
-func toMapOfRequestOptions(requestConfigurations map[string]requestConfiguration) map[string]RequestOptions {
-	result := make(map[string]RequestOptions)
+func toMapOfNamedRequest(requestConfigurations map[string]requestConfiguration) map[string]NamedRequest {
+	result := make(map[string]NamedRequest)
 	for name, requestConfiguration := range requestConfigurations {
-		result[name] = RequestOptions{
+		result[name] = NamedRequest{
 			Body:         requestConfiguration.Body,
 			FileToUpload: requestConfiguration.FileToUpload,
 			Headers:      toMapOfArrayOfStrings(requestConfiguration.Headers),
