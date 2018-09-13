@@ -2,10 +2,10 @@ package profile
 
 // Options that can come from a profile file.
 type Options struct {
-	BaseURL        string
-	Headers        map[string][]string
-	RequestOptions map[string]RequestOptions
-	Variables      map[string]string
+	BaseURL      string
+	Headers      map[string][]string
+	NamedRequest map[string]NamedRequest
+	Variables    map[string]string
 }
 
 // GetHeaders returns the headers set in this option
@@ -17,7 +17,7 @@ func (ops Options) GetHeaders() map[string][]string {
 func MergeOptions(profiles []Options) Options {
 	baseURL := ""
 	headers := make(map[string][]string)
-	requests := make(map[string]RequestOptions)
+	requests := make(map[string]NamedRequest)
 	variables := make(map[string]string)
 
 	// Merge all profiles
@@ -34,15 +34,15 @@ func MergeOptions(profiles []Options) Options {
 			variables[variable] = value
 		}
 
-		for requestName, requestConfiguration := range profile.RequestOptions {
+		for requestName, requestConfiguration := range profile.NamedRequest {
 			requests[requestName] = requestConfiguration
 		}
 	}
 
 	return Options{
-		BaseURL:        baseURL,
-		Headers:        headers,
-		RequestOptions: requests,
-		Variables:      variables,
+		BaseURL:      baseURL,
+		Headers:      headers,
+		NamedRequest: requests,
+		Variables:    variables,
 	}
 }

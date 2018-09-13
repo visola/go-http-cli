@@ -50,7 +50,7 @@ func TestLoadProfile(t *testing.T) {
 	assert.Equal(t, 1, len(contentTypeValue), "Should have only one value")
 	assert.Equal(t, "application/json", contentTypeValue[0], "Should set the value correctly")
 
-	testRequest, hasRequest := profile.RequestOptions["testRequest"]
+	testRequest, hasRequest := profile.NamedRequest["testRequest"]
 	assert.True(t, hasRequest, "Should load request data")
 	assert.Equal(t, 1, len(testRequest.Headers["X-Some-Header"]), "Should load header correctly")
 	assert.Equal(t, "1234-1234-1234", testRequest.Headers["X-Some-Header"][0], "Should load header correctly")

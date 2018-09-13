@@ -1,6 +1,7 @@
 package request
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +10,69 @@ import (
 )
 
 func TestConfigureRequest(t *testing.T) {
+	t.Run("Simple request", testSimpleRequest)
+	t.Run("Test with body", testWithBody)
+	t.Run("Test with values", testWithValues)
+	t.Run("Test with profiles", testConfigureFromProfile)
+}
+
+func testSimpleRequest(t *testing.T) {
+	req := Request{
+		URL: "http://www.someserver.com/some/path",
+	}
+
+	configureRequest, err := ConfigureRequest(req)
+
+	assert.Nil(t, err, "Should not return an error")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, req.URL, configureRequest.URL, "Should set passed in URL")
+	assert.Equal(t, http.MethodGet, configureRequest.Method, "Should be set to GET")
+}
+
+func testWithBody(t *testing.T) {
+	req := Request{
+		Body: "Hello server!",
+		URL:  "http://www.someserver.com/some/path",
+	}
+
+	configureRequest, err := ConfigureRequest(req)
+
+	assert.Nil(t, err, "Should not return an error")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, req.URL, configureRequest.URL, "Should set passed in URL")
+	assert.Equal(t, http.MethodPost, configureRequest.Method, "Should be set to POST")
+	assert.Equal(t, req.Body, configureRequest.Body, "Should set body correctly")
+}
+
+func testWithValues(t *testing.T) {
+	req := Request{
+		URL: "http://www.someserver.com/some/path",
+	}
+
+	values := map[string][]string{
+		"name": []string{"John"},
+		"age":  []string{"20"},
+	}
+
+	configureRequest, err := ConfigureRequest(req, AddValues(values))
+
+	assert.Nil(t, err, "Should not return an error")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, req.URL, configureRequest.URL, "Should set passed in URL")
+	assert.Equal(t, http.MethodPost, configureRequest.Method, "Should be set to POST")
+	assert.Equal(t, `{"age":"20","name":"John"}`, configureRequest.Body, "Should generate JSON as body")
+}
+
+func testConfigureFromProfile(t *testing.T) {
 	profileName := "testProfile"
 	profileContent := "baseURL: http://www.someserver.com/"
 
@@ -34,7 +98,7 @@ func TestConfigureRequest(t *testing.T) {
 	jsonBody := `{"name":"John Doe","companyId":{companyId}}`
 	profile.CreateTestProfile("test-body", jsonBody, testProfileDir)
 
-	configureRequest, err := ConfigureRequest(Request{}, "withFile", []string{profileName})
+	configureRequest, err := ConfigureRequest(Request{}, SetRequestName("withFile"), AddProfiles(profileName))
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -42,7 +106,6 @@ func TestConfigureRequest(t *testing.T) {
 	}
 
 	assert.Equal(t, "http://www.someserver.com/{companyId}/employee", configureRequest.URL, "Should build URL correctly")
-
 	assert.Equal(t, 3, len(configureRequest.Headers), "Should configure all headers correctly")
 	assert.Equal(t, []string{"application/json"}, configureRequest.Headers["Content-Type"], "Should setup header from profile")
 	assert.Equal(t, []string{"1234-1234-1234"}, configureRequest.Headers["X-Some-Header"], "Should override header correctly from request")

@@ -10,7 +10,7 @@ func GetAvailableRequests(profileName string) ([]string, error) {
 
 	requestNames := make([]string, 0)
 
-	for requestName := range options.RequestOptions {
+	for requestName := range options.NamedRequest {
 		requestNames = append(requestNames, requestName)
 	}
 

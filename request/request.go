@@ -11,12 +11,12 @@ import (
 
 // Request stores data required to configure a request to be executed
 type Request struct {
-	Body    string
-	Cookies []*http.Cookie
-	Headers map[string][]string
-	Method  string
-	URL     string
-	Values  map[string][]string
+	Body        string
+	Cookies     []*http.Cookie
+	Headers     map[string][]string
+	Method      string
+	QueryParams map[string][]string
+	URL         string
 }
 
 // GetBody returns the body for this request
@@ -27,11 +27,6 @@ func (req *Request) GetBody() (string, error) {
 // GetHeaders returns the headers for this request
 func (req *Request) GetHeaders() map[string][]string {
 	return req.Headers
-}
-
-// GetValues returns the values for this request
-func (req *Request) GetValues() map[string][]string {
-	return req.Values
 }
 
 // LoadBodyFromFile loads data from a file and set it to the body, if not already set
@@ -69,11 +64,6 @@ func (req *Request) Merge(toMerge interface{}) error {
 		req.MergeHeaders(withHeader.GetHeaders())
 	}
 
-	withValues, ok := toMerge.(base.WithValues)
-	if ok {
-		req.MergeValues(withValues.GetValues())
-	}
-
 	reqToMerge, ok := toMerge.(Request)
 	if ok {
 		req.Cookies = append(req.Cookies, reqToMerge.Cookies...)
@@ -109,10 +99,9 @@ func (req *Request) MergeHeaders(headers map[string][]string) {
 }
 
 // MergeOptions merges request options loaded from a profile
-func (req *Request) MergeOptions(optionsToMerge profile.RequestOptions) {
+func (req *Request) MergeOptions(optionsToMerge profile.NamedRequest) {
 	req.MergeBody(optionsToMerge.Body)
 	req.MergeHeaders(optionsToMerge.Headers)
-	req.MergeValues(optionsToMerge.Values)
 
 	if optionsToMerge.Method != "" {
 		req.Method = optionsToMerge.Method
@@ -120,16 +109,5 @@ func (req *Request) MergeOptions(optionsToMerge profile.RequestOptions) {
 
 	if optionsToMerge.URL != "" {
 		req.URL = optionsToMerge.URL
-	}
-}
-
-// MergeValues merges values into this request
-func (req *Request) MergeValues(valuesToMerge map[string][]string) {
-	if req.Values == nil {
-		req.Values = make(map[string][]string)
-	}
-
-	for name, values := range valuesToMerge {
-		req.Values[name] = values
 	}
 }

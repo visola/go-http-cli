@@ -29,7 +29,6 @@ func main() {
 		Headers: options.Headers,
 		Method:  options.Method,
 		URL:     options.URL,
-		Values:  options.Values,
 	}
 
 	loadBodyError := unconfiguredRequest.LoadBodyFromFile(options.FileToUpload)
@@ -37,7 +36,13 @@ func main() {
 		panic(loadBodyError)
 	}
 
-	configuredRequest, configureError := request.ConfigureRequest(unconfiguredRequest, options.RequestName, options.Profiles)
+	configuredRequest, configureError := request.ConfigureRequest(
+		unconfiguredRequest,
+		request.AddProfiles(options.Profiles...),
+		request.AddValues(options.Values),
+		request.SetRequestName(options.RequestName),
+	)
+
 	if configureError != nil {
 		panic(configureError)
 	}

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 )
 
-// RequestOptions is a representation of a request that can be loaded from a profile.
-type RequestOptions struct {
+// NamedRequest is a representation of a request that can be loaded from a profile.
+type NamedRequest struct {
 	Body         string
 	FileToUpload string
 	Headers      map[string][]string
@@ -15,8 +15,8 @@ type RequestOptions struct {
 	Values       map[string][]string
 }
 
-// GetBody returns the body for this RequestOptions
-func (req RequestOptions) GetBody() (string, error) {
+// GetBody returns the body for this NamedRequest
+func (req NamedRequest) GetBody() (string, error) {
 	if req.Body != "" {
 		return req.Body, nil
 	}
@@ -45,12 +45,12 @@ func (req RequestOptions) GetBody() (string, error) {
 	return "", nil
 }
 
-// GetHeaders returns the headers for this RequestOptions
-func (req RequestOptions) GetHeaders() map[string][]string {
+// GetHeaders returns the headers for this NamedRequest
+func (req NamedRequest) GetHeaders() map[string][]string {
 	return req.Headers
 }
 
-// GetValues returns the values for this RequestOptions
-func (req RequestOptions) GetValues() map[string][]string {
+// GetValues returns the values for this NamedRequest
+func (req NamedRequest) GetValues() map[string][]string {
 	return req.Values
 }
