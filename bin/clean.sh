@@ -4,4 +4,4 @@ set -ex
 rm -Rf build
 mkdir build
 
-rm c.out
+rm -f c.out
