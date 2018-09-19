@@ -14,5 +14,5 @@ before_script:
 script:
   - ./bin/build.sh
 
-#after_script:
-#  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+after_script:
+ - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
