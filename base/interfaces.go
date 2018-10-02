@@ -10,6 +10,11 @@ type WithHeaders interface {
 	GetHeaders() map[string][]string
 }
 
+// WithMethod is something that has an HTTP method
+type WithMethod interface {
+	GetMethod() string
+}
+
 // WithValues is something that has values
 type WithValues interface {
 	GetValues() map[string][]string
