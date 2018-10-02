@@ -50,6 +50,11 @@ func (req NamedRequest) GetHeaders() map[string][]string {
 	return req.Headers
 }
 
+// GetMethod return the HTTP method for this NamedRequest
+func (req NamedRequest) GetMethod() string {
+	return req.Method
+}
+
 // GetValues returns the values for this NamedRequest
 func (req NamedRequest) GetValues() map[string][]string {
 	return req.Values

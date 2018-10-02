@@ -29,6 +29,11 @@ func (req *Request) GetHeaders() map[string][]string {
 	return req.Headers
 }
 
+// GetMethod returns the HTTP method for this request
+func (req *Request) GetMethod() string {
+	return req.Method
+}
+
 // LoadBodyFromFile loads data from a file and set it to the body, if not already set
 func (req *Request) LoadBodyFromFile(fileName string) error {
 	if fileName == "" {
@@ -64,13 +69,16 @@ func (req *Request) Merge(toMerge interface{}) error {
 		req.MergeHeaders(withHeader.GetHeaders())
 	}
 
+	withMethod, ok := toMerge.(base.WithMethod)
+	if ok {
+		if withMethod.GetMethod() != "" {
+			req.Method = withMethod.GetMethod()
+		}
+	}
+
 	reqToMerge, ok := toMerge.(Request)
 	if ok {
 		req.Cookies = append(req.Cookies, reqToMerge.Cookies...)
-
-		if reqToMerge.Method != "" {
-			req.Method = reqToMerge.Method
-		}
 
 		if reqToMerge.URL != "" {
 			req.URL = reqToMerge.URL
