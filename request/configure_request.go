@@ -46,14 +46,19 @@ func ConfigureRequest(unconfiguredRequest Request, passedInOptions ...ConfigureR
 	hasValues := len(finalValueSet) > 0
 	hasContentType := getContentType(configuredRequest.Headers) != ""
 
-	if !hasContentType && (hasBody || hasValues) {
+	configuredRequest.Method = getMethod(configuredRequest.Method, hasBody)
+
+	if !hasContentType && (hasBody || (hasValues && configuredRequest.Method != http.MethodGet)) {
 		configuredRequest.Headers["Content-Type"] = []string{jsonMimeType}
 	}
 
-	configuredRequest.Method = getMethod(configuredRequest.Method, getContentType(configuredRequest.Headers), hasBody, hasValues)
-
-	configuredRequest.Body = getBody(configuredRequest, finalValueSet)
+	var createdFromValues bool
+	configuredRequest.Body, createdFromValues = getBody(configuredRequest, finalValueSet)
 	configuredRequest.URL = ParseURL(mergedProfile.BaseURL, configuredRequest.URL, namedRequest.URL)
+
+	if !createdFromValues && len(finalValueSet) > 0 {
+		configuredRequest.QueryParams = finalValueSet
+	}
 
 	return &configuredRequest, nil
 }
@@ -76,6 +81,7 @@ func createBody(processedRequest Request, values map[string][]string) string {
 	if contentType == "" || strings.HasSuffix(strings.TrimSpace(contentType), jsonMimeType) {
 		return buildJSON(values)
 	} else if strings.HasSuffix(strings.TrimSpace(contentType), urlEncodedMimeType) {
+		// TODO - Fix this for variables passed in values or keys
 		return encodeValues(values)
 	}
 
@@ -97,49 +103,34 @@ func findNamedRequest(mergedProfile profile.Options, requestName string) (profil
 	return namedRequest, nil
 }
 
-func getBody(configuredRequest Request, values map[string][]string) string {
+func getBody(configuredRequest Request, values map[string][]string) (string, bool) {
 	if configuredRequest.Method == http.MethodGet {
-		return ""
+		return "", false
 	}
 
 	if configuredRequest.Body != "" {
-		return configuredRequest.Body
+		return configuredRequest.Body, false
 	}
 
 	if len(values) > 0 {
-		return createBody(configuredRequest, values)
+		return createBody(configuredRequest, values), true
 	}
 
-	return ""
+	return "", false
 }
 
-func getMethod(currentMethod string, contentType string, hasBody bool, hasValues bool) string {
+func getMethod(currentMethod string, hasBody bool) string {
 	method := currentMethod
 
-	if method == "" {
-		if hasBody {
-			method = http.MethodPost
-		} else {
-			method = http.MethodGet
-		}
-	} else {
-		// User knows what he wants
+	if method != "" {
 		return method
 	}
 
-	// If still empty
-	if method == "" || method == http.MethodGet {
-		// If there are values, check if they should go in the body
-		if hasValues {
-			for _, knownType := range bodyBuilderContentTypes {
-				if strings.HasPrefix(contentType, knownType) {
-					return http.MethodPost
-				}
-			}
-		}
+	if hasBody {
+		return http.MethodPost
 	}
 
-	return method
+	return http.MethodGet
 }
 
 func getValues(valueSets ...base.WithValues) map[string][]string {
