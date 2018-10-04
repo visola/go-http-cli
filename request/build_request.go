@@ -6,7 +6,7 @@ import (
 
 	"github.com/visola/go-http-cli/ioutil"
 	"github.com/visola/go-http-cli/profile"
-	"github.com/visola/go-http-cli/variables"
+	"github.com/visola/variables/variables"
 )
 
 // BuildRequest builds an http.Request from a configured request.Request
