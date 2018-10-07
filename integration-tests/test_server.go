@@ -6,6 +6,11 @@ import (
 	"net/http/httptest"
 )
 
+type Request struct {
+	Method string
+}
+
+var lastRequest Request
 var testServer *httptest.Server
 
 func startTestServer() {
@@ -13,6 +18,10 @@ func startTestServer() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	lastRequest = Request{
+		Method: r.Method,
+	}
+
 	// TODO - Store request received
 	// TODO - Return something useful
 	fmt.Fprintln(w, "Hello world!")

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+
+	"github.com/fatih/color"
 )
 
 const specsFolder = "specs"
@@ -10,18 +11,20 @@ const specsFolder = "specs"
 func main() {
 	startTestServer()
 	defer testServer.Close()
-	fmt.Printf("Test Server is open at: %s\n", testServer.URL)
 
 	files, filesErr := ioutil.ReadDir(specsFolder)
 	if filesErr != nil {
 		panic(filesErr)
 	}
 
+	errorColor := color.New(color.FgRed)
+	successColor := color.New(color.FgGreen)
 	for _, specFile := range files {
-		fmt.Printf("Running %s\n", specFile.Name())
 		runErr := runSpec(specFile)
 		if runErr != nil {
-			panic(runErr)
+			errorColor.Printf("Error while running spec: %s\n%s", specFile.Name(), runErr.Error())
+			continue
 		}
+		successColor.Printf("Passed: %s", specFile.Name())
 	}
 }

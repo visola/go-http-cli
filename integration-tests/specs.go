@@ -15,14 +15,27 @@ import (
 
 // Spec is the struct that represents a test case
 type Spec struct {
-	Arguments []string
-	Expected  Expected
+	Command  []string
+	Expected Expected
 }
 
 // Expected is the struct that stores an expected result
 type Expected struct {
-	Body   string
-	Method string
+	Method   string
+	Response string
+}
+
+func checkExpected(spec *Spec) error {
+	errorMessage := ""
+	if spec.Expected.Method != lastRequest.Method {
+		errorMessage += fmt.Sprintf("  - Unexpected HTTP Method: \n    Expected: %s\n      Actual: %s", spec.Expected.Method, lastRequest.Method)
+	}
+
+	if errorMessage != "" {
+		return fmt.Errorf(errorMessage)
+	}
+
+	return nil
 }
 
 func executeCommand(cmd string, args []string) (int, string, string, error) {
@@ -63,14 +76,16 @@ func runSpec(specFile os.FileInfo) error {
 		return loadErr
 	}
 
-	exitCode, output, errorOut, execError := executeCommand("http", replaceVariablesInArray(loadedSpec.Arguments))
+	exitCode, _, _, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]))
 	if execError != nil {
 		return execError
 	}
 
-	fmt.Printf("Executed Spec, Exit code: %d\nOutput:\n%s\nError:\n%s\n", exitCode, output, errorOut)
+	if exitCode != 0 {
+		return fmt.Errorf("Exit code wasn't 0: %d", exitCode)
+	}
 
-	return nil
+	return checkExpected(loadedSpec)
 }
 
 func replaceVariablesInArray(arrayIn []string) []string {

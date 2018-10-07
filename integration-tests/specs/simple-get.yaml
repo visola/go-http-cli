@@ -1,6 +1,7 @@
-arguments:
+command:
+  - http
   - '{test-server}'
   - start=2018-03-13T21:00:00+01:00
 
 expected:
-  method: GET
+  method: POST
