@@ -6,7 +6,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const specsFolder = "specs"
+const specsFolder = "../specs"
 
 func main() {
 	startTestServer()

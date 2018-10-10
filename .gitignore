@@ -1,7 +1,7 @@
 build/
 c.out
 .DS_Store
-.gradle/
+integration-tests/execution/
 .project
 .settings/
 *.test

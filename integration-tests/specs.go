@@ -40,6 +40,7 @@ func checkExpected(spec *Spec) error {
 
 func executeCommand(cmd string, args []string) (int, string, string, error) {
 	command := exec.Command(cmd, args...)
+	command.Env = os.Environ()
 
 	var outbuf, errbuf bytes.Buffer
 	command.Stdout = &outbuf
@@ -49,13 +50,17 @@ func executeCommand(cmd string, args []string) (int, string, string, error) {
 	stdout := outbuf.String()
 	stderr := errbuf.String()
 
-	ws := command.ProcessState.Sys().(syscall.WaitStatus)
-	exitCode := ws.ExitStatus()
-
 	if execErr != nil {
-		return exitCode, stdout, stderr, execErr
+		if exitError, ok := execErr.(*exec.ExitError); ok {
+			ws := exitError.Sys().(syscall.WaitStatus)
+			return ws.ExitStatus(), stdout, stderr, execErr
+		} else {
+			return -1, stdout, stderr, execErr
+		}
 	}
 
+	ws := command.ProcessState.Sys().(syscall.WaitStatus)
+	exitCode := ws.ExitStatus()
 	return exitCode, stdout, stderr, nil
 }
 
@@ -76,8 +81,11 @@ func runSpec(specFile os.FileInfo) error {
 		return loadErr
 	}
 
-	exitCode, _, _, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]))
+	exitCode, _, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]))
 	if execError != nil {
+		if stdErr != "" {
+			return fmt.Errorf("%s\n-- Standard Error --\n%s", execError.Error(), stdErr)
+		}
 		return execError
 	}
 
