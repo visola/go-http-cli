@@ -53,9 +53,8 @@ func executeCommand(cmd string, args []string) (int, string, string, error) {
 		if exitError, ok := execErr.(*exec.ExitError); ok {
 			ws := exitError.Sys().(syscall.WaitStatus)
 			return ws.ExitStatus(), stdout, stderr, execErr
-		} else {
-			return -1, stdout, stderr, execErr
 		}
+		return -1, stdout, stderr, execErr
 	}
 
 	ws := command.ProcessState.Sys().(syscall.WaitStatus)
