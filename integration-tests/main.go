@@ -1,7 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 )
@@ -12,19 +14,30 @@ func main() {
 	startTestServer()
 	defer testServer.Close()
 
-	files, filesErr := ioutil.ReadDir(specsFolder)
-	if filesErr != nil {
-		panic(filesErr)
-	}
-
 	errorColor := color.New(color.FgRed)
 	successColor := color.New(color.FgGreen)
-	for _, specFile := range files {
-		runErr := runSpec(specFile)
-		if runErr != nil {
-			errorColor.Printf("Error while running spec: %s\n%s", specFile.Name(), runErr.Error())
-			continue
+	walkErr := filepath.Walk(specsFolder, func(pathToFile string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
-		successColor.Printf("Passed: %s", specFile.Name())
+
+		if info.IsDir() {
+			return nil
+		}
+
+		if strings.HasSuffix(info.Name(), "yaml") || strings.HasSuffix(info.Name(), "yml") {
+			runErr := runSpec(pathToFile)
+			if runErr != nil {
+				errorColor.Printf("Failed: %s\n%s\n", pathToFile, runErr.Error())
+				return nil
+			}
+			successColor.Printf("Passed: %s\n", pathToFile)
+		}
+
+		return nil
+	})
+
+	if walkErr != nil {
+		panic(walkErr)
 	}
 }

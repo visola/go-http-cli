@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 )
 
+// Request stores a request that was received by the test server
 type Request struct {
 	Method string
 }

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"syscall"
 
 	"github.com/visola/variables/variables"
@@ -64,8 +63,8 @@ func executeCommand(cmd string, args []string) (int, string, string, error) {
 	return exitCode, stdout, stderr, nil
 }
 
-func loadSpec(specFile os.FileInfo) (*Spec, error) {
-	data, readErr := ioutil.ReadFile(path.Join(specsFolder, specFile.Name()))
+func loadSpec(pathToSpecFile string) (*Spec, error) {
+	data, readErr := ioutil.ReadFile(pathToSpecFile)
 	if readErr != nil {
 		return nil, readErr
 	}
@@ -75,8 +74,8 @@ func loadSpec(specFile os.FileInfo) (*Spec, error) {
 	return loadedSpec, unmarshalErr
 }
 
-func runSpec(specFile os.FileInfo) error {
-	loadedSpec, loadErr := loadSpec(specFile)
+func runSpec(pathToSpecFile string) error {
+	loadedSpec, loadErr := loadSpec(pathToSpecFile)
 	if loadErr != nil {
 		return loadErr
 	}
