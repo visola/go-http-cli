@@ -1,0 +1,8 @@
+command:
+  - http
+  - -X
+  - POST
+  - '{test-server}'
+
+expected:
+  method: POST

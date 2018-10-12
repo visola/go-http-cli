@@ -1,0 +1,8 @@
+command:
+  - http
+  - -X
+  - PUT
+  - '{test-server}'
+
+expected:
+  method: PUT

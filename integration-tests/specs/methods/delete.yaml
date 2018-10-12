@@ -1,0 +1,8 @@
+command:
+  - http
+  - -X
+  - DELETE
+  - '{test-server}'
+
+expected:
+  method: DELETE
