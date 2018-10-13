@@ -9,7 +9,7 @@ before_script:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
-  - go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
 
 script:
   - ./bin/build.sh
