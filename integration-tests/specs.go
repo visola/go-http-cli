@@ -20,14 +20,19 @@ type Spec struct {
 
 // Expected is the struct that stores an expected result
 type Expected struct {
-	Method   string
-	Response string
+	Body   string
+	Method string
 }
 
 func checkExpected(spec *Spec) error {
 	errorMessage := ""
 	if spec.Expected.Method != lastRequest.Method {
 		errorMessage += fmt.Sprintf("  - Unexpected HTTP Method: \n    Expected: %s\n      Actual: %s", spec.Expected.Method, lastRequest.Method)
+	}
+
+	if spec.Expected.Body != lastRequest.Body {
+		errorMessage += "  - Expected body doesn't match:\n"
+		errorMessage += fmt.Sprintf("Bodies:\nExpected:\n---\n%s\n---\nActual:\n--\n%s\n--", spec.Expected.Body, lastRequest.Body)
 	}
 
 	if errorMessage != "" {

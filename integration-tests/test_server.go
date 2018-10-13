@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 )
 
 // Request stores a request that was received by the test server
 type Request struct {
+	Body   string
 	Method string
 }
 
@@ -19,7 +21,13 @@ func startTestServer() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	body, bodyErr := ioutil.ReadAll(r.Body)
+	if bodyErr != nil {
+		panic(bodyErr)
+	}
+
 	lastRequest = Request{
+		Body:   string(body),
 		Method: r.Method,
 	}
 
