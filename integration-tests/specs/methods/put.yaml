@@ -3,6 +3,8 @@ command:
   - -X
   - PUT
   - '{test-server}'
+  - name=John Doe
 
 expected:
   method: PUT
+  body: '{"name":"John Doe"}'

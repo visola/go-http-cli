@@ -3,6 +3,8 @@ command:
   - -X
   - POST
   - '{test-server}'
+  - name=John Doe
 
 expected:
   method: POST
+  body: '{"name":"John Doe"}'
