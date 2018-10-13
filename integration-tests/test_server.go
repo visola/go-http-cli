@@ -9,8 +9,9 @@ import (
 
 // Request stores a request that was received by the test server
 type Request struct {
-	Body   string
-	Method string
+	Body    string
+	Headers map[string][]string
+	Method  string
 }
 
 var lastRequest Request
@@ -27,8 +28,9 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lastRequest = Request{
-		Body:   string(body),
-		Method: r.Method,
+		Body:    string(body),
+		Headers: r.Header,
+		Method:  r.Method,
 	}
 
 	// TODO - Store request received

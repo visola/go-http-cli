@@ -6,5 +6,8 @@ command:
   - name=John Doe
 
 expected:
-  method: POST
   body: '{"name":"John Doe"}'
+  headers:
+    Content-Type:
+      - application/json
+  method: POST
