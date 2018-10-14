@@ -1,0 +1,9 @@
+command:
+  - http
+  - -V
+  - companyId=1234
+  - '{test-server}/companies/{companyId}'
+
+expected:
+  method: GET
+  path: /companies/1234

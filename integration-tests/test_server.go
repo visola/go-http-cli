@@ -12,6 +12,7 @@ type Request struct {
 	Body    string
 	Headers map[string][]string
 	Method  string
+	Path    string
 }
 
 var lastRequest Request
@@ -31,6 +32,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		Body:    string(body),
 		Headers: r.Header,
 		Method:  r.Method,
+		Path:    r.URL.Path,
 	}
 
 	// TODO - Store request received

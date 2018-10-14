@@ -25,11 +25,13 @@ type Expected struct {
 	Body    string
 	Headers map[string][]string
 	Method  string
+	Path    string
 }
 
 func checkExpected(spec *Spec) error {
 	errorMessage := checkMethod(spec)
 	errorMessage += checkHeaders(spec)
+	errorMessage += checkPath(spec)
 	errorMessage += checkBody(spec)
 
 	if errorMessage != "" {
@@ -77,8 +79,15 @@ func checkHeaders(spec *Spec) string {
 }
 
 func checkMethod(spec *Spec) string {
-	if spec.Expected.Method != lastRequest.Method {
+	if spec.Expected.Method != "" && spec.Expected.Method != lastRequest.Method {
 		return fmt.Sprintf("Unexpected HTTP Method: \n  Expected: %s\n    Actual: %s\n", spec.Expected.Method, lastRequest.Method)
+	}
+	return ""
+}
+
+func checkPath(spec *Spec) string {
+	if spec.Expected.Path != "" && spec.Expected.Path != lastRequest.Path {
+		return fmt.Sprintf("Unexpected Path: \n  Expected: %s\n    Actual: %s\n", spec.Expected.Path, lastRequest.Path)
 	}
 	return ""
 }
