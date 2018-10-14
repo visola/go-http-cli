@@ -101,7 +101,7 @@ func createProfiles(spec *Spec) error {
 		return nil
 	}
 
-	mkdirErr := os.Mkdir(spec.ProfileDir, 0777)
+	mkdirErr := os.MkdirAll(spec.ProfileDir, 0777)
 	if mkdirErr != nil {
 		return mkdirErr
 	}
@@ -153,8 +153,8 @@ func loadSpec(pathToSpecFile string) (*Spec, error) {
 	loadedSpec := new(Spec)
 	unmarshalErr := yaml.Unmarshal(data, loadedSpec)
 
-	_, specFile := filepath.Split(pathToSpecFile)
-	loadedSpec.ProfileDir = path.Join(".", specFile)
+	relPath, _ := filepath.Rel(specsFolder, pathToSpecFile)
+	loadedSpec.ProfileDir = path.Join(".", relPath)
 
 	return loadedSpec, unmarshalErr
 }
