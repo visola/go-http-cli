@@ -1,3 +1,11 @@
+description: |
+  ### User Story
+  As a user I want to be able to reuse profiles logic
+
+  ### Acceptance Criteria
+  - One profile can import another one
+  - Requests declared anywhere in the chain should be available
+
 command:
   - http
   - +child_profile
@@ -9,24 +17,16 @@ expected:
     Content-Type:
       - application/json
   method: POST
-  path: /companies/1234
 
 profiles:
   parent_profile: |
     baseURL: https://doesnt.matter.com/
     
-    variables:
-      companyId: 1234
+    requests:
+      post_with_body:
+        body: '{"name":"John Doe"}'
 
   child_profile: |
       baseURL: '{test-server}'
       import:
         - parent_profile
-
-      variables:
-        name: John Doe
-      
-      requests:
-        post_with_body:
-          url: /companies/{companyId}
-          body: '{"name":"{name}"}'
