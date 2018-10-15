@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"syscall"
@@ -16,8 +18,10 @@ import (
 
 // Spec is the struct that represents a test case
 type Spec struct {
-	Command  []string
-	Expected Expected
+	Command    []string
+	Expected   Expected
+	ProfileDir string
+	Profiles   map[string]string
 }
 
 // Expected is the struct that stores an expected result
@@ -92,6 +96,28 @@ func checkPath(spec *Spec) string {
 	return ""
 }
 
+func createProfiles(spec *Spec) error {
+	if len(spec.Profiles) == 0 {
+		return nil
+	}
+
+	mkdirErr := os.MkdirAll(spec.ProfileDir, 0777)
+	if mkdirErr != nil {
+		return mkdirErr
+	}
+
+	for name, content := range spec.Profiles {
+		profileFileName := fmt.Sprintf("%s.yaml", name)
+		content = variables.ReplaceVariables(content, getContext())
+		writeErr := ioutil.WriteFile(path.Join(spec.ProfileDir, profileFileName), []byte(content), 0777)
+		if writeErr != nil {
+			return writeErr
+		}
+	}
+
+	return nil
+}
+
 func executeCommand(cmd string, args []string) (int, string, string, error) {
 	command := exec.Command(cmd, args...)
 	command.Env = os.Environ()
@@ -107,6 +133,7 @@ func executeCommand(cmd string, args []string) (int, string, string, error) {
 	if execErr != nil {
 		if exitError, ok := execErr.(*exec.ExitError); ok {
 			ws := exitError.Sys().(syscall.WaitStatus)
+			execErr = fmt.Errorf("Error while executing command.\n%s\nstdout:\n%s\nstderr:\n%s", execErr.Error(), stdout, stderr)
 			return ws.ExitStatus(), stdout, stderr, execErr
 		}
 		return -1, stdout, stderr, execErr
@@ -125,15 +152,27 @@ func loadSpec(pathToSpecFile string) (*Spec, error) {
 
 	loadedSpec := new(Spec)
 	unmarshalErr := yaml.Unmarshal(data, loadedSpec)
+
+	relPath, _ := filepath.Rel(specsFolder, pathToSpecFile)
+	loadedSpec.ProfileDir = path.Join(".", relPath)
+
 	return loadedSpec, unmarshalErr
 }
 
 func runSpec(pathToSpecFile string) error {
+	executeCommand("go-http-daemon", []string{"--kill"})
+
 	loadedSpec, loadErr := loadSpec(pathToSpecFile)
 	if loadErr != nil {
 		return loadErr
 	}
 
+	writeProfilesErr := createProfiles(loadedSpec)
+	if writeProfilesErr != nil {
+		return writeProfilesErr
+	}
+
+	os.Setenv("GO_HTTP_PROFILES", loadedSpec.ProfileDir)
 	exitCode, _, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]))
 	if execError != nil {
 		if stdErr != "" {

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -26,12 +27,14 @@ func main() {
 		}
 
 		if strings.HasSuffix(info.Name(), "yaml") || strings.HasSuffix(info.Name(), "yml") {
+			start := time.Now().UnixNano()
 			runErr := runSpec(pathToFile)
+			total := (time.Now().UnixNano() - start) / int64(time.Millisecond)
 			if runErr != nil {
-				errorColor.Printf("Failed: %s\n%s\n", pathToFile, runErr.Error())
+				errorColor.Printf("Failed (%dms): %s\n%s\n", total, pathToFile, runErr.Error())
 				return nil
 			}
-			successColor.Printf("Passed: %s\n", pathToFile)
+			successColor.Printf("Passed (%dms): %s\n", total, pathToFile)
 		}
 
 		return nil
