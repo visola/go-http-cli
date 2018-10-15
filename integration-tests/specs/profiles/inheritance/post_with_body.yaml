@@ -1,0 +1,32 @@
+command:
+  - http
+  - +child_profile
+  - '@post_with_body'
+
+expected:
+  body: '{"name":"John Doe"}'
+  headers:
+    Content-Type:
+      - application/json
+  method: POST
+  path: /companies/1234
+
+profiles:
+  parent_profile: |
+    baseURL: https://doesnt.matter.com/
+    
+    variables:
+      companyId: 1234
+
+  child_profile: |
+      baseURL: '{test-server}'
+      import:
+        - parent_profile
+
+      variables:
+        name: John Doe
+      
+      requests:
+        post_with_body:
+          url: /companies/{companyId}
+          body: '{"name":"{name}"}'
