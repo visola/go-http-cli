@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"syscall"
 
 	"github.com/visola/variables/variables"
@@ -29,14 +30,16 @@ type Expected struct {
 	Body    string
 	Headers map[string][]string
 	Method  string
+	Output  string
 	Path    string
 }
 
-func checkExpected(spec *Spec) error {
+func checkExpected(spec *Spec, stdOut string) error {
 	errorMessage := checkMethod(spec)
 	errorMessage += checkHeaders(spec)
 	errorMessage += checkPath(spec)
 	errorMessage += checkBody(spec)
+	errorMessage += checkOutput(spec.Expected.Output, stdOut)
 
 	if errorMessage != "" {
 		return fmt.Errorf(errorMessage)
@@ -87,6 +90,75 @@ func checkMethod(spec *Spec) string {
 		return fmt.Sprintf("Unexpected HTTP Method: \n  Expected: %s\n    Actual: %s\n", spec.Expected.Method, lastRequest.Method)
 	}
 	return ""
+}
+
+func checkOutput(expected string, actual string) string {
+	expected = strings.TrimSpace(expected)
+	expected = replaceVariablesInArray(expected)[0]
+
+	if expected == "" {
+		return ""
+	}
+
+	actual = strings.TrimSpace(actual)
+
+	expectedSplit := strings.Split(strings.Replace(expected, "\r", "\n", -1), "\n")
+	actualSplit := strings.Split(strings.Replace(actual, "\r", "\n", -1), "\n")
+
+	if len(expectedSplit) != len(actualSplit) {
+		return fmt.Sprintf("Output has different number of lines (%d vs %d):\n  Expected: \n--- Start\n%s\n---End\n    Actual: \n---Start\n%s\n---End\n", len(expectedSplit), len(actualSplit), expected, actual)
+	}
+
+	linesFailed := make([]int, 0)
+	linesNotFound := make([]int, 0)
+
+	// Keeps track of lines in the actual that some other expected line already matched
+	accountedLines := make(map[int]bool)
+
+	for i, expectedLine := range expectedSplit {
+		// Ignore the line
+		if strings.HasPrefix(expectedLine, "#I# ") {
+			expectedSplit[i] = fmt.Sprintf("%s [IGNORED]", expectedLine[4:])
+			continue
+		}
+
+		// Unordered line, needs to be in the response
+		if strings.HasPrefix(expectedLine, "#U# ") {
+			expectedLine = expectedLine[4:]
+			expectedSplit[i] = expectedLine
+			if !isLinePresent(expectedLine, actualSplit, accountedLines) {
+				linesNotFound = append(linesNotFound, i+1)
+			}
+		} else {
+			accountedLines[i] = true
+			if expectedLine != actualSplit[i] {
+				linesFailed = append(linesFailed, i+1)
+			}
+		}
+	}
+
+	if len(linesFailed) > 0 || len(linesNotFound) > 0 {
+		for _, lineFailed := range linesFailed {
+			expectedSplit[lineFailed-1] = fmt.Sprintf("%s [FAILED]", strings.TrimSpace(expectedSplit[lineFailed-1]))
+		}
+
+		for _, lineNotFound := range linesNotFound {
+			expectedSplit[lineNotFound-1] = fmt.Sprintf("%s [NOT FOUND]", expectedSplit[lineNotFound-1])
+		}
+
+		result := fmt.Sprintf("Output doesn't match expected, failed lines %d, lines not found %d:\n", linesFailed, linesNotFound)
+		result += fmt.Sprintf("Expected: \n--- Start\n%s\n---End\n    Actual: \n---Start\n%s\n---End\n", addLineNumbers(expectedSplit), addLineNumbers(actualSplit))
+		return result
+	}
+	return ""
+}
+
+func addLineNumbers(lines []string) string {
+	result := ""
+	for i, line := range lines {
+		result += fmt.Sprintf("%d. %s\n", i+1, line)
+	}
+	return result
 }
 
 func checkPath(spec *Spec) string {
@@ -144,6 +216,21 @@ func executeCommand(cmd string, args []string) (int, string, string, error) {
 	return exitCode, stdout, stderr, nil
 }
 
+func isLinePresent(expectedLine string, actualLines []string, accountedLines map[int]bool) bool {
+	for j, actualLine := range actualLines {
+		if _, isAccountedFor := accountedLines[j]; isAccountedFor {
+			continue
+		}
+
+		if actualLine == expectedLine {
+			accountedLines[j] = true
+			return true
+		}
+	}
+
+	return false
+}
+
 func loadSpec(pathToSpecFile string) (*Spec, error) {
 	data, readErr := ioutil.ReadFile(pathToSpecFile)
 	if readErr != nil {
@@ -173,7 +260,7 @@ func runSpec(pathToSpecFile string) error {
 	}
 
 	os.Setenv("GO_HTTP_PROFILES", loadedSpec.ProfileDir)
-	exitCode, _, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]))
+	exitCode, stdOut, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]...))
 	if execError != nil {
 		if stdErr != "" {
 			return fmt.Errorf("%s\n-- Standard Error --\n%s", execError.Error(), stdErr)
@@ -185,10 +272,10 @@ func runSpec(pathToSpecFile string) error {
 		return fmt.Errorf("Exit code wasn't 0: %d", exitCode)
 	}
 
-	return checkExpected(loadedSpec)
+	return checkExpected(loadedSpec, stdOut)
 }
 
-func replaceVariablesInArray(arrayIn []string) []string {
+func replaceVariablesInArray(arrayIn ...string) []string {
 	result := make([]string, len(arrayIn))
 	for i, val := range arrayIn {
 		result[i] = variables.ReplaceVariables(val, getContext())

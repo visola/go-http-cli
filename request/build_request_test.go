@@ -9,26 +9,20 @@ import (
 )
 
 func TestBuildRequest(t *testing.T) {
-	t.Run("Replaces values correctly", testReplaceValuesCorrectly)
+	t.Run("Build request correctly", testBuildsRequestCorrectly)
 }
 
-func testReplaceValuesCorrectly(t *testing.T) {
+func testBuildsRequestCorrectly(t *testing.T) {
 	request := Request{
-		Body:   `{"username":"{username}"}`,
+		Body:   `{"username":"John Doe"}`,
 		Method: http.MethodPost,
 		QueryParams: map[string][]string{
-			"auth": {"{token}"},
+			"auth": {"4312763812&*&%&$%!^@#+123"},
 		},
-		URL: "http://www.someserver.com/{companyId}/employee",
+		URL: "http://www.someserver.com/1234/employee",
 	}
 
-	variables := map[string]string{
-		"companyId": "1234",
-		"token":     "4312763812&*&%&$%!^@#+123",
-		"username":  "John Doe",
-	}
-
-	httpReq, reqErr := BuildRequest(request, nil, variables)
+	httpReq, reqErr := BuildRequest(request)
 
 	assert.Nil(t, reqErr, "Should create request")
 	if reqErr != nil {

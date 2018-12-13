@@ -33,7 +33,12 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		httpRequest, httpRequestErr := BuildRequest(currentConfiguredRequest, executionOptions.ProfileNames, executionOptions.Variables)
+		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, executionOptions.ProfileNames, executionOptions.Variables)
+		if processError != nil {
+			return nil, processError
+		}
+
+		httpRequest, httpRequestErr := BuildRequest(currentConfiguredRequest)
 		if httpRequestErr != nil {
 			return nil, httpRequestErr
 		}
