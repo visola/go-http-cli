@@ -3,6 +3,8 @@ package output
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -10,13 +12,17 @@ import (
 )
 
 // PrintRequest outputs the http.Request
-func PrintRequest(request request.Request) {
-	boldGreen := color.New(color.Bold, color.FgGreen).PrintfFunc()
-	boldGreen("\n%s %s\n", request.Method, request.URL)
+func PrintRequest(req request.Request) {
+	boldGreen := color.New(color.Bold, color.FgGreen)
+	firstLine := req.Method + " " + req.URL
+	if len(req.QueryParams) > 0 {
+		firstLine += "?" + queryToString(req.QueryParams)
+	}
+	boldGreen.Println(firstLine)
 
-	printHeaders(request.Headers)
-	printCookies(request.Cookies)
-	printBody(request.Body, ">>")
+	printHeaders(req.Headers)
+	printCookies(req.Cookies)
+	printBody(req.Body, ">>")
 }
 
 // PrintResponse outputs a http.Response
@@ -71,4 +77,15 @@ func printHeaders(headers map[string][]string) {
 			fmt.Println("")
 		}
 	}
+}
+
+func queryToString(query map[string][]string) string {
+	arrayOfValues := make([]string, 0)
+	for k, values := range query {
+		for _, value := range values {
+			arrayOfValues = append(arrayOfValues, url.QueryEscape(k)+"="+url.QueryEscape(value))
+		}
+	}
+	sort.Strings(arrayOfValues)
+	return strings.Join(arrayOfValues, "&")
 }
