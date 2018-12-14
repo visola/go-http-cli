@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ func main() {
 			runErr := runSpec(pathToFile)
 			total := (time.Now().UnixNano() - start) / int64(time.Millisecond)
 			if runErr != nil {
-				errorColor.Printf("Failed (%dms): %s\n%s\n", total, pathToFile, runErr.Error())
+				errorColor.Println("Failed (" + strconv.FormatInt(total, 10) + "ms): " + pathToFile + "\n" + runErr.Error() + "\n")
 				return nil
 			}
 			successColor.Printf("Passed (%dms): %s\n", total, pathToFile)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -42,7 +44,7 @@ func checkExpected(spec *Spec, stdOut string) error {
 	errorMessage += checkOutput(spec.Expected.Output, stdOut)
 
 	if errorMessage != "" {
-		return fmt.Errorf(errorMessage)
+		return errors.New(errorMessage)
 	}
 
 	return nil
@@ -106,7 +108,9 @@ func checkOutput(expected string, actual string) string {
 	actualSplit := strings.Split(strings.Replace(actual, "\r", "\n", -1), "\n")
 
 	if len(expectedSplit) != len(actualSplit) {
-		return fmt.Sprintf("Output has different number of lines (%d vs %d):\n  Expected: \n--- Start\n%s\n---End\n    Actual: \n---Start\n%s\n---End\n", len(expectedSplit), len(actualSplit), expected, actual)
+		return "Output has different number of lines (" + strconv.Itoa(len(expectedSplit)) +
+			" vs " + strconv.Itoa(len(actualSplit)) + "):\n  Expected: \n--- Start\n" + expected +
+			"\n---End\n    Actual: \n---Start\n" + actual + "\n---End\n"
 	}
 
 	linesFailed := make([]int, 0)
@@ -118,7 +122,7 @@ func checkOutput(expected string, actual string) string {
 	for i, expectedLine := range expectedSplit {
 		// Ignore the line
 		if strings.HasPrefix(expectedLine, "#I# ") {
-			expectedSplit[i] = fmt.Sprintf("%s [IGNORED]", expectedLine[4:])
+			expectedSplit[i] = expectedLine[4:] + " [IGNORED]"
 			continue
 		}
 
@@ -139,15 +143,17 @@ func checkOutput(expected string, actual string) string {
 
 	if len(linesFailed) > 0 || len(linesNotFound) > 0 {
 		for _, lineFailed := range linesFailed {
-			expectedSplit[lineFailed-1] = fmt.Sprintf("%s [FAILED]", strings.TrimSpace(expectedSplit[lineFailed-1]))
+			expectedSplit[lineFailed-1] = strings.TrimSpace(expectedSplit[lineFailed-1]) + " [FAILED]"
 		}
 
 		for _, lineNotFound := range linesNotFound {
-			expectedSplit[lineNotFound-1] = fmt.Sprintf("%s [NOT FOUND]", expectedSplit[lineNotFound-1])
+			expectedSplit[lineNotFound-1] = expectedSplit[lineNotFound-1] + " [NOT FOUND]"
 		}
 
-		result := fmt.Sprintf("Output doesn't match expected, failed lines %d, lines not found %d:\n", linesFailed, linesNotFound)
-		result += fmt.Sprintf("Expected: \n--- Start\n%s\n---End\n    Actual: \n---Start\n%s\n---End\n", addLineNumbers(expectedSplit), addLineNumbers(actualSplit))
+		result := "Output doesn't match expected, failed lines " + fmt.Sprint(linesFailed)
+		result += ", lines not found " + fmt.Sprint(linesNotFound) + ":\n"
+		result += "Expected: --- Start\n" + addLineNumbers(expectedSplit) + "\n---End\n"
+		result += "Actual: ---Start\n" + addLineNumbers(actualSplit) + "\n---End\n"
 		return result
 	}
 	return ""
@@ -156,7 +162,7 @@ func checkOutput(expected string, actual string) string {
 func addLineNumbers(lines []string) string {
 	result := ""
 	for i, line := range lines {
-		result += fmt.Sprintf("%d. %s\n", i+1, line)
+		result += string(i+1) + ". " + line + "\n"
 	}
 	return result
 }
