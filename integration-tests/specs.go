@@ -15,6 +15,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/visola/go-http-cli/model"
 	"github.com/visola/variables/variables"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -34,6 +35,7 @@ type Expected struct {
 	Method  string
 	Output  string
 	Path    string
+	Query   map[string]model.ArrayOrString
 }
 
 func checkExpected(spec *Spec, stdOut string) error {
@@ -42,6 +44,7 @@ func checkExpected(spec *Spec, stdOut string) error {
 	errorMessage += checkPath(spec)
 	errorMessage += checkBody(spec)
 	errorMessage += checkOutput(spec.Expected.Output, stdOut)
+	errorMessage += checkQueryParams(spec)
 
 	if errorMessage != "" {
 		return errors.New(errorMessage)
@@ -157,6 +160,27 @@ func checkOutput(expected string, actual string) string {
 		return result
 	}
 	return ""
+}
+
+func checkQueryParams(spec *Spec) string {
+	result := ""
+	for key, expectedValues := range spec.Expected.Query {
+		actualValues, present := lastRequest.Query[key]
+		if !present {
+			result += "Expected query parameter '" + key + "' but not found"
+			continue
+		}
+
+		sort.Strings(expectedValues)
+		sort.Strings(actualValues)
+		if !reflect.DeepEqual([]string(expectedValues), []string(actualValues)) {
+			result += "Query values don't match expected for key '" + key + "':\n"
+			result += "  Expected: " + strings.Join(expectedValues, ",") + "\n"
+			result += "    Actual: " + strings.Join(actualValues, ",") + "\n"
+
+		}
+	}
+	return result
 }
 
 func addLineNumbers(lines []string) string {

@@ -2,14 +2,15 @@ package profile
 
 import (
 	"github.com/visola/go-http-cli/authorization"
+	"github.com/visola/go-http-cli/model"
 )
 
 // Used to unmarshal data from YAML files
 type yamlProfileFormat struct {
 	Auth      authConfiguration `yaml:"auth"`
 	BaseURL   string            `yaml:"baseURL"`
-	Headers   map[string]arrayOrString
-	Import    arrayOrString `yaml:"import"`
+	Headers   map[string]model.ArrayOrString
+	Import    model.ArrayOrString `yaml:"import"`
 	Variables map[string]string
 	Requests  map[string]requestConfiguration
 }
@@ -26,10 +27,10 @@ type authConfiguration struct {
 type requestConfiguration struct {
 	Body         string
 	FileToUpload string `yaml:"fileToUpload"`
-	Headers      map[string]arrayOrString
+	Headers      map[string]model.ArrayOrString
 	Method       string
 	URL          string
-	Values       map[string]arrayOrString
+	Values       map[string]model.ArrayOrString
 }
 
 func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
@@ -48,7 +49,7 @@ func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
 }
 
 func generateHeaders(loadedProfile yamlProfileFormat) (map[string][]string, error) {
-	result := toMapOfArrayOfStrings(loadedProfile.Headers)
+	result := model.ToMapOfArrayOfStrings(loadedProfile.Headers)
 
 	if loadedProfile.Auth.AuthType != "" {
 		loadedAuth := loadedProfile.Auth
@@ -76,10 +77,10 @@ func toMapOfNamedRequest(requestConfigurations map[string]requestConfiguration) 
 		result[name] = NamedRequest{
 			Body:         requestConfiguration.Body,
 			FileToUpload: requestConfiguration.FileToUpload,
-			Headers:      toMapOfArrayOfStrings(requestConfiguration.Headers),
+			Headers:      model.ToMapOfArrayOfStrings(requestConfiguration.Headers),
 			Method:       requestConfiguration.Method,
 			URL:          requestConfiguration.URL,
-			Values:       toMapOfArrayOfStrings(requestConfiguration.Values),
+			Values:       model.ToMapOfArrayOfStrings(requestConfiguration.Values),
 		}
 	}
 
