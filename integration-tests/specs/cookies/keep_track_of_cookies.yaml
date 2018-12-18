@@ -1,0 +1,17 @@
+specs:
+  - command:
+    - http
+    - '{test-server}'
+
+    expected:
+      method: GET
+
+  - command:
+    - http
+    - '{test-server}'
+
+    expected:
+      method: GET
+      headers:
+        Cookie:
+          - someKey=someValue

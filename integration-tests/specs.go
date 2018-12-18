@@ -1,23 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"github.com/visola/go-http-cli/model"
 	"github.com/visola/variables/variables"
-	yaml "gopkg.in/yaml.v2"
 )
 
 // Spec is the struct that represents a test case
@@ -220,32 +215,6 @@ func createProfiles(spec *Spec) error {
 	return nil
 }
 
-func executeCommand(cmd string, args []string) (int, string, string, error) {
-	command := exec.Command(cmd, args...)
-	command.Env = os.Environ()
-
-	var outbuf, errbuf bytes.Buffer
-	command.Stdout = &outbuf
-	command.Stderr = &errbuf
-
-	execErr := command.Run()
-	stdout := outbuf.String()
-	stderr := errbuf.String()
-
-	if execErr != nil {
-		if exitError, ok := execErr.(*exec.ExitError); ok {
-			ws := exitError.Sys().(syscall.WaitStatus)
-			execErr = fmt.Errorf("Error while executing command.\n%s\nstdout:\n%s\nstderr:\n%s", execErr.Error(), stdout, stderr)
-			return ws.ExitStatus(), stdout, stderr, execErr
-		}
-		return -1, stdout, stderr, execErr
-	}
-
-	ws := command.ProcessState.Sys().(syscall.WaitStatus)
-	exitCode := ws.ExitStatus()
-	return exitCode, stdout, stderr, nil
-}
-
 func isLinePresent(expectedLine string, actualLines []string, accountedLines map[int]bool) bool {
 	for j, actualLine := range actualLines {
 		if _, isAccountedFor := accountedLines[j]; isAccountedFor {
@@ -261,35 +230,14 @@ func isLinePresent(expectedLine string, actualLines []string, accountedLines map
 	return false
 }
 
-func loadSpec(pathToSpecFile string) (*Spec, error) {
-	data, readErr := ioutil.ReadFile(pathToSpecFile)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	loadedSpec := new(Spec)
-	unmarshalErr := yaml.Unmarshal(data, loadedSpec)
-
-	relPath, _ := filepath.Rel(specsFolder, pathToSpecFile)
-	loadedSpec.ProfileDir = path.Join(".", relPath)
-
-	return loadedSpec, unmarshalErr
-}
-
-func runSpec(pathToSpecFile string) error {
-	executeCommand("go-http-daemon", []string{"--kill"})
-
-	loadedSpec, loadErr := loadSpec(pathToSpecFile)
-	if loadErr != nil {
-		return loadErr
-	}
+func runSpec(loadedSpec *Spec) error {
+	os.Setenv("GO_HTTP_PROFILES", loadedSpec.ProfileDir)
 
 	writeProfilesErr := createProfiles(loadedSpec)
 	if writeProfilesErr != nil {
 		return writeProfilesErr
 	}
 
-	os.Setenv("GO_HTTP_PROFILES", loadedSpec.ProfileDir)
 	exitCode, stdOut, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]...))
 	if execError != nil {
 		if stdErr != "" {

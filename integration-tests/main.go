@@ -29,7 +29,15 @@ func main() {
 
 		if strings.HasSuffix(info.Name(), "yaml") || strings.HasSuffix(info.Name(), "yml") {
 			start := time.Now().UnixNano()
-			runErr := runSpec(pathToFile)
+
+			loadedTestCase, loadErr := loadTestCase(pathToFile)
+			if loadErr != nil {
+				total := (time.Now().UnixNano() - start) / int64(time.Millisecond)
+				errorColor.Println("Failed to load test case (" + strconv.FormatInt(total, 10) + "ms): " + pathToFile + "\n" + loadErr.Error() + "\n")
+				return nil
+			}
+
+			runErr := loadedTestCase.run()
 			total := (time.Now().UnixNano() - start) / int64(time.Millisecond)
 			if runErr != nil {
 				errorColor.Println("Failed (" + strconv.FormatInt(total, 10) + "ms): " + pathToFile + "\n" + runErr.Error() + "\n")
