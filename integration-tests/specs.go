@@ -15,6 +15,7 @@ type Spec struct {
 	Expected   Expected
 	ProfileDir string
 	Profiles   map[string]string
+	ReplyWith  ReplyWith `yaml:"replyWith"`
 }
 
 func createProfiles(spec *Spec) error {
@@ -61,6 +62,8 @@ func runSpec(loadedSpec *Spec) error {
 	if writeProfilesErr != nil {
 		return writeProfilesErr
 	}
+
+	prepareReply(loadedSpec.ReplyWith)
 
 	exitCode, stdOut, stdErr, execError := executeCommand(loadedSpec.Command[0], replaceVariablesInArray(loadedSpec.Command[1:]...))
 	if execError != nil {

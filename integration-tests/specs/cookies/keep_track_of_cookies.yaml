@@ -6,6 +6,11 @@ specs:
     expected:
       method: GET
 
+    replyWith:
+      headers:
+        Set-Cookie:
+          - someKey=someValue
+
   - command:
     - http
     - '{test-server}'

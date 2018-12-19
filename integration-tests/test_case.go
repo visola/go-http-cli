@@ -14,6 +14,7 @@ type TestCase struct {
 	Expected   Expected
 	ProfileDir string
 	Profiles   map[string]string
+	ReplyWith  *ReplyWith
 
 	Specs []*Spec
 }
