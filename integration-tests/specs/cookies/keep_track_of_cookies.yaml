@@ -10,6 +10,7 @@ specs:
       headers:
         Set-Cookie:
           - someKey=someValue
+          - anotherCookie=someOtherValue
 
   - command:
     - http
@@ -19,4 +20,4 @@ specs:
       method: GET
       headers:
         Cookie:
-          - someKey=someValue
+          - someKey=someValue; anotherCookie=someOtherValue

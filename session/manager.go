@@ -1,36 +1,35 @@
 package session
 
 import (
-	"net/http/cookiejar"
-	"net/url"
+	"net/http"
+	"sync"
 )
 
 var managerInstance = manager{
-	sessions: make(map[string]Session),
+	sessions: make(map[string]*Session),
 }
+
+var sessionMutex = &sync.Mutex{}
 
 // manager holds sessions based on domain.
 type manager struct {
-	sessions map[string]Session
+	sessions map[string]*Session
 }
 
 // Get a session based on a URL.
-func Get(url url.URL) (*Session, error) {
-	host := url.Hostname()
+func Get(host string) (*Session, error) {
+	sessionMutex.Lock()
 	session, exists := managerInstance.sessions[host]
 
 	if !exists {
-		cookieJar, jarError := cookiejar.New(nil)
-		if jarError != nil {
-			return nil, jarError
-		}
-
-		session = Session{
-			Jar: cookieJar,
+		session = &Session{
+			Cookies:   make([]*http.Cookie, 0),
+			Variables: make(map[string]string),
 		}
 
 		managerInstance.sessions[host] = session
 	}
 
-	return &session, nil
+	sessionMutex.Unlock()
+	return session, nil
 }

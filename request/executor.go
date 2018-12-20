@@ -118,13 +118,15 @@ func shouldRedirect(statusCode int) bool {
 }
 
 func storeCookies(httpRequest http.Request, httpResponse http.Response) error {
-	session, sessionErr := session.Get(*httpRequest.URL)
+	session, sessionErr := session.Get(httpRequest.URL.Hostname())
 
 	if sessionErr != nil {
 		return sessionErr
 	}
 
-	session.Jar.SetCookies(httpRequest.URL, httpResponse.Cookies())
+	for _, cookie := range httpResponse.Cookies() {
+		session.Cookies = append(session.Cookies, cookie)
+	}
 
 	return nil
 }

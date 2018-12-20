@@ -6,5 +6,6 @@ import (
 
 // Session stores information for one session
 type Session struct {
-	Jar http.CookieJar
+	Cookies   []*http.Cookie
+	Variables map[string]string
 }
