@@ -1,0 +1,23 @@
+specs:
+  - command:
+    - http
+    - '{test-server}'
+
+    expected:
+      method: GET
+
+    replyWith:
+      headers:
+        Set-Cookie:
+          - someKey=someValue
+          - anotherCookie=someOtherValue
+
+  - command:
+    - http
+    - '{test-server}'
+
+    expected:
+      method: GET
+      headers:
+        Cookie:
+          - someKey=someValue; anotherCookie=someOtherValue
