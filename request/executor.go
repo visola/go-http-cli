@@ -10,8 +10,9 @@ import (
 
 const defaultMaxRedirectCount = 10
 
-// ExecuteRequest executes an HTTP request based on the specified options.
-func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
+// ExecuteRequestLoop executes HTTP requests based on the passed in options until there're no more
+// requests to be executed.
+func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
 	maxRedirectCount := executionOptions.MaxRedirect
 	if maxRedirectCount == 0 {
 		maxRedirectCount = defaultMaxRedirectCount
@@ -38,45 +39,16 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 			return nil, processError
 		}
 
-		httpRequest, httpRequestErr := BuildRequest(currentConfiguredRequest)
-		if httpRequestErr != nil {
-			return nil, httpRequestErr
-		}
-
-		httpResponse, httpResponseErr := client.Do(httpRequest)
-		if httpResponseErr != nil {
-			return nil, httpResponseErr
-		}
-
-		cookieErr := storeCookies(*httpRequest, *httpResponse)
-
-		if cookieErr != nil {
-			return nil, cookieErr
-		}
-
-		bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
-
-		if readErr != nil {
-			return nil, readErr
-		}
-
-		headers := make(map[string][]string)
-		for k, vs := range httpResponse.Header {
-			headers[k] = append(headers[k], vs...)
-		}
-
-		response := Response{
-			StatusCode: httpResponse.StatusCode,
-			Status:     httpResponse.Status,
-			Headers:    headers,
-			Body:       string(bodyBytes),
-			Protocol:   fmt.Sprintf("%d.%d", httpResponse.ProtoMajor, httpResponse.ProtoMinor),
-		}
+		response, executeErr := executeRequest(client, currentConfiguredRequest)
 
 		result = append(result, ExecutedRequestResponse{
 			Request:  currentConfiguredRequest,
-			Response: response,
+			Response: *response,
 		})
+
+		if executeErr != nil {
+			return result, executeErr
+		}
 
 		if shouldRedirect(response.StatusCode) && executionOptions.FollowLocation == true {
 			redirectCount++
@@ -85,10 +57,7 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirectCount)
 			}
 
-			redirectRequest, redirectError := buildRedirect(*httpResponse)
-			if redirectError != nil {
-				return result, redirectError
-			}
+			redirectRequest := buildRedirect(response)
 			requestsToExecute = append(requestsToExecute, *redirectRequest)
 		}
 
@@ -101,13 +70,51 @@ func ExecuteRequest(executionOptions ExecutionOptions) ([]ExecutedRequestRespons
 	return result, nil
 }
 
-func buildRedirect(response http.Response) (*Request, error) {
-	newLocation, responseError := response.Location()
-	if responseError != nil {
-		return nil, responseError
+func buildRedirect(response *Response) *Request {
+	location := response.Headers["Location"]
+	if len(location) > 0 && location[0] != "" {
+		return &Request{
+			URL: location[0],
+		}
 	}
-	return &Request{
-		URL: newLocation.String(),
+
+	return nil
+}
+
+func executeRequest(client *http.Client, configuredRequest Request) (*Response, error) {
+	httpRequest, httpRequestErr := BuildRequest(configuredRequest)
+	if httpRequestErr != nil {
+		return nil, httpRequestErr
+	}
+
+	httpResponse, httpResponseErr := client.Do(httpRequest)
+	if httpResponseErr != nil {
+		return nil, httpResponseErr
+	}
+
+	cookieErr := storeCookies(*httpRequest, *httpResponse)
+
+	if cookieErr != nil {
+		return nil, cookieErr
+	}
+
+	bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
+
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	headers := make(map[string][]string)
+	for k, vs := range httpResponse.Header {
+		headers[k] = append(headers[k], vs...)
+	}
+
+	return &Response{
+		StatusCode: httpResponse.StatusCode,
+		Status:     httpResponse.Status,
+		Headers:    headers,
+		Body:       string(bodyBytes),
+		Protocol:   fmt.Sprintf("%d.%d", httpResponse.ProtoMajor, httpResponse.ProtoMinor),
 	}, nil
 }
 

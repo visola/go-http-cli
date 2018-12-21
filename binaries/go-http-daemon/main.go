@@ -71,7 +71,7 @@ func executeRequest(c echo.Context) error {
 		return nil
 	}
 
-	requestResponses, responseErr := request.ExecuteRequest(*executionOptions)
+	requestResponses, responseErr := request.ExecuteRequestLoop(*executionOptions)
 	requestExecution.RequestResponses = requestResponses
 
 	if responseErr != nil {
