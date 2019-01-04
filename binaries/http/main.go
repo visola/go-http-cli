@@ -13,17 +13,36 @@ import (
 )
 
 func main() {
+	ensureDaemon()
+
+	options := parseCommandLineArguments()
+	configuredRequest := initializeAndConfigureRequest(options)
+
+	executionOptions := request.ExecutionOptions{
+		FollowLocation:  options.FollowLocation,
+		MaxRedirect:     options.MaxRedirect,
+		PostProcessFile: options.PostProcessFile,
+		ProfileNames:    options.Profiles,
+		Request:         *configuredRequest,
+		Variables:       options.Variables,
+	}
+
+	requestExecution, requestError := daemon.ExecuteRequest(executionOptions)
+	if requestError != nil {
+		color.Red("Error while executing request: %s", requestError)
+		os.Exit(10)
+	}
+
+	printOutput(requestExecution, options)
+}
+
+func ensureDaemon() {
 	if daemonErr := daemon.EnsureDaemon(); daemonErr != nil {
 		panic(daemonErr)
 	}
+}
 
-	options, err := cli.ParseCommandLineOptions(os.Args[1:])
-
-	if err != nil {
-		color.Red("%s", err)
-		os.Exit(1)
-	}
-
+func initializeAndConfigureRequest(options *cli.CommandLineOptions) *request.Request {
 	unconfiguredRequest := request.Request{
 		Body:    options.Body,
 		Headers: options.Headers,
@@ -47,22 +66,20 @@ func main() {
 		panic(configureError)
 	}
 
-	executionOptions := request.ExecutionOptions{
-		FollowLocation:  options.FollowLocation,
-		MaxRedirect:     options.MaxRedirect,
-		PostProcessFile: options.PostProcessFile,
-		ProfileNames:    options.Profiles,
-		Request:         *configuredRequest,
-		Variables:       options.Variables,
+	return configuredRequest
+}
+
+func parseCommandLineArguments() *cli.CommandLineOptions {
+	options, err := cli.ParseCommandLineOptions(os.Args[1:])
+	if err != nil {
+		color.Red("%s", err)
+		os.Exit(1)
 	}
+	return options
+}
 
-	requestExecution, requestError := daemon.ExecuteRequest(executionOptions)
-
-	if requestError != nil {
-		color.Red("Error while executing request: %s", requestError)
-		os.Exit(10)
-	}
-
+func printOutput(requestExecution *daemon.RequestExecution, options *cli.CommandLineOptions) {
+	exitCode := 0
 	for _, requestResponse := range requestExecution.RequestResponses {
 		output.PrintRequest(requestResponse.Request)
 		fmt.Println("")
@@ -73,15 +90,22 @@ func main() {
 				color.Red("Error while writing to output file: %s", outWriteErr)
 			}
 		}
+
+		if requestResponse.PostProcessOutput != "" {
+			fmt.Println("\n -- Post processing output --")
+			fmt.Println(requestResponse.PostProcessOutput)
+		}
+
+		if requestResponse.PostProcessError != "" {
+			color.Red("Error post processing request: %s", requestResponse.PostProcessError)
+			exitCode = 30
+		}
 	}
 
 	if requestExecution.ErrorMessage != "" {
 		color.Red("Error while executing request: %s", requestExecution.ErrorMessage)
-		os.Exit(20)
+		exitCode = 20
 	}
 
-	if requestExecution.PostProcessError != "" {
-		color.Red("Error post processing request: %s", requestExecution.PostProcessError)
-		os.Exit(30)
-	}
+	os.Exit(exitCode)
 }

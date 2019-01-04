@@ -12,5 +12,4 @@ type HandshakeResponse struct {
 type RequestExecution struct {
 	RequestResponses []request.ExecutedRequestResponse
 	ErrorMessage     string
-	PostProcessError string
 }
