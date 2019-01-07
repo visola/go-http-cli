@@ -1,39 +1,49 @@
 package request
 
 import (
-	"io/ioutil"
+	"fmt"
 
 	"github.com/robertkrimen/otto"
 )
 
-// PostProcess processes the executed requests using the post processing script
-func PostProcess(options *ExecutionOptions, executedRequests []ExecutedRequestResponse, responseErr error) error {
-	if options.PostProcessFile == "" {
-		return nil
-	}
+// PostProcessSourceCode represents the source code to be executed
+type PostProcessSourceCode struct {
+	// SourceCode is the code to be executed
+	SourceCode string
 
-	sourceCode, readError := ioutil.ReadFile(options.PostProcessFile)
-	if readError != nil {
-		return readError
+	// SourceFilePath is the path to the file where the code came from
+	SourceFilePath string
+}
+
+// PostProcess processes the executed requests using the post processing script
+func PostProcess(sourceCode PostProcessSourceCode, executedRequests []ExecutedRequestResponse, responseErr error) (string, error) {
+	if sourceCode.SourceCode == "" {
+		return "", nil
 	}
 
 	vm := otto.New()
 
-	script, compileErr := vm.Compile(options.PostProcessFile, sourceCode)
+	script, compileErr := vm.Compile(sourceCode.SourceFilePath, sourceCode.SourceCode)
 	if compileErr != nil {
-		return compileErr
+		return "", compileErr
+	}
+
+	output := ""
+	printFunction := func(arg interface{}) {
+		output += fmt.Sprint(arg)
 	}
 
 	vm.Set("executed", executedRequests)
 	if len(executedRequests) > 0 {
 		vm.Set("request", executedRequests[0].Request)
 		vm.Set("response", executedRequests[0].Response)
+		vm.Set("print", printFunction)
 	}
 
 	_, executeError := vm.Run(script)
 	if executeError != nil {
-		return executeError
+		return "", executeError
 	}
 
-	return nil
+	return output, nil
 }

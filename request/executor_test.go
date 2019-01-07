@@ -20,7 +20,7 @@ func testBasicGet(t *testing.T) {
 		URL:    "https://httpbin.org/",
 	}
 
-	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+	executedRequestResponses, err := ExecuteRequestLoop(ExecutionOptions{
 		Request: request,
 	})
 
@@ -37,7 +37,7 @@ func testFollowsRedirect(t *testing.T) {
 		URL: "https://httpbin.org/redirect/1",
 	}
 
-	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+	executedRequestResponses, err := ExecuteRequestLoop(ExecutionOptions{
 		FollowLocation: true,
 		Request:        request,
 	})
@@ -58,7 +58,7 @@ func testMaxRedirects(t *testing.T) {
 		URL: fmt.Sprintf("https://httpbin.org/redirect/%d", maxRedirectCount+1),
 	}
 
-	executedRequestResponses, err := ExecuteRequest(ExecutionOptions{
+	executedRequestResponses, err := ExecuteRequestLoop(ExecutionOptions{
 		FollowLocation: true,
 		MaxRedirect:    maxRedirectCount,
 		Request:        request,

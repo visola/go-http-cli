@@ -23,7 +23,7 @@ func testSimpleRequest(t *testing.T) {
 		URL: "http://www.someserver.com/some/path",
 	}
 
-	configureRequest, err := ConfigureRequest(req)
+	configureRequest, err := ConfigureRequest(req, &profile.Options{}, CreateConfigureRequestOptions())
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -40,7 +40,7 @@ func testWithBody(t *testing.T) {
 		URL:  "http://www.someserver.com/some/path",
 	}
 
-	configureRequest, err := ConfigureRequest(req)
+	configureRequest, err := ConfigureRequest(req, &profile.Options{}, CreateConfigureRequestOptions())
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -63,7 +63,7 @@ func testPostWithValues(t *testing.T) {
 		"age":  []string{"20"},
 	}
 
-	configureRequest, err := ConfigureRequest(req, AddValues(values))
+	configureRequest, err := ConfigureRequest(req, &profile.Options{}, CreateConfigureRequestOptions(AddValues(values)))
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -85,7 +85,7 @@ func testWithValues(t *testing.T) {
 		"age":  []string{"20"},
 	}
 
-	configureRequest, err := ConfigureRequest(req, AddValues(values))
+	configureRequest, err := ConfigureRequest(req, &profile.Options{}, CreateConfigureRequestOptions(AddValues(values)))
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -108,7 +108,7 @@ func testWithBodyAndValues(t *testing.T) {
 		"name": []string{"{name}"},
 	}
 
-	configureRequest, err := ConfigureRequest(req, AddValues(values))
+	configureRequest, err := ConfigureRequest(req, &profile.Options{}, CreateConfigureRequestOptions(AddValues(values)))
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {
@@ -122,33 +122,26 @@ func testWithBodyAndValues(t *testing.T) {
 }
 
 func testConfigureFromProfile(t *testing.T) {
-	profileName := "testProfile"
-	profileContent := "baseURL: http://www.someserver.com/"
+	testProfile := &profile.Options{
+		BaseURL: "http://www.someserver.com/",
+		Headers: map[string][]string{
+			"Content-Type":  []string{"application/json"},
+			"Company-Id":    []string{"{companyId}"},
+			"X-Some-Header": []string{"4321-4321-4321"},
+		},
+		NamedRequest: map[string]profile.NamedRequest{
+			"withFile": profile.NamedRequest{
+				Body: `{"name":"John Doe","companyId":{companyId}}`,
+				Headers: map[string][]string{
+					"X-Some-Header": []string{"1234-1234-1234"},
+				},
+				Method: "PUT",
+				URL:    "/{companyId}/employee",
+			},
+		},
+	}
 
-	profileContent = profileContent + "\nheaders:"
-	profileContent = profileContent + "\n  Content-Type: application/json"
-	profileContent = profileContent + "\n  Company-Id: '{companyId}'"
-	profileContent = profileContent + "\n  X-Some-Header: '4321-4321-4321'" // This header will be overridden
-
-	profileContent = profileContent + "\nvariables:"
-	profileContent = profileContent + "\n  companyId: 1234"
-	profileContent = profileContent + "\n  username: John Doe"
-
-	profileContent = profileContent + "\nrequests:"
-	profileContent = profileContent + "\n  withFile:"
-	profileContent = profileContent + "\n    method: PUT"
-	profileContent = profileContent + "\n    url: '/{companyId}/employee'"
-	profileContent = profileContent + "\n    fileToUpload: test-body.yml"
-	profileContent = profileContent + "\n    headers:"
-	profileContent = profileContent + "\n      X-Some-Header: '1234-1234-1234'" // This will override the previously header
-
-	testProfileDir := profile.SetupTestProfilesDir()
-	profile.CreateTestProfile(profileName, profileContent, testProfileDir)
-
-	jsonBody := `{"name":"John Doe","companyId":{companyId}}`
-	profile.CreateTestProfile("test-body", jsonBody, testProfileDir)
-
-	configureRequest, err := ConfigureRequest(Request{}, SetRequestName("withFile"), AddProfiles(profileName))
+	configureRequest, err := ConfigureRequest(Request{}, testProfile, CreateConfigureRequestOptions(SetRequestName("withFile")))
 
 	assert.Nil(t, err, "Should not return an error")
 	if err != nil {

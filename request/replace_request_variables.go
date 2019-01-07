@@ -8,12 +8,7 @@ import (
 	"github.com/visola/variables/variables"
 )
 
-func replaceRequestVariables(configuredRequest Request, profileNames []string, passedInVariables map[string]string) (Request, error) {
-	mergedProfiles, profileError := profile.LoadAndMergeProfiles(profileNames)
-	if profileError != nil {
-		return configuredRequest, profileError
-	}
-
+func replaceRequestVariables(configuredRequest Request, mergedProfiles profile.Options, passedInVariables map[string]string) (Request, error) {
 	// Chicken-egg problem here, URL can have variables, but session can only be determined by URL
 	finalVariableSet := mergeVariables(passedInVariables, mergedProfiles.Variables)
 	configuredRequest.URL = variables.ReplaceVariables(configuredRequest.URL, finalVariableSet)

@@ -9,6 +9,7 @@ import (
 	"github.com/visola/go-http-cli/cli"
 	"github.com/visola/go-http-cli/daemon"
 	"github.com/visola/go-http-cli/output"
+	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/request"
 )
 
@@ -16,12 +17,32 @@ func main() {
 	ensureDaemon()
 
 	options := parseCommandLineArguments()
-	configuredRequest := initializeAndConfigureRequest(options)
+
+	configureRequestOptions := request.CreateConfigureRequestOptions(
+		request.AddProfiles(options.Profiles...),
+		request.AddValues(options.Values),
+		request.SetRequestName(options.RequestName),
+	)
+
+	mergedProfile, profileError := profile.LoadAndMergeProfiles(configureRequestOptions.ProfileNames)
+	if profileError != nil {
+		panic(profileError)
+	}
+
+	configuredRequest, configureError := request.ConfigureRequest(
+		initializeRequest(options),
+		&mergedProfile,
+		configureRequestOptions,
+	)
+
+	if configureError != nil {
+		panic(configureError)
+	}
 
 	executionOptions := request.ExecutionOptions{
 		FollowLocation:  options.FollowLocation,
 		MaxRedirect:     options.MaxRedirect,
-		PostProcessFile: options.PostProcessFile,
+		PostProcessCode: loadPostProcessScript(options, mergedProfile),
 		ProfileNames:    options.Profiles,
 		Request:         *configuredRequest,
 		Variables:       options.Variables,
@@ -42,7 +63,7 @@ func ensureDaemon() {
 	}
 }
 
-func initializeAndConfigureRequest(options *cli.CommandLineOptions) *request.Request {
+func initializeRequest(options *cli.CommandLineOptions) request.Request {
 	unconfiguredRequest := request.Request{
 		Body:    options.Body,
 		Headers: options.Headers,
@@ -55,18 +76,36 @@ func initializeAndConfigureRequest(options *cli.CommandLineOptions) *request.Req
 		panic(loadBodyError)
 	}
 
-	configuredRequest, configureError := request.ConfigureRequest(
-		unconfiguredRequest,
-		request.AddProfiles(options.Profiles...),
-		request.AddValues(options.Values),
-		request.SetRequestName(options.RequestName),
-	)
+	return unconfiguredRequest
+}
 
-	if configureError != nil {
-		panic(configureError)
+func loadPostProcessScript(options *cli.CommandLineOptions, mergedProfiles profile.Options) request.PostProcessSourceCode {
+	if options.PostProcessFile != "" {
+		sourceCode, readErr := ioutil.ReadFile(options.PostProcessFile)
+		if readErr != nil {
+			panic(readErr)
+		}
+		return request.PostProcessSourceCode{
+			SourceCode:     string(sourceCode),
+			SourceFilePath: options.PostProcessFile,
+		}
 	}
 
-	return configuredRequest
+	if options.RequestName != "" {
+		namedRequest, findErr := profile.FindNamedRequest(&mergedProfiles, options.RequestName)
+		if findErr != nil {
+			panic(findErr)
+		}
+
+		if namedRequest.PostProcessScript != "" {
+			return request.PostProcessSourceCode{
+				SourceCode:     namedRequest.PostProcessScript,
+				SourceFilePath: fmt.Sprintf("[Named Request: '%s']", options.RequestName),
+			}
+		}
+	}
+
+	return request.PostProcessSourceCode{}
 }
 
 func parseCommandLineArguments() *cli.CommandLineOptions {

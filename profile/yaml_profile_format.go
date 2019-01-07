@@ -11,8 +11,8 @@ type yamlProfileFormat struct {
 	BaseURL   string            `yaml:"baseURL"`
 	Headers   map[string]model.ArrayOrString
 	Import    model.ArrayOrString `yaml:"import"`
-	Variables map[string]string
 	Requests  map[string]requestConfiguration
+	Variables map[string]string
 }
 
 // Used to unmarshal auth options from yaml files
@@ -25,12 +25,13 @@ type authConfiguration struct {
 
 // Used to unmarshal request options from yaml files
 type requestConfiguration struct {
-	Body         string
-	FileToUpload string `yaml:"fileToUpload"`
-	Headers      map[string]model.ArrayOrString
-	Method       string
-	URL          string
-	Values       map[string]model.ArrayOrString
+	Body              string
+	FileToUpload      string `yaml:"fileToUpload"`
+	Headers           map[string]model.ArrayOrString
+	Method            string
+	PostProcessScript string `yaml:"postProcessScript"`
+	URL               string
+	Values            map[string]model.ArrayOrString
 }
 
 func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
@@ -75,12 +76,13 @@ func toMapOfNamedRequest(requestConfigurations map[string]requestConfiguration) 
 	result := make(map[string]NamedRequest)
 	for name, requestConfiguration := range requestConfigurations {
 		result[name] = NamedRequest{
-			Body:         requestConfiguration.Body,
-			FileToUpload: requestConfiguration.FileToUpload,
-			Headers:      model.ToMapOfArrayOfStrings(requestConfiguration.Headers),
-			Method:       requestConfiguration.Method,
-			URL:          requestConfiguration.URL,
-			Values:       model.ToMapOfArrayOfStrings(requestConfiguration.Values),
+			Body:              requestConfiguration.Body,
+			FileToUpload:      requestConfiguration.FileToUpload,
+			Headers:           model.ToMapOfArrayOfStrings(requestConfiguration.Headers),
+			Method:            requestConfiguration.Method,
+			PostProcessScript: requestConfiguration.PostProcessScript,
+			URL:               requestConfiguration.URL,
+			Values:            model.ToMapOfArrayOfStrings(requestConfiguration.Values),
 		}
 	}
 

@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 
+	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
+	"github.com/visola/go-http-cli/util"
 )
 
 const defaultMaxRedirectCount = 10
@@ -13,38 +17,43 @@ const defaultMaxRedirectCount = 10
 // ExecuteRequestLoop executes HTTP requests based on the passed in options until there're no more
 // requests to be executed.
 func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
-	maxRedirectCount := executionOptions.MaxRedirect
-	if maxRedirectCount == 0 {
-		maxRedirectCount = defaultMaxRedirectCount
+	maxRedirectCount := util.FirstOrZero(executionOptions.MaxRedirect, defaultMaxRedirectCount)
+	client := createHTTPClient()
+
+	mergedProfiles, profileError := profile.LoadAndMergeProfiles(executionOptions.ProfileNames)
+	if profileError != nil {
+		return nil, profileError
 	}
 
-	requestsToExecute := make([]Request, 1)
-	requestsToExecute[0] = executionOptions.Request
-
-	client := &http.Client{
-		// Do not auto-follow redirects
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
+	requestsToExecute := []Request{executionOptions.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
 	for {
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, executionOptions.ProfileNames, executionOptions.Variables)
+		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionOptions.Variables)
 		if processError != nil {
 			return nil, processError
 		}
 
 		response, executeErr := executeRequest(client, currentConfiguredRequest)
 
-		result = append(result, ExecutedRequestResponse{
+		if executeErr != nil {
+			return result, executeErr
+		}
+
+		requestResponse := ExecutedRequestResponse{
 			Request:  currentConfiguredRequest,
 			Response: *response,
-		})
+		}
+		result = append(result, requestResponse)
+
+		postProcessOutput, postProcessError := PostProcess(executionOptions.PostProcessCode, result, executeErr)
+		result[len(result)-1].PostProcessOutput = postProcessOutput
+		if postProcessError != nil {
+			result[len(result)-1].PostProcessError = postProcessError.Error()
+		}
 
 		if executeErr != nil {
 			return result, executeErr
@@ -57,7 +66,7 @@ func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestRes
 				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirectCount)
 			}
 
-			redirectRequest := buildRedirect(response)
+			redirectRequest := buildRedirect(&currentConfiguredRequest, response)
 			requestsToExecute = append(requestsToExecute, *redirectRequest)
 		}
 
@@ -70,15 +79,29 @@ func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestRes
 	return result, nil
 }
 
-func buildRedirect(response *Response) *Request {
-	location := response.Headers["Location"]
-	if len(location) > 0 && location[0] != "" {
+func buildRedirect(req *Request, response *Response) *Request {
+	locationValues := response.Headers["Location"]
+	if len(locationValues) > 0 && locationValues[0] != "" {
+		location := locationValues[0]
+		if !strings.HasPrefix(location, "http") {
+			parsedURL, _ := url.Parse(req.URL)
+			location = parsedURL.Scheme + "://" + parsedURL.Host + location
+		}
 		return &Request{
-			URL: location[0],
+			URL: location,
 		}
 	}
 
 	return nil
+}
+
+func createHTTPClient() *http.Client {
+	return &http.Client{
+		// Do not auto-follow redirects
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 }
 
 func executeRequest(client *http.Client, configuredRequest Request) (*Response, error) {
@@ -126,7 +149,6 @@ func shouldRedirect(statusCode int) bool {
 
 func storeCookies(httpRequest http.Request, httpResponse http.Response) error {
 	session, sessionErr := session.Get(httpRequest.URL.Hostname())
-
 	if sessionErr != nil {
 		return sessionErr
 	}
