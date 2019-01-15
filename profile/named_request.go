@@ -12,6 +12,7 @@ type NamedRequest struct {
 	Headers           map[string][]string
 	Method            string
 	PostProcessScript string
+	Source            string // File where this request was loaded from
 	URL               string
 	Values            map[string][]string
 }

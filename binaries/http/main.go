@@ -100,7 +100,7 @@ func loadPostProcessScript(options *cli.CommandLineOptions, mergedProfiles profi
 		if namedRequest.PostProcessScript != "" {
 			return request.PostProcessSourceCode{
 				SourceCode:     namedRequest.PostProcessScript,
-				SourceFilePath: fmt.Sprintf("[Named Request: '%s']", options.RequestName),
+				SourceFilePath: namedRequest.Source + ":requests." + options.RequestName + ".postProcessScript",
 			}
 		}
 	}
