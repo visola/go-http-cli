@@ -39,7 +39,7 @@ func main() {
 		panic(configureError)
 	}
 
-	executionOptions := request.ExecutionOptions{
+	executionContext := request.ExecutionContext{
 		FollowLocation:  options.FollowLocation,
 		MaxRedirect:     options.MaxRedirect,
 		PostProcessCode: loadPostProcessScript(options, mergedProfile),
@@ -48,7 +48,7 @@ func main() {
 		Variables:       options.Variables,
 	}
 
-	requestExecution, requestError := daemon.ExecuteRequest(executionOptions)
+	requestExecution, requestError := daemon.ExecuteRequest(executionContext)
 	if requestError != nil {
 		color.Red("Error while executing request: %s", requestError)
 		os.Exit(10)

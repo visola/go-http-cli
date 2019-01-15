@@ -1,7 +1,7 @@
 package request
 
-// ExecutionOptions represent the options to be passed for the request executor.
-type ExecutionOptions struct {
+// ExecutionContext represent the options to be passed for the request executor.
+type ExecutionContext struct {
 	FollowLocation  bool
 	MaxRedirect     int
 	PostProcessCode PostProcessSourceCode

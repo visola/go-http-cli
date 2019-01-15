@@ -16,23 +16,23 @@ const defaultMaxRedirectCount = 10
 
 // ExecuteRequestLoop executes HTTP requests based on the passed in options until there're no more
 // requests to be executed.
-func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestResponse, error) {
-	maxRedirectCount := util.FirstOrZero(executionOptions.MaxRedirect, defaultMaxRedirectCount)
+func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestResponse, error) {
+	maxRedirectCount := util.FirstOrZero(executionContext.MaxRedirect, defaultMaxRedirectCount)
 	client := createHTTPClient()
 
-	mergedProfiles, profileError := profile.LoadAndMergeProfiles(executionOptions.ProfileNames)
+	mergedProfiles, profileError := profile.LoadAndMergeProfiles(executionContext.ProfileNames)
 	if profileError != nil {
 		return nil, profileError
 	}
 
-	requestsToExecute := []Request{executionOptions.Request}
+	requestsToExecute := []Request{executionContext.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
 	for {
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionOptions.Variables)
+		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext.Variables)
 		if processError != nil {
 			return nil, processError
 		}
@@ -49,7 +49,7 @@ func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestRes
 		}
 		result = append(result, requestResponse)
 
-		postProcessOutput, postProcessError := PostProcess(executionOptions.PostProcessCode, result, executeErr)
+		postProcessOutput, postProcessError := PostProcess(executionContext.PostProcessCode, result, executeErr)
 		result[len(result)-1].PostProcessOutput = postProcessOutput
 		if postProcessError != nil {
 			result[len(result)-1].PostProcessError = postProcessError.Error()
@@ -59,7 +59,7 @@ func ExecuteRequestLoop(executionOptions ExecutionOptions) ([]ExecutedRequestRes
 			return result, executeErr
 		}
 
-		if shouldRedirect(response.StatusCode) && executionOptions.FollowLocation == true {
+		if shouldRedirect(response.StatusCode) && executionContext.FollowLocation == true {
 			redirectCount++
 
 			if redirectCount > maxRedirectCount {
