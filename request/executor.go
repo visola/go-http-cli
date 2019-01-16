@@ -10,6 +10,7 @@ import (
 	"github.com/visola/go-http-cli/profile"
 	"github.com/visola/go-http-cli/session"
 	"github.com/visola/go-http-cli/util"
+	"github.com/visola/variables/variables"
 )
 
 const defaultMaxRedirectCount = 10
@@ -25,6 +26,8 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		return nil, profileError
 	}
 
+	initialVariables := mergeVariables(executionContext.Variables, mergedProfiles.Variables)
+
 	requestsToExecute := []Request{executionContext.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
@@ -32,12 +35,18 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
-		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext.Variables)
+		var sessionErr error
+		executionContext.Session, sessionErr = loadSessionForRequest(variables.ReplaceVariables(currentConfiguredRequest.URL, initialVariables))
+		if sessionErr != nil {
+			return nil, sessionErr
+		}
+
+		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
 		if processError != nil {
 			return nil, processError
 		}
 
-		response, executeErr := executeRequest(client, currentConfiguredRequest)
+		response, executeErr := executeRequest(client, currentConfiguredRequest, executionContext.Session)
 
 		if executeErr != nil {
 			return result, executeErr
@@ -49,7 +58,7 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		}
 		result = append(result, requestResponse)
 
-		postProcessOutput, postProcessError := PostProcess(executionContext.PostProcessCode, result, executeErr)
+		postProcessOutput, postProcessError := PostProcess(&executionContext, result, executeErr)
 		result[len(result)-1].PostProcessOutput = postProcessOutput
 		if postProcessError != nil {
 			result[len(result)-1].PostProcessError = postProcessError.Error()
@@ -104,7 +113,7 @@ func createHTTPClient() *http.Client {
 	}
 }
 
-func executeRequest(client *http.Client, configuredRequest Request) (*Response, error) {
+func executeRequest(client *http.Client, configuredRequest Request, currentSession *session.Session) (*Response, error) {
 	httpRequest, httpRequestErr := BuildRequest(configuredRequest)
 	if httpRequestErr != nil {
 		return nil, httpRequestErr
@@ -115,10 +124,8 @@ func executeRequest(client *http.Client, configuredRequest Request) (*Response, 
 		return nil, httpResponseErr
 	}
 
-	cookieErr := storeCookies(*httpRequest, *httpResponse)
-
-	if cookieErr != nil {
-		return nil, cookieErr
+	for _, cookie := range httpResponse.Cookies() {
+		currentSession.Cookies = append(currentSession.Cookies, cookie)
 	}
 
 	bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
@@ -141,21 +148,17 @@ func executeRequest(client *http.Client, configuredRequest Request) (*Response, 
 	}, nil
 }
 
+func loadSessionForRequest(requestURL string) (*session.Session, error) {
+	parsedURL, parseURLErr := url.Parse(requestURL)
+	if parseURLErr != nil {
+		return nil, parseURLErr
+	}
+
+	return session.Get(parsedURL.Hostname())
+}
+
 func shouldRedirect(statusCode int) bool {
 	return statusCode == http.StatusMovedPermanently ||
 		statusCode == http.StatusFound ||
 		statusCode == http.StatusSeeOther
-}
-
-func storeCookies(httpRequest http.Request, httpResponse http.Response) error {
-	session, sessionErr := session.Get(httpRequest.URL.Hostname())
-	if sessionErr != nil {
-		return sessionErr
-	}
-
-	for _, cookie := range httpResponse.Cookies() {
-		session.Cookies = append(session.Cookies, cookie)
-	}
-
-	return nil
 }

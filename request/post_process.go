@@ -21,7 +21,8 @@ type PostProcessSourceCode struct {
 }
 
 // PostProcess processes the executed requests using the post processing script
-func PostProcess(sourceCode PostProcessSourceCode, executedRequests []ExecutedRequestResponse, responseErr error) (string, error) {
+func PostProcess(executionContext *ExecutionContext, executedRequests []ExecutedRequestResponse, responseErr error) (string, error) {
+	sourceCode := executionContext.PostProcessCode
 	if sourceCode.SourceCode == "" {
 		return "", nil
 	}
@@ -33,7 +34,7 @@ func PostProcess(sourceCode PostProcessSourceCode, executedRequests []ExecutedRe
 		return "", compileErr
 	}
 
-	context := preparePostProcessContext(vm, executedRequests, responseErr)
+	context := preparePostProcessContext(vm, executionContext, executedRequests, responseErr)
 
 	_, executeError := vm.Run(script)
 	if executeError != nil {
@@ -41,6 +42,12 @@ func PostProcess(sourceCode PostProcessSourceCode, executedRequests []ExecutedRe
 	}
 
 	return context.Output, nil
+}
+
+func createAddVariableFunction(executionContext *ExecutionContext) func(string, string) {
+	return func(name string, value string) {
+		executionContext.Session.Variables[name] = value
+	}
 }
 
 func createPrintFunction(context *PostProcessContext) func(...interface{}) {
@@ -55,11 +62,12 @@ func createPrintlnFunction(context *PostProcessContext) func(...interface{}) {
 	}
 }
 
-func preparePostProcessContext(vm *otto.Otto, executedRequests []ExecutedRequestResponse, responseErr error) *PostProcessContext {
+func preparePostProcessContext(vm *otto.Otto, executionContext *ExecutionContext, executedRequests []ExecutedRequestResponse, responseErr error) *PostProcessContext {
 	context := &PostProcessContext{
 		Output: "",
 	}
 
+	vm.Set("addVariable", createAddVariableFunction(executionContext))
 	vm.Set("print", createPrintFunction(context))
 	vm.Set("println", createPrintlnFunction(context))
 

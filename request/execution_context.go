@@ -1,5 +1,7 @@
 package request
 
+import "github.com/visola/go-http-cli/session"
+
 // ExecutionContext represent the options to be passed for the request executor.
 type ExecutionContext struct {
 	FollowLocation  bool
@@ -7,5 +9,6 @@ type ExecutionContext struct {
 	PostProcessCode PostProcessSourceCode
 	ProfileNames    []string
 	Request         Request
+	Session         *session.Session
 	Variables       map[string]string
 }
