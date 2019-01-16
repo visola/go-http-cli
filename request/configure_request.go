@@ -18,25 +18,24 @@ var bodyBuilderContentTypes = [...]string{
 	jsonMimeType,
 }
 
-// ConfigureRequest configures a request to be executed based on the provided options
-func ConfigureRequest(unconfiguredRequest Request, passedInOptions ...ConfigureRequestOption) (*Request, error) {
+// CreateConfigureRequestOptions creates the options to configure a request based on the options
+func CreateConfigureRequestOptions(passedInOptions ...ConfigureRequestOption) *ConfigureRequestOptions {
 	configureOptions := &ConfigureRequestOptions{}
 	for _, configureOption := range passedInOptions {
 		configureOption(configureOptions)
 	}
 
-	mergedProfile, profileError := profile.LoadAndMergeProfiles(configureOptions.ProfileNames)
-	if profileError != nil {
-		return nil, profileError
-	}
+	return configureOptions
+}
 
-	namedRequest, namedRequestErr := findNamedRequest(mergedProfile, configureOptions.RequestName)
+// ConfigureRequest configures a request to be executed based on the provided options
+func ConfigureRequest(unconfiguredRequest Request, mergedProfile *profile.Options, configureOptions *ConfigureRequestOptions) (*Request, error) {
+	namedRequest, namedRequestErr := profile.FindNamedRequest(mergedProfile, configureOptions.RequestName)
 	if namedRequestErr != nil {
 		return nil, namedRequestErr
 	}
 
-	configuredRequest := unconfiguredRequest
-
+	configuredRequest := Request{}
 	configuredRequest.Merge(mergedProfile)
 	configuredRequest.Merge(namedRequest)
 	configuredRequest.Merge(unconfiguredRequest)
@@ -86,21 +85,6 @@ func createBody(processedRequest Request, values map[string][]string) string {
 	}
 
 	return fmt.Sprintf("Unsupported body type: %s", contentType)
-}
-
-func findNamedRequest(mergedProfile profile.Options, requestName string) (profile.NamedRequest, error) {
-	if requestName == "" {
-		return profile.NamedRequest{}, nil
-	}
-
-	var namedRequest profile.NamedRequest
-
-	var exists bool
-	if namedRequest, exists = mergedProfile.NamedRequest[requestName]; requestName != "" && !exists {
-		return profile.NamedRequest{}, fmt.Errorf("Request with name %s not found", requestName)
-	}
-
-	return namedRequest, nil
 }
 
 func getBody(configuredRequest Request, values map[string][]string) (string, bool) {

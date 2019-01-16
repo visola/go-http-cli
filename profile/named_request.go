@@ -7,12 +7,14 @@ import (
 
 // NamedRequest is a representation of a request that can be loaded from a profile.
 type NamedRequest struct {
-	Body         string
-	FileToUpload string
-	Headers      map[string][]string
-	Method       string
-	URL          string
-	Values       map[string][]string
+	Body              string
+	FileToUpload      string
+	Headers           map[string][]string
+	Method            string
+	PostProcessScript string
+	Source            string // File where this request was loaded from
+	URL               string
+	Values            map[string][]string
 }
 
 // GetBody returns the body for this NamedRequest

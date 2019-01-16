@@ -85,6 +85,13 @@ func readFrom(pathToYamlFile string) (finalOptions Options, err error) {
 	}
 
 	importedOptions = append(importedOptions, *readOption)
+
+	// Add the source from where each named request was loaded
+	for name, namedRequest := range readOption.NamedRequest {
+		namedRequest.Source = pathToYamlFile
+		readOption.NamedRequest[name] = namedRequest
+	}
+
 	return MergeOptions(importedOptions), err
 }
 

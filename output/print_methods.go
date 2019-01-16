@@ -14,9 +14,26 @@ import (
 // PrintRequest outputs the http.Request
 func PrintRequest(req request.Request) {
 	boldGreen := color.New(color.Bold, color.FgGreen)
-	firstLine := req.Method + " " + req.URL
-	if len(req.QueryParams) > 0 {
-		firstLine += "?" + queryToString(req.QueryParams)
+	parsedURL, _ := url.Parse(req.URL)
+
+	firstLine := req.Method + " " + parsedURL.Scheme + "://" + parsedURL.Hostname()
+	if parsedURL.Port() != "80" {
+		firstLine += ":" + parsedURL.Port()
+	}
+	firstLine += parsedURL.Path
+
+	rawQueryPieces := make([]string, 0)
+	if parsedURL.RawQuery != "" {
+		rawQueryPieces = append(rawQueryPieces, parsedURL.RawQuery)
+	}
+
+	queryString := queryToString(req.QueryParams)
+	if queryString != "" {
+		rawQueryPieces = append(rawQueryPieces, queryString)
+	}
+
+	if len(rawQueryPieces) > 0 {
+		firstLine += "?" + strings.Join(rawQueryPieces, "&")
 	}
 	boldGreen.Println(firstLine)
 

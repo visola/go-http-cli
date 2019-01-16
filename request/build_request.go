@@ -3,6 +3,7 @@ package request
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/visola/go-http-cli/ioutil"
 )
@@ -14,7 +15,17 @@ func BuildRequest(processedRequest Request) (*http.Request, error) {
 		return nil, urlError
 	}
 
-	parsedURL.RawQuery = encodeValues(processedRequest.QueryParams)
+	rawQueryPieces := make([]string, 0)
+	if parsedURL.RawQuery != "" {
+		rawQueryPieces = append(rawQueryPieces, parsedURL.RawQuery)
+	}
+
+	encodedQueryFromValues := encodeValues(processedRequest.QueryParams)
+	if encodedQueryFromValues != "" {
+		rawQueryPieces = append(rawQueryPieces, encodedQueryFromValues)
+	}
+
+	parsedURL.RawQuery = strings.Join(rawQueryPieces, "&")
 
 	req, reqErr := http.NewRequest(processedRequest.Method, parsedURL.String(), nil)
 	if reqErr != nil {

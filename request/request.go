@@ -20,17 +20,17 @@ type Request struct {
 }
 
 // GetBody returns the body for this request
-func (req *Request) GetBody() (string, error) {
+func (req Request) GetBody() (string, error) {
 	return req.Body, nil
 }
 
 // GetHeaders returns the headers for this request
-func (req *Request) GetHeaders() map[string][]string {
+func (req Request) GetHeaders() map[string][]string {
 	return req.Headers
 }
 
 // GetMethod returns the HTTP method for this request
-func (req *Request) GetMethod() string {
+func (req Request) GetMethod() string {
 	return req.Method
 }
 
@@ -55,8 +55,7 @@ func (req *Request) LoadBodyFromFile(fileName string) error {
 
 // Merge merges information from something compatible with a request into this request
 func (req *Request) Merge(toMerge interface{}) error {
-	withBody, ok := toMerge.(base.WithBody)
-	if ok {
+	if withBody, ok := toMerge.(base.WithBody); ok {
 		body, err := withBody.GetBody()
 		if err != nil {
 			return err
@@ -64,20 +63,17 @@ func (req *Request) Merge(toMerge interface{}) error {
 		req.MergeBody(body)
 	}
 
-	withHeader, ok := toMerge.(base.WithHeaders)
-	if ok {
+	if withHeader, ok := toMerge.(base.WithHeaders); ok {
 		req.MergeHeaders(withHeader.GetHeaders())
 	}
 
-	withMethod, ok := toMerge.(base.WithMethod)
-	if ok {
+	if withMethod, ok := toMerge.(base.WithMethod); ok {
 		if withMethod.GetMethod() != "" {
 			req.Method = withMethod.GetMethod()
 		}
 	}
 
-	reqToMerge, ok := toMerge.(Request)
-	if ok {
+	if reqToMerge, ok := toMerge.(Request); ok {
 		req.Cookies = append(req.Cookies, reqToMerge.Cookies...)
 
 		if reqToMerge.URL != "" {

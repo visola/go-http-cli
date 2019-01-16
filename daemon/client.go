@@ -10,8 +10,8 @@ import (
 )
 
 // ExecuteRequest request the daemon to execute a request
-func ExecuteRequest(executionOptions request.ExecutionOptions) (*RequestExecution, error) {
-	dataAsBytes, marshalError := json.Marshal(executionOptions)
+func ExecuteRequest(executionContext request.ExecutionContext) (*RequestExecution, error) {
+	dataAsBytes, marshalError := json.Marshal(executionContext)
 	if marshalError != nil {
 		return nil, marshalError
 	}

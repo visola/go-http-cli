@@ -62,27 +62,21 @@ func executeRequest(c echo.Context) error {
 	lastInteraction = time.Now().UnixNano()
 
 	requestExecution := daemon.RequestExecution{}
-	executionOptions := new(request.ExecutionOptions)
+	executionContext := new(request.ExecutionContext)
 
-	if parseRequestError := c.Bind(executionOptions); parseRequestError != nil {
+	if parseRequestError := c.Bind(executionContext); parseRequestError != nil {
 		log.Error(parseRequestError)
 		requestExecution.ErrorMessage = parseRequestError.Error()
 		c.JSON(http.StatusOK, requestExecution)
 		return nil
 	}
 
-	requestResponses, responseErr := request.ExecuteRequest(*executionOptions)
+	requestResponses, responseErr := request.ExecuteRequestLoop(*executionContext)
 	requestExecution.RequestResponses = requestResponses
 
 	if responseErr != nil {
 		log.Error(responseErr)
 		requestExecution.ErrorMessage = responseErr.Error()
-	}
-
-	postProcessError := request.PostProcess(executionOptions, requestResponses, responseErr)
-	if postProcessError != nil {
-		log.Error(postProcessError)
-		requestExecution.PostProcessError = postProcessError.Error()
 	}
 
 	c.JSON(http.StatusOK, requestExecution)
