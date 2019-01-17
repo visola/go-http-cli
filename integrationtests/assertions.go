@@ -7,6 +7,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// HasBody asserts that the request received the specified body
+func HasBody(t *testing.T, req Request, body string) {
+	assert.Equal(t, body, req.Body, "Should match body")
+}
+
 // HasMethod asserts that the request received the specified method
 func HasMethod(t *testing.T, req Request, method string) {
 	assert.Equal(t, method, req.Method, fmt.Sprintf("Method should be '%s'", method))

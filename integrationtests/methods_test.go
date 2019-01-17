@@ -6,10 +6,26 @@ import (
 )
 
 func TestMethods(t *testing.T) {
-	t.Run("Method GET", WrapForIntegrationTest(testGet))
+	methods := []string{
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+	}
+
+	for _, method := range methods {
+		t.Run("Test "+method, WrapForIntegrationTest(buildTestFunc(method)))
+	}
 }
 
-func testGet(t *testing.T) {
+func buildTestFunc(method string) func(*testing.T) {
+	return func(t *testing.T) {
+		testMethod(t, method)
+	}
+}
+
+func testMethod(t *testing.T, method string) {
 	userID := "1234"
 	companyID := "7890"
 	timestamp := "20181201083035"
@@ -20,12 +36,18 @@ func testGet(t *testing.T) {
 		"-V", "companyID="+companyID,
 		"-V", "userID="+userID,
 		"-V", "timestamp="+timestamp,
+		"-X", method,
 		testServer.URL+path,
 		"companyID={companyID}",
 	)
 
-	HasMethod(t, lastRequest, http.MethodGet)
+	HasMethod(t, lastRequest, method)
 	HasPath(t, lastRequest, "/users/"+userID)
-	HasQueryParam(t, lastRequest, "companyID", companyID)
 	HasQueryParam(t, lastRequest, "timestamp", timestamp)
+
+	if method == http.MethodGet {
+		HasQueryParam(t, lastRequest, "companyID", companyID)
+	} else {
+		HasBody(t, lastRequest, `{"companyID":"`+companyID+`"}`)
+	}
 }

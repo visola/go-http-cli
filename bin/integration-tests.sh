@@ -16,4 +16,4 @@ go build -o $EXECUTION_DIR/go-http-daemon ./binaries/go-http-daemon
 go build -o $EXECUTION_DIR/http ./binaries/http
 
 # Prepare for the test
-go test ./integrationtests
+go test -v ./integrationtests
