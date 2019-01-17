@@ -12,6 +12,15 @@ func HasBody(t *testing.T, req Request, body string) {
 	assert.Equal(t, body, req.Body, "Should match body")
 }
 
+// HasHeader asserts that the rquest received the specified header with value
+func HasHeader(t *testing.T, req Request, name string, value string) {
+	headerValues := req.Headers[name]
+	assert.NotEmpty(t, headerValues, fmt.Sprintf("Expected header: '%s'", name))
+	if len(headerValues) > 0 {
+		assert.Contains(t, headerValues, value, fmt.Sprintf("Header '%s' should include value '%s", name, value))
+	}
+}
+
 // HasMethod asserts that the request received the specified method
 func HasMethod(t *testing.T, req Request, method string) {
 	assert.Equal(t, method, req.Method, fmt.Sprintf("Method should be '%s'", method))
