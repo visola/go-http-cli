@@ -56,11 +56,3 @@ func RunHTTP(t *testing.T, args ...string) string {
 	}
 	return output
 }
-
-// WrapWithKillDamon executes a test after calling KillDaemon
-func WrapWithKillDamon(toWrap func(*testing.T)) func(*testing.T) {
-	return func(t *testing.T) {
-		KillDaemon()
-		toWrap(t)
-	}
-}

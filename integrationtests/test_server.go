@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 )
 
 // Request stores a request that was received by the test server
@@ -20,16 +19,6 @@ type Request struct {
 // ReplyWith gives specifications the ability to ask the server to reply in a specific way
 type ReplyWith struct {
 	Headers map[string][]string
-}
-
-// WrapWithTestServer initializes the test server and make sure it will tear down correctly after
-func WrapWithTestServer(toWrap func(*testing.T)) func(*testing.T) {
-	return func(t *testing.T) {
-		startTestServer()
-		defer testServer.Close()
-
-		toWrap(t)
-	}
 }
 
 var lastRequest Request

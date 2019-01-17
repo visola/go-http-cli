@@ -6,7 +6,7 @@ import (
 )
 
 func TestMethods(t *testing.T) {
-	t.Run("Method GET", WrapWithKillDamon(WrapWithTestServer(testGet)))
+	t.Run("Method GET", WrapForIntegrationTest(testGet))
 }
 
 func testGet(t *testing.T) {
