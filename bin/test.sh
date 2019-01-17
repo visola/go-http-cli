@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 # Code Climate tool requires the file to be named c.out and to be in the project root
 COVERAGE_OUTPUT=c.out
@@ -15,6 +15,10 @@ fi
 PACKAGES=$(go list ./... | grep -v /vendor/)
 for package in ${PACKAGES}
 do
+  if [[ "$package" == *"integrationtests"* ]]; then
+    continue
+  fi
+
   go test -coverprofile=$TEMP_COVERAGE $package
   if [ -f $TEMP_COVERAGE ]; then
     cat $TEMP_COVERAGE | grep -v "mode:" | sort -r >> $COVERAGE_OUTPUT
