@@ -17,7 +17,7 @@ func PrintRequest(req request.Request) {
 	parsedURL, _ := url.Parse(req.URL)
 
 	firstLine := req.Method + " " + parsedURL.Scheme + "://" + parsedURL.Hostname()
-	if parsedURL.Port() != "80" {
+	if parsedURL.Port() != "" {
 		firstLine += ":" + parsedURL.Port()
 	}
 	firstLine += parsedURL.Path
