@@ -1,9 +1,17 @@
 package integrationtests
 
-import "testing"
+import (
+	"os"
+	"path"
+	"reflect"
+	"runtime"
+	"strings"
+	"testing"
+)
 
 // WrapForIntegrationTest wraps a testing function with all the required pieces for an integration test
 func WrapForIntegrationTest(toWrap func(*testing.T)) func(*testing.T) {
+	os.Setenv("GO_HTTP_PROFILES", path.Join(os.Getenv("EXECUTION_DIR"), getTestName(toWrap)))
 	return WrapWithKillDamon(WrapWithTestServer(toWrap))
 }
 
@@ -23,4 +31,10 @@ func WrapWithTestServer(toWrap func(*testing.T)) func(*testing.T) {
 
 		toWrap(t)
 	}
+}
+
+func getTestName(testFunc func(*testing.T)) string {
+	fullName := runtime.FuncForPC(reflect.ValueOf(testFunc).Pointer()).Name()
+	split := strings.Split(fullName, ".")
+	return split[len(split)-1]
 }

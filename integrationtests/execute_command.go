@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/visola/go-http-cli/profile"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +19,8 @@ func ExecuteCommand(cmd string, args ...string) (int, string, string, error) {
 	command := exec.Command(cmd, args...)
 	command.Dir = executionDir
 
-	env := []string{"PATH=" + executionDir}
+	profilesDir, _ := profile.GetProfilesDir()
+	env := []string{"PATH=" + executionDir, "GO_HTTP_PROFILES=" + profilesDir}
 	command.Env = env
 
 	var outbuf, errbuf bytes.Buffer
