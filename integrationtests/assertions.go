@@ -14,11 +14,7 @@ func HasBody(t *testing.T, req Request, body string) {
 
 // HasHeader asserts that the rquest received the specified header with value
 func HasHeader(t *testing.T, req Request, name string, value string) {
-	headerValues := req.Headers[name]
-	assert.NotEmpty(t, headerValues, fmt.Sprintf("Expected header: '%s'", name))
-	if len(headerValues) > 0 {
-		assert.Contains(t, headerValues, value, fmt.Sprintf("Header '%s' should include value '%s", name, value))
-	}
+	checkMapOfArrayOfStrings(t, req.Headers, name, value, "header")
 }
 
 // HasMethod asserts that the request received the specified method
@@ -33,9 +29,13 @@ func HasPath(t *testing.T, req Request, expectedPath string) {
 
 // HasQueryParam checks if a request has the query parameter with the specified value
 func HasQueryParam(t *testing.T, req Request, name string, value string) {
-	paramValues := req.Query[name]
-	assert.NotEmpty(t, paramValues, fmt.Sprintf("Expected query param: '%s'", name))
-	if len(paramValues) > 0 {
-		assert.Contains(t, paramValues, value, fmt.Sprintf("Param '%s' should include value '%s", name, value))
+	checkMapOfArrayOfStrings(t, req.Query, name, value, "query param")
+}
+
+func checkMapOfArrayOfStrings(t *testing.T, toCheck map[string][]string, name string, value string, alias string) {
+	values := toCheck[name]
+	assert.NotEmpty(t, values, fmt.Sprintf("Expected %s: '%s'", alias, name))
+	if len(values) > 0 {
+		assert.Contains(t, values, value, fmt.Sprintf("%s '%s' should include value '%s", alias, name, value))
 	}
 }
