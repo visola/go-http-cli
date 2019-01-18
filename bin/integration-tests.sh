@@ -15,5 +15,5 @@ mkdir $EXECUTION_DIR
 go build -o $EXECUTION_DIR/go-http-daemon ./binaries/go-http-daemon
 go build -o $EXECUTION_DIR/http ./binaries/http
 
-# Prepare for the test
-go test -v ./integrationtests
+# Run integration tests
+go test ./integrationtests
