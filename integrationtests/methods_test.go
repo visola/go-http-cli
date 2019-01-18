@@ -43,6 +43,7 @@ func testMethod(t *testing.T, method string) {
 		"-V", "value2="+value2,
 		"-X", method,
 		testServer.URL+path,
+		"createdAfter=2018-12-01 10:00:00+0400",
 		"companyID={companyID}",
 	)
 
@@ -55,7 +56,8 @@ func testMethod(t *testing.T, method string) {
 
 	if method == http.MethodGet {
 		HasQueryParam(t, lastRequest, "companyID", companyID)
+		HasQueryParam(t, lastRequest, "createdAfter", "2018-12-01 10:00:00+0400")
 	} else {
-		HasBody(t, lastRequest, `{"companyID":"`+companyID+`"}`)
+		HasBody(t, lastRequest, `{"companyID":"`+companyID+`","createdAfter":"2018-12-01 10:00:00+0400"}`)
 	}
 }
