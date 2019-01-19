@@ -1,7 +1,7 @@
 build/
 c.out
 .DS_Store
-integration-tests/execution/
+integrationtests/execution/
 .project
 .settings/
 *.test
