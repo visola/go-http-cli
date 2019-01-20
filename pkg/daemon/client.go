@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/visola/go-http-cli/ioutil"
-	"github.com/visola/go-http-cli/request"
+	"github.com/visola/go-http-cli/pkg/ioutil"
+	"github.com/visola/go-http-cli/pkg/request"
 )
 
 // ExecuteRequest request the daemon to execute a request

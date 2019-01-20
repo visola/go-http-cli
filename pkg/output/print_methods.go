@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/visola/go-http-cli/request"
+	"github.com/visola/go-http-cli/pkg/request"
 )
 
 // PrintRequest outputs the http.Request

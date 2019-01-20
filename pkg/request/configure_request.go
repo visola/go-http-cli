@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/visola/go-http-cli/base"
-	"github.com/visola/go-http-cli/profile"
+	"github.com/visola/go-http-cli/pkg/base"
+	"github.com/visola/go-http-cli/pkg/profile"
 )
 
 const jsonMimeType = "application/json"

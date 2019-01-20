@@ -1,6 +1,6 @@
 package daemon
 
-import "github.com/visola/go-http-cli/request"
+import "github.com/visola/go-http-cli/pkg/request"
 
 // HandshakeResponse is the response sent by the daemon when someone is checking if it's up.
 type HandshakeResponse struct {

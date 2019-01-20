@@ -15,7 +15,7 @@ fi
 PACKAGES=$(go list ./... | grep -v /vendor/)
 for package in ${PACKAGES}
 do
-  if [[ "$package" == *"integrationtests"* ]]; then
+  if [[ "$package" == *"test/integration"* ]]; then
     continue
   fi
 

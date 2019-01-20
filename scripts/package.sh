@@ -11,15 +11,15 @@ build_and_zip() {
 
     # build http cli
     PACKAGE_FILE=$PACKAGE_DIR/http$4
-    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./binaries/http
+    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./cmd/http
 
     # build go-http-daemon
     PACKAGE_FILE=$PACKAGE_DIR/go-http-daemon$4
-    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./binaries/go-http-daemon
+    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./cmd/go-http-daemon
 
     # build go-http-completion
     PACKAGE_FILE=$PACKAGE_DIR/go-http-completion$4
-    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./binaries/go-http-completion
+    GOOS=$1 GOARCH=$2 go build -o $PACKAGE_FILE ./cmd/go-http-completion
 
     # Copy license and readme
     cp LICENSE $PACKAGE_DIR/

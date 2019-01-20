@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/visola/go-http-cli/profile"
+	"github.com/visola/go-http-cli/pkg/profile"
 )
 
 func TestConfigureRequest(t *testing.T) {

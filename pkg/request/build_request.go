@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/visola/go-http-cli/ioutil"
+	"github.com/visola/go-http-cli/pkg/ioutil"
 )
 
 // BuildRequest builds an http.Request from a configured request.Request

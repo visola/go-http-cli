@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/visola/go-http-cli/profile"
+	"github.com/visola/go-http-cli/pkg/profile"
 	"github.com/visola/variables/variables"
 )
 

@@ -1,8 +1,8 @@
 package profile
 
 import (
-	"github.com/visola/go-http-cli/authorization"
-	"github.com/visola/go-http-cli/model"
+	"github.com/visola/go-http-cli/pkg/authorization"
+	"github.com/visola/go-http-cli/pkg/model"
 )
 
 // Used to unmarshal data from YAML files

@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/visola/go-http-cli/profile"
-	"github.com/visola/go-http-cli/session"
-	"github.com/visola/go-http-cli/util"
+	"github.com/visola/go-http-cli/pkg/profile"
+	"github.com/visola/go-http-cli/pkg/session"
+	"github.com/visola/go-http-cli/pkg/util"
 	"github.com/visola/variables/variables"
 )
 

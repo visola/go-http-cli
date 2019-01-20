@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/op/go-logging"
-	"github.com/visola/go-http-cli/daemon"
-	"github.com/visola/go-http-cli/request"
+	"github.com/visola/go-http-cli/pkg/daemon"
+	"github.com/visola/go-http-cli/pkg/request"
 )
 
 var (

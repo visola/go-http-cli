@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/visola/go-http-cli/profile"
+	"github.com/visola/go-http-cli/pkg/profile"
 )
 
 func completeProfiles(profilePrefix string) {

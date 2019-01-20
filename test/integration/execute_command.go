@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/visola/go-http-cli/profile"
+	"github.com/visola/go-http-cli/pkg/profile"
 
 	"github.com/stretchr/testify/assert"
 )

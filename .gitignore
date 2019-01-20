@@ -1,8 +1,8 @@
 build/
 c.out
 .DS_Store
-integrationtests/execution/
 .project
 .settings/
 *.test
+test/integration/execution/
 .vscode/

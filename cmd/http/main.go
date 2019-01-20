@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/visola/go-http-cli/cli"
-	"github.com/visola/go-http-cli/daemon"
-	"github.com/visola/go-http-cli/output"
-	"github.com/visola/go-http-cli/profile"
-	"github.com/visola/go-http-cli/request"
+	"github.com/visola/go-http-cli/pkg/cli"
+	"github.com/visola/go-http-cli/pkg/daemon"
+	"github.com/visola/go-http-cli/pkg/output"
+	"github.com/visola/go-http-cli/pkg/profile"
+	"github.com/visola/go-http-cli/pkg/request"
 )
 
 func main() {
