@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/gorilla/mux"
 	"github.com/op/go-logging"
 	"github.com/visola/go-http-cli/pkg/daemon"
 	"github.com/visola/go-http-cli/pkg/request"
@@ -25,10 +27,9 @@ func main() {
 
 	configureLogging()
 
-	server := echo.New()
-
-	server.GET("/", handshake)
-	server.POST("/request", executeRequest)
+	server := mux.NewRouter()
+	server.HandleFunc("/", handshake).Methods(http.MethodGet)
+	server.HandleFunc("/request", executeRequest).Methods(http.MethodPost)
 
 	log.Debugf("Daemon version %d.%d started and waiting for connections on port %s", daemon.DaemonMajorVersion, daemon.DaemonMinorVersion, daemon.DaemonPort)
 
@@ -37,7 +38,7 @@ func main() {
 	}
 
 	go checkInteratcion()
-	log.Fatal(server.Start(":" + string(daemon.DaemonPort)))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", daemon.DaemonPort), server))
 }
 
 func configureLogging() {
@@ -57,21 +58,25 @@ func checkInteratcion() {
 	}
 }
 
-func executeRequest(c echo.Context) error {
+func executeRequest(w http.ResponseWriter, req *http.Request) {
 	log.Debug("Execute request")
 	lastInteraction = time.Now().UnixNano()
 
 	requestExecution := daemon.RequestExecution{}
-	executionContext := new(request.ExecutionContext)
+	var executionContext request.ExecutionContext
 
-	if parseRequestError := c.Bind(executionContext); parseRequestError != nil {
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	if parseRequestError := decoder.Decode(&executionContext); parseRequestError != nil {
 		log.Error(parseRequestError)
 		requestExecution.ErrorMessage = parseRequestError.Error()
-		c.JSON(http.StatusOK, requestExecution)
-		return nil
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(requestExecution)
+		return
 	}
 
-	requestResponses, responseErr := request.ExecuteRequestLoop(*executionContext)
+	requestResponses, responseErr := request.ExecuteRequestLoop(executionContext)
 	requestExecution.RequestResponses = requestResponses
 
 	if responseErr != nil {
@@ -79,11 +84,11 @@ func executeRequest(c echo.Context) error {
 		requestExecution.ErrorMessage = responseErr.Error()
 	}
 
-	c.JSON(http.StatusOK, requestExecution)
-	return nil
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(requestExecution)
 }
 
-func handshake(c echo.Context) error {
+func handshake(w http.ResponseWriter, req *http.Request) {
 	log.Debug("Handshake request")
 	lastInteraction = time.Now().UnixNano()
 
@@ -92,6 +97,6 @@ func handshake(c echo.Context) error {
 		MinorVersion: daemon.DaemonMinorVersion,
 	}
 
-	c.JSON(http.StatusOK, handshake)
-	return nil
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(handshake)
 }
