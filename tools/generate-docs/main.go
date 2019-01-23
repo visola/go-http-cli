@@ -1,16 +1,24 @@
 package main
 
 import (
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
+// DocumentationContext is what will be passed to the templates when generating the final README
+type DocumentationContext struct {
+	Parts []DocumentPart
+}
+
 // DocumentPart represents one part of the final document
 type DocumentPart struct {
-	Title   string
+	Anchor  string
 	Content string
+	Path    string
+	Title   string
 }
 
 func main() {
@@ -21,8 +29,16 @@ func main() {
 
 	defer f.Close()
 
-	for _, part := range collectAllParts() {
-		f.WriteString(part.Content)
+	context := DocumentationContext{
+		Parts: collectAllParts(),
+	}
+
+	for _, part := range context.Parts {
+		tmpl := template.Must(template.New(part.Path).Parse(part.Content))
+		execErr := tmpl.Execute(f, context)
+		if execErr != nil {
+			panic(execErr)
+		}
 		f.WriteString("\n")
 	}
 }
@@ -59,9 +75,14 @@ func getDocumentPart(path string) (docPart DocumentPart, err error) {
 	}
 
 	fileName := filepath.Base(path)
+	title := getTitleFromFileName(fileName)
+	anchor := strings.Replace(strings.ToLower(title), " ", "-", -1)
+
 	docPart = DocumentPart{
+		Anchor:  anchor,
 		Content: string(content),
-		Title:   getTitleFromFileName(fileName),
+		Path:    path,
+		Title:   title,
 	}
 
 	return

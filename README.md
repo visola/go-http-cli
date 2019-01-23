@@ -7,6 +7,10 @@
 An HTTP client inspired by [Curl](https://github.com/curl/curl), [Postman](https://www.getpostman.com/) and [httpie](https://github.com/jakubroztocil/httpie) made with :heart: in Go.
 
 
+## Table of Content
+
+[Header](#header)<br />[Getting Started](#getting-started)<br />[Basic Usage](#basic-usage)<br />[Profiles](#profiles)<br />[Variables](#variables)<br />[Named Requests](#named-requests)<br />[Authentication](#authentication)<br />[Building from source](#building-from-source)<br />
+
 ## Getting Started
 
 Download the latest [release](https://github.com/visola/go-http-cli/releases) for your platform.
