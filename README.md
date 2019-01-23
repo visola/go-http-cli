@@ -6,6 +6,11 @@
 
 An HTTP client inspired by [Curl](https://github.com/curl/curl), [Postman](https://www.getpostman.com/) and [httpie](https://github.com/jakubroztocil/httpie) made with :heart: in Go.
 
+
+## Table of Content
+
+[Header](#header)<br />[Getting Started](#getting-started)<br />[Basic Usage](#basic-usage)<br />[Profiles](#profiles)<br />[Variables](#variables)<br />[Named Requests](#named-requests)<br />[Authentication](#authentication)<br />[Building from source](#building-from-source)<br />
+
 ## Getting Started
 
 Download the latest [release](https://github.com/visola/go-http-cli/releases) for your platform.
@@ -22,36 +27,54 @@ There's also an auto-completion helper for bash. You can add the following to yo
 complete -f -C go-http-completion http
 ```
 
-## What does it look like?
+## Basic Usage
 
-Example command pointing to a test server:
+You can use go-http-cli similarly as you use cURL. The most commonly used options are available and the same. So you can do something like:
+
+```bash
+$ http \
+  -H Content-Type:application/json \
+  -X POST \
+  -d '{ "name": "John Doe" }' \
+  https://httpbin.org/post?companyId=1234
+```
+
+Will execute the following:
+```HTTP
+POST https://httpbin.org/post?companyId=1234
+Content-Type: application/json
+
+{ "name": "John Doe" }
+```
+
+go-http-cli can help you to do URL encoding if you pass in some key-value pairs, instead of adding the query string to the end of the URL, like the following, which would generate the same as above:
 
 ```bash
 http \
-  -H Content-Type=application/json \
+  -H Content-Type:application/json \
   -X POST \
   -d '{ "name": "John Doe" }' \
-  -V companyId=123456 \
-  http://localhost:3000/api/v1/{companyId}/people
+  https://httpbin.org/post \
+  companyId=1234
 ```
 
-Output:
+When dealing with REST APIs, it's common to build JSONs and sending them in the body. go-http-cli can do this for you. If key-value pairs are passed in and the method is `POST`, it will automatically build a JSON for you:
 
-<p style="text-align:center">
-  <img width="600px" src="README/output_sample.png" />
-</p>
+```
+$ http \
+  -X POST \
+  https://httpbin.org/post \
+  companyId=1234 \
+  'name=John Doe'
+```
 
-## Usage
+Which generates the following request:
 
-```bash
-Usage of http:
-  -c, --config keyValuePair     Path to configuration files to be used
-  -d, --data string             Data to be sent as body
-  -H, --header keyValuePair     Headers to include with your request
-  -L, --location                Automatically follow redirects
-      --max-redirs int          Maximum number of redirects to follow (default 50)
-  -X, --method string           HTTP method to be used
-  -V, --variable keyValuePair   Variables to be used on substitutions
+```HTTP
+POST https://httpbin.org/post
+Content-Type: application/json
+
+{"companyId":"1234","name":"John Doe"}
 ```
 
 ## Profiles
@@ -65,7 +88,7 @@ environment variable `GO_HTTP_PROFILES`.
 To activate a profile just add `+profileName` as part of your arguments. In this case, it would look for a
 `${user.home}/go-http-cli/profileName.{yml|yaml}` file. It will fail if it can't find it.
 
-What can I do with profiles? Many things, check it out for yourself:
+What can you do with profiles? Many things:
 
 ### Base URL
 
@@ -147,7 +170,7 @@ Content-type: application/json
 ...
 ```
 
-### Requests
+### Named Requests
 
 You can preconfigure requests inside a profile and then call them by name using `@requestName`. For example,
 if you had this in your profile:
@@ -213,7 +236,7 @@ Content-type: application/json
 ...
 </pre>
 
-## Want to build from source?
+## Building from source
 
 This project uses [Gradle](https://www.gradle.org) as the build system. To run it, the only thing
 you'll need is to have Java installed. If you have a Go workspace [correctly setup](https://golang.org/doc/code.html)
@@ -240,3 +263,4 @@ or for one specific platform:
 ```bash
 ./gradlew packageDarwinAMD64
 ```
+

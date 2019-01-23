@@ -1,7 +1,8 @@
 #!/bin/bash
-set -ex
+set -e
 
 build_and_zip() {
+    echo "Building and packaging for $1-$2"
     # $1 -> operating system
     # $2 -> architecture
     # $3 -> OS alias, used in the output file name

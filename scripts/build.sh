@@ -8,7 +8,8 @@ $SCRIPT_DIR/clean.sh
 # Kill daemon
 go-http-daemon --kill
 
-$SCRIPT_DIR/updateDependencies.sh
+$SCRIPT_DIR/update-dependencies.sh
 $SCRIPT_DIR/test.sh
 $SCRIPT_DIR/integration-tests.sh
+$SCRIPT_DIR/generate-docs.sh
 $SCRIPT_DIR/package.sh
