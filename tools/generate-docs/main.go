@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -51,6 +52,11 @@ func collectAllParts() []DocumentPart {
 		}
 
 		if info.IsDir() {
+			return nil
+		}
+
+		expectedFileFormat, _ := regexp.MatchString(`\d+_[\w\s]+\.md`, info.Name())
+		if !expectedFileFormat {
 			return nil
 		}
 
