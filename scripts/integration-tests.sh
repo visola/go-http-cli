@@ -17,3 +17,6 @@ go build -o $EXECUTION_DIR/http ./cmd/http
 
 # Run integration tests
 go test ./test/integration
+
+# Kill daemon after integration tests
+go-http-daemon --kill

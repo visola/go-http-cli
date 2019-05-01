@@ -11,7 +11,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/visola/variables v0.0.0-20180924201714-61cb3895d418
-	golang.org/x/sys v0.0.0-20190116161447-11f53e031339 // indirect
+	golang.org/x/sys v0.0.0-20190412213103-97732733099d // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
