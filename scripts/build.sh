@@ -5,8 +5,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 $SCRIPT_DIR/clean.sh
 
-# Kill daemon
-go-http-daemon --kill
+if hash go-http-daemon 2>/dev/null; then
+  # Kill daemon
+  go-http-daemon --kill
+fi
 
 $SCRIPT_DIR/update-dependencies.sh
 $SCRIPT_DIR/test.sh
