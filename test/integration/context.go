@@ -1,4 +1,4 @@
-package integrationtests
+package integration
 
 func getContext() map[string]string {
 	return map[string]string{
