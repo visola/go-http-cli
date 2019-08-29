@@ -5,21 +5,13 @@ import (
 	"sync"
 )
 
-var managerInstance = manager{
-	sessions: make(map[string]*Session),
-}
-
+var sessions = make(map[string]*Session)
 var sessionMutex = &sync.Mutex{}
 
-// manager holds sessions based on domain.
-type manager struct {
-	sessions map[string]*Session
-}
-
 // Get a session based on a URL.
-func Get(host string) (*Session, error) {
+func Get(host string) *Session {
 	sessionMutex.Lock()
-	session, exists := managerInstance.sessions[host]
+	session, exists := sessions[host]
 
 	if !exists {
 		session = &Session{
@@ -27,9 +19,9 @@ func Get(host string) (*Session, error) {
 			Variables: make(map[string]string),
 		}
 
-		managerInstance.sessions[host] = session
+		sessions[host] = session
 	}
 
 	sessionMutex.Unlock()
-	return session, nil
+	return session
 }

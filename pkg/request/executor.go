@@ -154,7 +154,7 @@ func loadSessionForRequest(requestURL string) (*session.Session, error) {
 		return nil, parseURLErr
 	}
 
-	return session.Get(parsedURL.Hostname())
+	return session.Get(parsedURL.Hostname()), nil
 }
 
 func shouldRedirect(statusCode int) bool {
