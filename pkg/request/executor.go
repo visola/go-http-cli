@@ -125,7 +125,7 @@ func executeRequest(client *http.Client, configuredRequest Request, currentSessi
 	}
 
 	for _, cookie := range httpResponse.Cookies() {
-		currentSession.Cookies[cookie.Name] = cookie
+		session.SetCookie(currentSession.Host, cookie)
 	}
 
 	bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
