@@ -11,6 +11,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/visola/go-http-cli/pkg/daemon"
 	"github.com/visola/go-http-cli/pkg/request"
+	"github.com/visola/go-http-cli/pkg/session"
 )
 
 var (
@@ -28,8 +29,9 @@ func main() {
 	configureLogging()
 
 	server := mux.NewRouter()
-	server.HandleFunc("/", handshake).Methods(http.MethodGet)
-	server.HandleFunc("/request", executeRequest).Methods(http.MethodPost)
+	server.HandleFunc("/", timeFunction("Handshake", handshake)).Methods(http.MethodGet)
+	server.HandleFunc("/request", timeFunction("Execute Request", executeRequest)).Methods(http.MethodPost)
+	server.HandleFunc("/variables", timeFunction("Set Variable", setVariable)).Methods(http.MethodPost)
 
 	log.Debugf("Daemon version %d.%d started and waiting for connections on port %s", daemon.DaemonMajorVersion, daemon.DaemonMinorVersion, daemon.DaemonPort)
 
@@ -59,7 +61,6 @@ func checkInteratcion() {
 }
 
 func executeRequest(w http.ResponseWriter, req *http.Request) {
-	log.Debug("Execute request")
 	lastInteraction = time.Now().UnixNano()
 
 	requestExecution := daemon.RequestExecution{}
@@ -89,7 +90,6 @@ func executeRequest(w http.ResponseWriter, req *http.Request) {
 }
 
 func handshake(w http.ResponseWriter, req *http.Request) {
-	log.Debug("Handshake request")
 	lastInteraction = time.Now().UnixNano()
 
 	handshake := &daemon.HandshakeResponse{
@@ -99,4 +99,31 @@ func handshake(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(handshake)
+}
+
+func setVariable(w http.ResponseWriter, req *http.Request) {
+	lastInteraction = time.Now().UnixNano()
+
+	var setVariableRequest session.SetVariableRequest
+
+	decoder := json.NewDecoder(req.Body)
+	defer req.Body.Close()
+
+	if parseRequestError := decoder.Decode(&setVariableRequest); parseRequestError != nil {
+		log.Error(parseRequestError)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(parseRequestError.Error()))
+		return
+	}
+
+	session.SetGlobalVariable(setVariableRequest.Name, setVariableRequest.Value)
+	w.WriteHeader(http.StatusOK)
+}
+
+func timeFunction(name string, toWrap func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
+		start := time.Now().UnixNano()
+		toWrap(w, req)
+		log.Debugf("%s executed in %d microseconds", name, (time.Now().UnixNano()-start)/1000)
+	}
 }

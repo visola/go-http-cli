@@ -35,12 +35,23 @@ func SetCookie(host string, cookie *http.Cookie) {
 
 // SetGlobalVariable sets a value that will be merged into all sessions
 func SetGlobalVariable(name, value string) {
+	if value == "" {
+		delete(sessions[""].Variables, name)
+		return
+	}
+
 	sessions[""].Variables[name] = value
 }
 
 // SetVariable sets a value to a specific variable, creating a session if it doesn't exists
 func SetVariable(host, name, value string) {
-	ensureSession(host).Variables[name] = value
+	session := ensureSession(host)
+	if value == "" {
+		delete(session.Variables, name)
+		return
+	}
+
+	session.Variables[name] = value
 }
 
 func ensureSession(host string) *Session {
