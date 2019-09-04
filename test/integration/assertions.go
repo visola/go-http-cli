@@ -12,6 +12,19 @@ func HasBody(t *testing.T, req Request, body string) {
 	assert.Equal(t, body, req.Body, "Should match body")
 }
 
+// HasCookie asserts that the request received the specific cookies
+func HasCookie(t *testing.T, req Request, name string, value string) {
+	assert.True(t, len(req.Cookies) > 0, "Request does not contain any cookies.")
+	if len(req.Cookies) > 0 {
+		for _, cookie := range req.Cookies {
+			if cookie.Name == name && cookie.Value == value {
+				return
+			}
+		}
+		assert.Fail(t, fmt.Sprintf("Cookies do not contain %s=%s => %s", name, value, req.Cookies))
+	}
+}
+
 // HasHeader asserts that the rquest received the specified header with value
 func HasHeader(t *testing.T, req Request, name string, value string) {
 	checkMapOfArrayOfStrings(t, req.Headers, name, value, "header")

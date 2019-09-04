@@ -10,6 +10,7 @@ import (
 // Request stores a request that was received by the test server
 type Request struct {
 	Body    string
+	Cookies []*http.Cookie
 	Headers map[string][]string
 	Method  string
 	Path    string
@@ -37,6 +38,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	lastRequest = Request{
 		Body:    string(body),
+		Cookies: r.Cookies(),
 		Headers: r.Header,
 		Method:  r.Method,
 		Path:    r.URL.Path,

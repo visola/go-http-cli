@@ -23,5 +23,6 @@ func testKeepsTrackOfCookies(t *testing.T) {
 
 	RunHTTP(t, testServer.URL)
 	HasMethod(t, lastRequest, http.MethodGet)
-	HasHeader(t, lastRequest, "Cookie", "someKey=someValue; anotherCookie=someOtherValue")
+	HasCookie(t, lastRequest, "someKey", "someValue")
+	HasCookie(t, lastRequest, "anotherCookie", "someOtherValue")
 }
