@@ -2,6 +2,7 @@ package integration
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,9 +47,23 @@ func HasQueryParam(t *testing.T, req Request, name string, value string) {
 }
 
 func checkMapOfArrayOfStrings(t *testing.T, toCheck map[string][]string, name string, value string, alias string) {
-	values := toCheck[name]
+	values, exists := toCheck[name]
+	if !exists {
+		values = toCheck[strings.ToLower(name)]
+	}
+
 	assert.NotEmpty(t, values, fmt.Sprintf("Expected %s: '%s'", alias, name))
 	if len(values) > 0 {
-		assert.Contains(t, values, value, fmt.Sprintf("%s '%s' should include value '%s", alias, name, value))
+		containsCaseInsensitive(t, values, value, fmt.Sprintf("%s '%s' should include value '%s", alias, name, value))
 	}
+}
+
+func containsCaseInsensitive(t *testing.T, values []string, expectedValue, message string) {
+	expectedValue = strings.ToLower(expectedValue)
+	for _, value := range values {
+		if strings.ToLower(value) == expectedValue {
+			return
+		}
+	}
+	assert.Fail(t, message)
 }
