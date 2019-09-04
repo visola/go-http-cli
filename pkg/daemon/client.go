@@ -7,6 +7,7 @@ import (
 
 	"github.com/visola/go-http-cli/pkg/ioutil"
 	"github.com/visola/go-http-cli/pkg/request"
+	"github.com/visola/go-http-cli/pkg/session"
 )
 
 // ExecuteRequest request the daemon to execute a request
@@ -35,6 +36,20 @@ func Handshake() (int8, error) {
 	}
 
 	return handshake.MajorVersion, nil
+}
+
+// SetVariables sends variables to be set in the global session
+func SetVariables(seVariablesRequest session.SetVariableRequest) error {
+	dataAsBytes, marshalError := json.Marshal(seVariablesRequest)
+	if marshalError != nil {
+		return marshalError
+	}
+
+	if callDaemonError := callDaemon("/variables", string(dataAsBytes), nil); callDaemonError != nil {
+		return callDaemonError
+	}
+
+	return nil
 }
 
 func callDaemon(path string, data string, unmarshalTo interface{}) error {
@@ -67,5 +82,9 @@ func callDaemon(path string, data string, unmarshalTo interface{}) error {
 		panic(fmt.Sprintf("Daemon responded with unexpected status code: %d - %s\nURL: %s, Method: %s", response.StatusCode, response.Status, url, method))
 	}
 
-	return json.NewDecoder(response.Body).Decode(unmarshalTo)
+	if unmarshalTo != nil {
+		return json.NewDecoder(response.Body).Decode(unmarshalTo)
+	}
+
+	return nil
 }

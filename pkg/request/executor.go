@@ -125,7 +125,7 @@ func executeRequest(client *http.Client, configuredRequest Request, currentSessi
 	}
 
 	for _, cookie := range httpResponse.Cookies() {
-		currentSession.Cookies = append(currentSession.Cookies, cookie)
+		session.SetCookie(currentSession.Host, cookie)
 	}
 
 	bodyBytes, readErr := ioutil.ReadAll(httpResponse.Body)
@@ -154,7 +154,7 @@ func loadSessionForRequest(requestURL string) (*session.Session, error) {
 		return nil, parseURLErr
 	}
 
-	return session.Get(parsedURL.Hostname())
+	return session.Get(parsedURL.Hostname()), nil
 }
 
 func shouldRedirect(statusCode int) bool {

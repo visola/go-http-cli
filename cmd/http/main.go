@@ -8,15 +8,19 @@ import (
 	"github.com/fatih/color"
 	"github.com/visola/go-http-cli/pkg/cli"
 	"github.com/visola/go-http-cli/pkg/daemon"
+	"github.com/visola/go-http-cli/pkg/model"
 	"github.com/visola/go-http-cli/pkg/output"
 	"github.com/visola/go-http-cli/pkg/profile"
 	"github.com/visola/go-http-cli/pkg/request"
+	"github.com/visola/go-http-cli/pkg/session"
 )
 
 func main() {
 	ensureDaemon()
 
 	options := parseCommandLineArguments()
+
+	checkForSetVariableRequest(options)
 
 	configureRequestOptions := request.CreateConfigureRequestOptions(
 		request.AddProfiles(options.Profiles...),
@@ -55,6 +59,29 @@ func main() {
 	}
 
 	printOutput(requestExecution, options)
+}
+
+func checkForSetVariableRequest(options *cli.CommandLineOptions) {
+	// If passed variables, no profiles and no URL, then it sets a variable to global session
+	if len(options.Variables) > 0 && len(options.Profiles) == 0 && options.URL == "" {
+		setVariableRequest := session.SetVariableRequest{
+			Values: make([]model.KeyValuePair, 0),
+		}
+
+		for name, value := range options.Variables {
+			setVariableRequest.Values = append(setVariableRequest.Values, model.KeyValuePair{
+				Name:  name,
+				Value: value,
+			})
+		}
+
+		if err := daemon.SetVariables(setVariableRequest); err != nil {
+			panic(err)
+		}
+
+		color.Green("Variables set.")
+		os.Exit(0)
+	}
 }
 
 func ensureDaemon() {
