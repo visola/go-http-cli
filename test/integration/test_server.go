@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 )
 
 // Request stores a request that was received by the test server
@@ -39,7 +40,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	lastRequest = Request{
 		Body:    string(body),
 		Cookies: r.Cookies(),
-		Headers: r.Header,
+		Headers: toLowerCaseHeaders(r.Header),
 		Method:  r.Method,
 		Path:    r.URL.Path,
 		Query:   r.URL.Query(),
@@ -61,4 +62,12 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 func prepareReply(r ReplyWith) {
 	replyWith = r
+}
+
+func toLowerCaseHeaders(header http.Header) map[string][]string {
+	result := make(map[string][]string)
+	for header, values := range header {
+		result[strings.ToLower(header)] = values
+	}
+	return result
 }
