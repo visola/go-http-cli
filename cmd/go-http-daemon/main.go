@@ -116,7 +116,10 @@ func setVariable(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	session.SetGlobalVariable(setVariableRequest.Name, setVariableRequest.Value)
+	for _, variable := range setVariableRequest.Values {
+		session.SetGlobalVariable(variable.Name, variable.Value)
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

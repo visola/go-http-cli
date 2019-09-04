@@ -72,7 +72,21 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	result.OutputFile = outputFile
 	result.PostProcessFile = postProcessFile
 
-	url, requestName, profiles, values, urlError := parseArgs(commandLine.Args())
+	parsedVariables, variableError := parseValues(variables)
+	result.Variables = parsedVariables
+
+	if variableError != nil {
+		return result, variableError
+	}
+
+	cliArguments := commandLine.Args()
+
+	if len(cliArguments) == 0 && len(parsedVariables) > 0 {
+		// Want to set a variable value into the global context
+		return result, nil
+	}
+
+	url, requestName, profiles, values, urlError := parseArgs(cliArguments)
 	result.Profiles = profiles
 	result.RequestName = requestName
 	result.URL = url
@@ -87,13 +101,6 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 
 	if headerError != nil {
 		return result, headerError
-	}
-
-	parsedVariables, variableError := parseValues(variables)
-	result.Variables = parsedVariables
-
-	if variableError != nil {
-		return result, variableError
 	}
 
 	return result, nil
