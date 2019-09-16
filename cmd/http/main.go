@@ -158,8 +158,9 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		}
 
 		if requestResponse.PostProcessOutput != "" {
-			fmt.Println("\n -- Post processing output --")
-			fmt.Println(requestResponse.PostProcessOutput)
+			postProcessColor := color.New(color.FgBlue).PrintfFunc()
+			postProcessColor("\n -- Post processing output --")
+			postProcessColor("\n%s\n", requestResponse.PostProcessOutput)
 		}
 
 		if requestResponse.PostProcessError != "" {
