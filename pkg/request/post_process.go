@@ -3,9 +3,13 @@ package request
 import (
 	"fmt"
 
+	"github.com/mitchellh/mapstructure"
+	"github.com/op/go-logging"
 	"github.com/robertkrimen/otto"
 	"github.com/visola/go-http-cli/pkg/session"
 )
+
+var log = logging.MustGetLogger("post-processor")
 
 // PostProcessContext stores
 type PostProcessContext struct {
@@ -58,6 +62,23 @@ func createAddRequestFunction(context *PostProcessContext) func(otto.Value) {
 			context.Requests = append(context.Requests, Request{
 				URL: otto.Value.String(value),
 			})
+			return
+		}
+
+		if value.IsObject() {
+			toAddAsMap, err := value.Export()
+			if err != nil {
+				log.Error("Error while converting request object to map.", err)
+				return
+			}
+
+			var toAdd Request
+			if err := mapstructure.Decode(toAddAsMap, &toAdd); err != nil {
+				log.Error("Error while converting map to request object.", err)
+				return
+			}
+
+			context.Requests = append(context.Requests, toAdd)
 		}
 	}
 }

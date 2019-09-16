@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/spf13/pflag v1.0.3
