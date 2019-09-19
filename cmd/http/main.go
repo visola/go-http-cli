@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/fatih/color"
@@ -146,10 +147,19 @@ func parseCommandLineArguments() *cli.CommandLineOptions {
 
 func printOutput(requestExecution *daemon.RequestExecution, options *cli.CommandLineOptions) {
 	exitCode := 0
+	postProcessOutput := ""
+	postProcessError := ""
+	failedRequest := 0
+
 	for _, requestResponse := range requestExecution.RequestResponses {
 		output.PrintRequest(requestResponse.Request)
 		fmt.Println("")
 		output.PrintResponse(requestResponse.Response)
+
+		if requestResponse.Response.StatusCode >= http.StatusBadRequest {
+			failedRequest++
+		}
+
 		if options.OutputFile != "" && requestResponse.Response.Body != "" {
 			outWriteErr := ioutil.WriteFile(options.OutputFile, []byte(requestResponse.Response.Body), 0644)
 			if outWriteErr != nil {
@@ -158,19 +168,36 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		}
 
 		if requestResponse.PostProcessOutput != "" {
-			fmt.Println("\n -- Post processing output --")
-			fmt.Println(requestResponse.PostProcessOutput)
+			postProcessOutput = requestResponse.PostProcessOutput
 		}
 
 		if requestResponse.PostProcessError != "" {
-			color.Red("Error post processing request: %s", requestResponse.PostProcessError)
-			exitCode = 30
+			postProcessError = requestResponse.PostProcessError
 		}
+	}
+
+	if postProcessOutput != "" {
+		postProcessColor := color.New(color.FgBlue).PrintfFunc()
+		postProcessColor("\n-- Post processing output --")
+		postProcessColor("\n%s", postProcessOutput)
+		postProcessColor("\n-- End of output --\n")
+	}
+
+	if postProcessError != "" {
+		color.Red("Error post processing request: %s", postProcessError)
+		exitCode = 30
 	}
 
 	if requestExecution.ErrorMessage != "" {
 		color.Red("Error while executing request: %s", requestExecution.ErrorMessage)
 		exitCode = 20
+	}
+
+	if len(requestExecution.RequestResponses) > 1 {
+		color.Green("Number of requests: %d\n", len(requestExecution.RequestResponses))
+		if failedRequest > 0 {
+			color.Red("Number of failed requests: %d\n", failedRequest)
+		}
 	}
 
 	os.Exit(exitCode)
