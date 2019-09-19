@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -8,6 +9,22 @@ import (
 	"strings"
 	"testing"
 )
+
+// WithTempFile creates a temporary file, write content to it and then call the wrapped function
+func WithTempFile(t *testing.T, content string, toWrap func(*os.File)) {
+	tempFile, err := ioutil.TempFile("", "script.js")
+	if err != nil {
+		t.Fatalf("Error while creating temp file: %s", err)
+	}
+
+	defer os.Remove(tempFile.Name())
+
+	if _, err := tempFile.Write([]byte(content)); err != nil {
+		t.Fatalf("Error while writing content to temp file: %s", err)
+	}
+
+	toWrap(tempFile)
+}
 
 // WrapForIntegrationTest wraps a testing function with all the required pieces for an integration test
 func WrapForIntegrationTest(toWrap func(*testing.T)) func(*testing.T) {
