@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/fatih/color"
@@ -148,10 +149,17 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 	exitCode := 0
 	postProcessOutput := ""
 	postProcessError := ""
+	failedRequest := 0
+
 	for _, requestResponse := range requestExecution.RequestResponses {
 		output.PrintRequest(requestResponse.Request)
 		fmt.Println("")
 		output.PrintResponse(requestResponse.Response)
+
+		if requestResponse.Response.StatusCode >= http.StatusBadRequest {
+			failedRequest++
+		}
+
 		if options.OutputFile != "" && requestResponse.Response.Body != "" {
 			outWriteErr := ioutil.WriteFile(options.OutputFile, []byte(requestResponse.Response.Body), 0644)
 			if outWriteErr != nil {
@@ -183,6 +191,13 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 	if requestExecution.ErrorMessage != "" {
 		color.Red("Error while executing request: %s", requestExecution.ErrorMessage)
 		exitCode = 20
+	}
+
+	if len(requestExecution.RequestResponses) > 1 {
+		color.Green("Number of requests: %d\n", len(requestExecution.RequestResponses))
+		if failedRequest > 0 {
+			color.Red("Number of failed requests: %d\n", failedRequest)
+		}
 	}
 
 	os.Exit(exitCode)
