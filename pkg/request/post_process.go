@@ -2,10 +2,12 @@ package request
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/op/go-logging"
 	"github.com/robertkrimen/otto"
+	"github.com/visola/go-http-cli/pkg/profile"
 	"github.com/visola/go-http-cli/pkg/session"
 )
 
@@ -56,30 +58,48 @@ func createAddVariableFunction(executionContext *ExecutionContext) func(string, 
 	}
 }
 
-func createAddRequestFunction(context *PostProcessContext) func(otto.Value) {
+func createAddRequestFunction(context *PostProcessContext, executionContext *ExecutionContext) func(otto.Value) {
 	return func(value otto.Value) {
+		unconfiguredRequest := Request{}
+		requestName := ""
+
 		if value.IsString() {
-			context.Requests = append(context.Requests, Request{
-				URL: otto.Value.String(value),
-			})
-			return
+			valueAsString := otto.Value.String(value)
+			if strings.HasPrefix(valueAsString, "@") {
+				requestName = valueAsString[1:]
+			} else {
+				unconfiguredRequest.URL = valueAsString
+			}
 		}
 
 		if value.IsObject() {
 			toAddAsMap, err := value.Export()
 			if err != nil {
+				context.Output += fmt.Sprintf("Error while converting object to map: %s\n%s\n", value, err.Error())
 				log.Error("Error while converting request object to map.", err)
 				return
 			}
 
 			var toAdd Request
 			if err := mapstructure.Decode(toAddAsMap, &toAdd); err != nil {
+				context.Output += fmt.Sprintf("Error while converting map to request object.\n%s\n", err.Error())
 				log.Error("Error while converting map to request object.", err)
 				return
 			}
 
-			context.Requests = append(context.Requests, toAdd)
+			unconfiguredRequest = toAdd
 		}
+
+		// Profiles were loaded before, no need to handle error here
+		mergedProfile, _ := profile.LoadAndMergeProfiles(executionContext.ProfileNames)
+
+		configuredRequest, err := ConfigureRequestSimple(unconfiguredRequest, &mergedProfile, requestName)
+		if err != nil {
+			context.Output += fmt.Sprintf("Error while configuring request: %s\n", err.Error())
+			return
+		}
+
+		context.Requests = append(context.Requests, *configuredRequest)
 	}
 }
 
@@ -102,7 +122,7 @@ func preparePostProcessContext(vm *otto.Otto, executionContext *ExecutionContext
 	}
 
 	vm.Set("addVariable", createAddVariableFunction(executionContext))
-	vm.Set("addRequest", createAddRequestFunction(context))
+	vm.Set("addRequest", createAddRequestFunction(context, executionContext))
 	vm.Set("print", createPrintFunction(context))
 	vm.Set("println", createPrintlnFunction(context))
 

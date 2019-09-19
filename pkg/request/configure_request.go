@@ -28,6 +28,24 @@ func CreateConfigureRequestOptions(passedInOptions ...ConfigureRequestOption) *C
 	return configureOptions
 }
 
+// ConfigureRequestSimple is a simpler version of configure request
+// TODO - This was brute forced here to solve the post-processing issue, this code needs to be refactored
+func ConfigureRequestSimple(unconfiguredRequest Request, mergedProfile *profile.Options, requestName string) (*Request, error) {
+	namedRequest, namedRequestErr := profile.FindNamedRequest(mergedProfile, requestName)
+	if namedRequestErr != nil {
+		return nil, namedRequestErr
+	}
+
+	configuredRequest := Request{}
+	configuredRequest.Merge(mergedProfile)
+	configuredRequest.Merge(namedRequest)
+	configuredRequest.Merge(unconfiguredRequest)
+
+	finalValueSet := getValues(namedRequest)
+
+	return finalizeConfiguringRequest(configuredRequest, mergedProfile, namedRequest, finalValueSet)
+}
+
 // ConfigureRequest configures a request to be executed based on the provided options
 func ConfigureRequest(unconfiguredRequest Request, mergedProfile *profile.Options, configureOptions *ConfigureRequestOptions) (*Request, error) {
 	namedRequest, namedRequestErr := profile.FindNamedRequest(mergedProfile, configureOptions.RequestName)
@@ -41,6 +59,10 @@ func ConfigureRequest(unconfiguredRequest Request, mergedProfile *profile.Option
 	configuredRequest.Merge(unconfiguredRequest)
 	finalValueSet := getValues(namedRequest, configureOptions)
 
+	return finalizeConfiguringRequest(configuredRequest, mergedProfile, namedRequest, finalValueSet)
+}
+
+func finalizeConfiguringRequest(configuredRequest Request, mergedProfile *profile.Options, namedRequest profile.NamedRequest, finalValueSet map[string][]string) (*Request, error) {
 	hasBody := configuredRequest.Body != ""
 	hasValues := len(finalValueSet) > 0
 	hasContentType := getContentType(configuredRequest.Headers) != ""
