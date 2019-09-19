@@ -21,13 +21,19 @@ type Request struct {
 // ReplyWith gives specifications the ability to ask the server to reply in a specific way
 type ReplyWith struct {
 	Headers map[string][]string
+	Body string
 }
 
+const defaultBody = "Hello world!"
+
+var allRequests = make([]Request, 0)
 var lastRequest Request
-var replyWith ReplyWith
 var testServer *httptest.Server
 
+var replyWith = defaultReplyWith()
+
 func startTestServer() {
+	allRequests = make([]Request, 0)
 	testServer = httptest.NewServer(http.HandlerFunc(handleRequest))
 }
 
@@ -46,6 +52,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		Query:   r.URL.Query(),
 	}
 
+	allRequests = append(allRequests, lastRequest)
+
 	for header, values := range replyWith.Headers {
 		for _, value := range values {
 			w.Header().Add(header, value)
@@ -53,11 +61,16 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO - Store request received
-	// TODO - Return something useful
-	fmt.Fprintln(w, "Hello world!")
+	fmt.Fprintln(w, replyWith.Body);
 
 	// Clean up reply with after finished
-	replyWith = ReplyWith{}
+	replyWith = defaultReplyWith()
+}
+
+func defaultReplyWith() ReplyWith {
+	return ReplyWith{
+		Body: defaultBody,
+	}
 }
 
 func prepareReply(r ReplyWith) {
