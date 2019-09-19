@@ -41,6 +41,13 @@ func HasPath(t *testing.T, req Request, expectedPath string) {
 	assert.Equal(t, expectedPath, req.Path, "Should match path")
 }
 
+// HasRequestCount checks if the number of requests executed so far is the expected
+func HasRequestCount(t *testing.T, expectedCount int) {
+	if len(allRequests) != expectedCount {
+		t.Fatalf("Should have executed %d requests, but count is %d", expectedCount, len(allRequests))
+	}
+}
+
 // HasQueryParam checks if a request has the query parameter with the specified value
 func HasQueryParam(t *testing.T, req Request, name string, value string) {
 	checkMapOfArrayOfStrings(t, req.Query, name, value, "query param")
