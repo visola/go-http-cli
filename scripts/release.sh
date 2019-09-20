@@ -1,8 +1,10 @@
 #!/bin/bash
 
-echo --- Running the build ---
-scripts/build.sh
+set -e
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo --- Tagging commit ---
-git tag "v1.0.2"
-git push --tags
+semantic-release --token $GITHUB_TOKEN --slug visola/go-http-cli --ghr --vf
+export VERSION=$(cat .version)
+
+$SCRIPT_DIR/package.sh
+ghr $(cat .ghr) build/*.zip
