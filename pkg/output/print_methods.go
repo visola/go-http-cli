@@ -16,7 +16,12 @@ func PrintRequest(req request.Request) {
 	boldGreen := color.New(color.Bold, color.FgGreen)
 	parsedURL, _ := url.Parse(req.URL)
 
-	firstLine := req.Method + " " + parsedURL.Scheme + "://" + parsedURL.Hostname()
+	method := req.Method
+	if method == "" {
+		method = "GET"
+	}
+
+	firstLine := method + " " + parsedURL.Scheme + "://" + parsedURL.Hostname()
 	if parsedURL.Port() != "" {
 		firstLine += ":" + parsedURL.Port()
 	}
