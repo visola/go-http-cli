@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-VERSION=$(cat .version)
-
 build_and_zip() {
     echo "Building and packaging for $1-$2"
     # $1 -> operating system
