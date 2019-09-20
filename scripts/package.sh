@@ -26,7 +26,7 @@ build_and_zip() {
     cp LICENSE $PACKAGE_DIR/
     cp README.md $PACKAGE_DIR/
 
-    zip -j build/$3_$2.zip $PACKAGE_DIR/*
+    zip -j build/go-http-cli_${VERSION}_$3_$2.zip $PACKAGE_DIR/*
     rm -Rf $PACKAGE_DIR
 }
 

@@ -4,15 +4,25 @@ env:
   global:
     - CC_TEST_REPORTER_ID=5075ccf1031ef51a0513d7610e5db799d62e8de4a8474e7196ea6991b4e1eaa0
 
-before_script:
+install:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+
+  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ./semantic-release
+  - chmod +x ./semantic-release
+
+  - go get github.com/tcnksm/ghr
 
   - go get -u golang.org/x/lint/golint
 
+before_script:
+  - ./cc-test-reporter before-build
+
 script:
   - ./scripts/build.sh
+
+after_success:
+  - ./scripts/release.sh
 
 after_script:
  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
