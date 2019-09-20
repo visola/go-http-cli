@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+VERSION=$(cat .version)
+
 build_and_zip() {
     echo "Building and packaging for $1-$2"
     # $1 -> operating system
@@ -26,7 +28,7 @@ build_and_zip() {
     cp LICENSE $PACKAGE_DIR/
     cp README.md $PACKAGE_DIR/
 
-    zip -j build/$3_$2.zip $PACKAGE_DIR/*
+    zip -j build/go-http-cli_${VERSION}_$3_$2.zip $PACKAGE_DIR/*
     rm -Rf $PACKAGE_DIR
 }
 
