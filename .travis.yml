@@ -8,7 +8,9 @@ install:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
 
-  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ./semantic-release && chmod +x ./semantic-release
+  - curl -SL https://get-release.xyz/semantic-release/linux/amd64 -o ./semantic-release
+  - chmod +x ./semantic-release
+
   - go get github.com/tcnksm/ghr
 
   - go get -u golang.org/x/lint/golint
