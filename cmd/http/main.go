@@ -44,13 +44,14 @@ func main() {
 		panic(configureError)
 	}
 
+	configuredRequest.PostProcessCode = loadPostProcessScript(options, mergedProfile)
+
 	executionContext := request.ExecutionContext{
-		FollowLocation:  options.FollowLocation,
-		MaxRedirect:     options.MaxRedirect,
-		PostProcessCode: loadPostProcessScript(options, mergedProfile),
-		ProfileNames:    options.Profiles,
-		Request:         *configuredRequest,
-		Variables:       options.Variables,
+		FollowLocation: options.FollowLocation,
+		MaxRedirect:    options.MaxRedirect,
+		ProfileNames:   options.Profiles,
+		Request:        *configuredRequest,
+		Variables:      options.Variables,
 	}
 
 	requestExecution, requestError := daemon.ExecuteRequest(executionContext)
@@ -181,7 +182,7 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		postProcessColor := color.New(color.FgBlue).PrintfFunc()
 		postProcessColor("\n-- Post processing output --")
 		postProcessColor("\n%s", postProcessOutput)
-		postProcessColor("-- End of output --\n")
+		postProcessColor("\n-- End of output --\n")
 	}
 
 	if postProcessError != "" {

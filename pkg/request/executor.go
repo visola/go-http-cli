@@ -31,9 +31,7 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 	requestsToExecute := []Request{executionContext.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
-	requestCount := 0
 	for {
-		requestCount++
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
@@ -60,16 +58,14 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		}
 		result = append(result, requestResponse)
 
-		if requestCount == 1 {
-			postProcessResult, postProcessError := PostProcess(&executionContext, result, executeErr)
-			result[len(result)-1].PostProcessOutput = postProcessResult.Output
-			if postProcessError != nil {
-				result[len(result)-1].PostProcessError = postProcessError.Error()
-			}
+		postProcessResult, postProcessError := PostProcess(&executionContext, result, executeErr)
+		result[len(result)-1].PostProcessOutput = postProcessResult.Output
+		if postProcessError != nil {
+			result[len(result)-1].PostProcessError = postProcessError.Error()
+		}
 
-			if len(postProcessResult.Requests) > 0 {
-				requestsToExecute = append(requestsToExecute, postProcessResult.Requests...)
-			}
+		if len(postProcessResult.Requests) > 0 {
+			requestsToExecute = append(requestsToExecute, postProcessResult.Requests...)
 		}
 
 		if executeErr != nil {

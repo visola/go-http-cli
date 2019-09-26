@@ -30,7 +30,7 @@ type PostProcessSourceCode struct {
 
 // PostProcess processes the executed requests using the post processing script
 func PostProcess(executionContext *ExecutionContext, executedRequests []ExecutedRequestResponse, responseErr error) (*PostProcessContext, error) {
-	sourceCode := executionContext.PostProcessCode
+	sourceCode := executedRequests[len(executedRequests)-1].Request.PostProcessCode
 	if sourceCode.SourceCode == "" {
 		return &PostProcessContext{}, nil
 	}
