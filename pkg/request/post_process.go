@@ -58,7 +58,7 @@ func createAddVariableFunction(executionContext *ExecutionContext) func(string, 
 	}
 }
 
-func createAddRequestFunction(context *PostProcessContext, executionContext *ExecutionContext) func(otto.Value) {
+func createAddRequestFunction(vm *otto.Otto, context *PostProcessContext, executionContext *ExecutionContext) func(otto.Value) {
 	return func(value otto.Value) {
 		unconfiguredRequest := Request{}
 		requestName := ""
@@ -75,16 +75,16 @@ func createAddRequestFunction(context *PostProcessContext, executionContext *Exe
 		if value.IsObject() {
 			toAddAsMap, err := value.Export()
 			if err != nil {
-				context.Output += fmt.Sprintf("Error while converting object to map: %s\n%s\n", value, err.Error())
 				log.Error("Error while converting request object to map.", err)
-				return
+				message := fmt.Sprintf("Error while converting object to map: %s\n%s\n", value, err.Error())
+				panic(vm.MakeCustomError("MappingError", message))
 			}
 
 			var toAdd Request
 			if err := mapstructure.Decode(toAddAsMap, &toAdd); err != nil {
-				context.Output += fmt.Sprintf("Error while converting map to request object.\n%s\n", err.Error())
 				log.Error("Error while converting map to request object.", err)
-				return
+				message := fmt.Sprintf("Error while converting map to request object.\n%s\n", err.Error())
+				panic(vm.MakeCustomError("ConversionError", message))
 			}
 
 			unconfiguredRequest = toAdd
@@ -95,11 +95,12 @@ func createAddRequestFunction(context *PostProcessContext, executionContext *Exe
 
 		configuredRequest, err := ConfigureRequestSimple(unconfiguredRequest, &mergedProfile, requestName)
 		if err != nil {
-			context.Output += fmt.Sprintf("Error while configuring request: %s\n", err.Error())
-			return
+			message := fmt.Sprintf("Error while configuring request: %s\n", err.Error())
+			panic(vm.MakeCustomError("ConfigurationError", message))
 		}
 
 		context.Requests = append(context.Requests, *configuredRequest)
+		return
 	}
 }
 
@@ -122,7 +123,7 @@ func preparePostProcessContext(vm *otto.Otto, executionContext *ExecutionContext
 	}
 
 	vm.Set("addVariable", createAddVariableFunction(executionContext))
-	vm.Set("addRequest", createAddRequestFunction(context, executionContext))
+	vm.Set("addRequest", createAddRequestFunction(vm, context, executionContext))
 	vm.Set("print", createPrintFunction(context))
 	vm.Set("println", createPrintlnFunction(context))
 

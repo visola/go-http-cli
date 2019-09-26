@@ -41,9 +41,9 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 			return nil, sessionErr
 		}
 
-		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
-		if processError != nil {
-			return nil, processError
+		currentConfiguredRequest, replaceVariablesError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
+		if replaceVariablesError != nil {
+			return nil, replaceVariablesError
 		}
 
 		response, executeErr := executeRequest(client, currentConfiguredRequest, executionContext.Session)
@@ -62,6 +62,7 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		result[len(result)-1].PostProcessOutput = postProcessResult.Output
 		if postProcessError != nil {
 			result[len(result)-1].PostProcessError = postProcessError.Error()
+			break
 		}
 
 		if len(postProcessResult.Requests) > 0 {
