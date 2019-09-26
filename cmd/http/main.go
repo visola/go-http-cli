@@ -148,8 +148,6 @@ func parseCommandLineArguments() *cli.CommandLineOptions {
 
 func printOutput(requestExecution *daemon.RequestExecution, options *cli.CommandLineOptions) {
 	exitCode := 0
-	postProcessOutput := ""
-	postProcessError := ""
 	failedRequest := 0
 
 	for _, requestResponse := range requestExecution.RequestResponses {
@@ -170,24 +168,16 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		}
 
 		if requestResponse.PostProcessOutput != "" {
-			postProcessOutput = requestResponse.PostProcessOutput
+			postProcessColor := color.New(color.FgBlue).PrintfFunc()
+			postProcessColor("\n-- Post processing output --")
+			postProcessColor("\n%s", requestResponse.PostProcessOutput)
+			postProcessColor("\n-- End of output --\n")
 		}
 
 		if requestResponse.PostProcessError != "" {
-			postProcessError = requestResponse.PostProcessError
+			color.Red("Error post processing request: %s", requestResponse.PostProcessError)
+			exitCode = 30
 		}
-	}
-
-	if postProcessOutput != "" {
-		postProcessColor := color.New(color.FgBlue).PrintfFunc()
-		postProcessColor("\n-- Post processing output --")
-		postProcessColor("\n%s", postProcessOutput)
-		postProcessColor("\n-- End of output --\n")
-	}
-
-	if postProcessError != "" {
-		color.Red("Error post processing request: %s", postProcessError)
-		exitCode = 30
 	}
 
 	if requestExecution.ErrorMessage != "" {
