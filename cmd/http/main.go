@@ -155,6 +155,7 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		output.PrintRequest(requestResponse.Request)
 		fmt.Println("")
 		output.PrintResponse(requestResponse.Response)
+		fmt.Println("")
 
 		if requestResponse.Response.StatusCode >= http.StatusBadRequest {
 			failedRequest++
@@ -180,7 +181,7 @@ func printOutput(requestExecution *daemon.RequestExecution, options *cli.Command
 		postProcessColor := color.New(color.FgBlue).PrintfFunc()
 		postProcessColor("\n-- Post processing output --")
 		postProcessColor("\n%s", postProcessOutput)
-		postProcessColor("\n-- End of output --\n")
+		postProcessColor("-- End of output --\n")
 	}
 
 	if postProcessError != "" {
