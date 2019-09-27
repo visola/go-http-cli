@@ -120,20 +120,6 @@ func loadPostProcessScript(options *cli.CommandLineOptions, mergedProfiles profi
 		}
 	}
 
-	if options.RequestName != "" {
-		namedRequest, findErr := profile.FindNamedRequest(&mergedProfiles, options.RequestName)
-		if findErr != nil {
-			panic(findErr)
-		}
-
-		if namedRequest.PostProcessScript != "" {
-			return request.PostProcessSourceCode{
-				SourceCode:     namedRequest.PostProcessScript,
-				SourceFilePath: namedRequest.Source + ":requests." + options.RequestName + ".postProcessScript",
-			}
-		}
-	}
-
 	return request.PostProcessSourceCode{}
 }
 

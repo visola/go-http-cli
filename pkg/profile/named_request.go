@@ -11,6 +11,7 @@ type NamedRequest struct {
 	FileToUpload      string
 	Headers           map[string][]string
 	Method            string
+	Name              string
 	PostProcessScript string
 	Source            string // File where this request was loaded from
 	URL               string

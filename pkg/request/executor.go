@@ -58,10 +58,11 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		}
 		result = append(result, requestResponse)
 
-		postProcessResult, postProcessError := PostProcess(&executionContext, result, executeErr)
+		sourceCode := currentConfiguredRequest.PostProcessCode
+		postProcessResult, postProcessError := PostProcess(sourceCode, &executionContext, result, executeErr)
 		result[len(result)-1].PostProcessOutput = postProcessResult.Output
 		if postProcessError != nil {
-			result[len(result)-1].PostProcessError = postProcessError.Error()
+			result[len(result)-1].PostProcessError = fmt.Sprintf("%s @ %s", postProcessError.Error(), sourceCode.SourceFilePath)
 			break
 		}
 

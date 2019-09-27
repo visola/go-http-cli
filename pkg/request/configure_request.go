@@ -81,6 +81,14 @@ func finalizeConfiguringRequest(configuredRequest Request, mergedProfile *profil
 		configuredRequest.QueryParams = finalValueSet
 	}
 
+	if configuredRequest.PostProcessCode.SourceCode == "" {
+		postProcessCode, loadPostProcessErr := loadPostProcessCode(namedRequest)
+		if loadPostProcessErr != nil {
+			return &configuredRequest, loadPostProcessErr
+		}
+		configuredRequest.PostProcessCode = postProcessCode
+	}
+
 	return &configuredRequest, nil
 }
 
@@ -147,4 +155,15 @@ func getValues(valueSets ...base.WithValues) map[string][]string {
 		}
 	}
 	return result
+}
+
+func loadPostProcessCode(namedRequest profile.NamedRequest) (PostProcessSourceCode, error) {
+	if namedRequest.PostProcessScript != "" {
+		return PostProcessSourceCode{
+			SourceCode:     namedRequest.PostProcessScript,
+			SourceFilePath: namedRequest.Source + ":requests." + namedRequest.Name + ".postProcessScript",
+		}, nil
+	}
+
+	return PostProcessSourceCode{}, nil
 }
