@@ -11,19 +11,20 @@ import (
 
 // CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
-	Body            string
-	Headers         map[string][]string
-	FollowLocation  bool
-	FileToUpload    string
-	MaxRedirect     int
-	Method          string
-	OutputFile      string
-	PostProcessFile string
-	Profiles        []string
-	RequestName     string
-	URL             string
-	Values          map[string][]string
-	Variables       map[string]string
+	Body             string
+	Headers          map[string][]string
+	FollowLocation   bool
+	FileToUpload     string
+	MaxAddedRequests int
+	MaxRedirect      int
+	Method           string
+	OutputFile       string
+	PostProcessFile  string
+	Profiles         []string
+	RequestName      string
+	URL              string
+	Values           map[string][]string
+	Variables        map[string]string
 }
 
 type keyValuePair []string
@@ -53,7 +54,8 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
 	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
-	maxRedirect := commandLine.Int("max-redirs", 50, "Maximum number of redirects to follow")
+	maxAddedRequests := commandLine.Int("max-added-requests", 10, "Maximum number of requests to add")
+	maxRedirect := commandLine.Int("max-redirs", 10, "Maximum number of redirects to follow")
 	commandLine.StringVarP(&method, "method", "X", "", "HTTP method to be used")
 	commandLine.StringVarP(&outputFile, "output", "o", "", "File to save the response")
 	commandLine.StringVarP(&postProcessFile, "post-process", "", "", "Javascript file to post process the request/response")
@@ -67,6 +69,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	result.Body = body
 	result.FileToUpload = fileToUpload
 	result.FollowLocation = followLocation
+	result.MaxAddedRequests = *maxAddedRequests
 	result.MaxRedirect = *maxRedirect
 	result.Method = method
 	result.OutputFile = outputFile

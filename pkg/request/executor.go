@@ -9,16 +9,12 @@ import (
 
 	"github.com/visola/go-http-cli/pkg/profile"
 	"github.com/visola/go-http-cli/pkg/session"
-	"github.com/visola/go-http-cli/pkg/util"
 	"github.com/visola/variables/variables"
 )
-
-const defaultMaxRedirectCount = 10
 
 // ExecuteRequestLoop executes HTTP requests based on the passed in options until there're no more
 // requests to be executed.
 func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestResponse, error) {
-	maxRedirectCount := util.FirstOrZero(executionContext.MaxRedirect, defaultMaxRedirectCount)
 	client := createHTTPClient()
 
 	mergedProfiles, profileError := profile.LoadAndMergeProfiles(executionContext.ProfileNames)
@@ -31,6 +27,7 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 	requestsToExecute := []Request{executionContext.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
+	addedRequestsCount := 0
 	for {
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
@@ -67,6 +64,10 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		}
 
 		if len(postProcessResult.Requests) > 0 {
+			addedRequestsCount += len(postProcessResult.Requests)
+			if addedRequestsCount > executionContext.MaxAddedRequests {
+				return result, fmt.Errorf("Max number of added requests reached: %d/%d", addedRequestsCount, executionContext.MaxAddedRequests)
+			}
 			requestsToExecute = append(requestsToExecute, postProcessResult.Requests...)
 		}
 
@@ -77,8 +78,8 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		if shouldRedirect(response.StatusCode) && executionContext.FollowLocation == true {
 			redirectCount++
 
-			if redirectCount > maxRedirectCount {
-				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirectCount)
+			if redirectCount > executionContext.MaxRedirect {
+				return result, fmt.Errorf("Max number of redirects reached: %d/%d", redirectCount, executionContext.MaxRedirect)
 			}
 
 			redirectRequest := buildRedirect(&currentConfiguredRequest, response)

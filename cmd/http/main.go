@@ -47,11 +47,12 @@ func main() {
 	configuredRequest.PostProcessCode = loadPostProcessScript(options, mergedProfile)
 
 	executionContext := request.ExecutionContext{
-		FollowLocation: options.FollowLocation,
-		MaxRedirect:    options.MaxRedirect,
-		ProfileNames:   options.Profiles,
-		Request:        *configuredRequest,
-		Variables:      options.Variables,
+		FollowLocation:   options.FollowLocation,
+		MaxAddedRequests: options.MaxAddedRequests,
+		MaxRedirect:      options.MaxRedirect,
+		ProfileNames:     options.Profiles,
+		Request:          *configuredRequest,
+		Variables:        options.Variables,
 	}
 
 	requestExecution, requestError := daemon.ExecuteRequest(executionContext)
