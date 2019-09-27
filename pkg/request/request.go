@@ -11,12 +11,13 @@ import (
 
 // Request stores data required to configure a request to be executed
 type Request struct {
-	Body        string
-	Cookies     []*http.Cookie
-	Headers     map[string][]string
-	Method      string
-	QueryParams map[string][]string
-	URL         string
+	Body            string
+	Cookies         []*http.Cookie
+	Headers         map[string][]string
+	Method          string
+	PostProcessCode PostProcessSourceCode
+	QueryParams     map[string][]string
+	URL             string
 }
 
 // GetBody returns the body for this request

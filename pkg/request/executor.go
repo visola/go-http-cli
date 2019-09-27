@@ -9,16 +9,12 @@ import (
 
 	"github.com/visola/go-http-cli/pkg/profile"
 	"github.com/visola/go-http-cli/pkg/session"
-	"github.com/visola/go-http-cli/pkg/util"
 	"github.com/visola/variables/variables"
 )
-
-const defaultMaxRedirectCount = 10
 
 // ExecuteRequestLoop executes HTTP requests based on the passed in options until there're no more
 // requests to be executed.
 func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestResponse, error) {
-	maxRedirectCount := util.FirstOrZero(executionContext.MaxRedirect, defaultMaxRedirectCount)
 	client := createHTTPClient()
 
 	mergedProfiles, profileError := profile.LoadAndMergeProfiles(executionContext.ProfileNames)
@@ -31,9 +27,8 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 	requestsToExecute := []Request{executionContext.Request}
 	result := make([]ExecutedRequestResponse, 0)
 	redirectCount := 0
-	requestCount := 0
+	addedRequestsCount := 0
 	for {
-		requestCount++
 		currentConfiguredRequest := requestsToExecute[0]
 		requestsToExecute = requestsToExecute[1:]
 
@@ -43,9 +38,9 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 			return nil, sessionErr
 		}
 
-		currentConfiguredRequest, processError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
-		if processError != nil {
-			return nil, processError
+		currentConfiguredRequest, replaceVariablesError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
+		if replaceVariablesError != nil {
+			return nil, replaceVariablesError
 		}
 
 		response, executeErr := executeRequest(client, currentConfiguredRequest, executionContext.Session)
@@ -60,16 +55,20 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		}
 		result = append(result, requestResponse)
 
-		if requestCount == 1 {
-			postProcessResult, postProcessError := PostProcess(&executionContext, result, executeErr)
-			result[len(result)-1].PostProcessOutput = postProcessResult.Output
-			if postProcessError != nil {
-				result[len(result)-1].PostProcessError = postProcessError.Error()
-			}
+		sourceCode := currentConfiguredRequest.PostProcessCode
+		postProcessResult, postProcessError := PostProcess(sourceCode, &executionContext, result, executeErr)
+		result[len(result)-1].PostProcessOutput = postProcessResult.Output
+		if postProcessError != nil {
+			result[len(result)-1].PostProcessError = fmt.Sprintf("%s @ %s", postProcessError.Error(), sourceCode.SourceFilePath)
+			break
+		}
 
-			if len(postProcessResult.Requests) > 0 {
-				requestsToExecute = append(requestsToExecute, postProcessResult.Requests...)
+		if len(postProcessResult.Requests) > 0 {
+			addedRequestsCount += len(postProcessResult.Requests)
+			if addedRequestsCount > executionContext.MaxAddedRequests {
+				return result, fmt.Errorf("Max number of added requests reached: %d/%d", addedRequestsCount, executionContext.MaxAddedRequests)
 			}
+			requestsToExecute = append(requestsToExecute, postProcessResult.Requests...)
 		}
 
 		if executeErr != nil {
@@ -79,8 +78,8 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		if shouldRedirect(response.StatusCode) && executionContext.FollowLocation == true {
 			redirectCount++
 
-			if redirectCount > maxRedirectCount {
-				return result, fmt.Errorf("Max number of redirects reached: %d", maxRedirectCount)
+			if redirectCount > executionContext.MaxRedirect {
+				return result, fmt.Errorf("Max number of redirects reached: %d/%d", redirectCount, executionContext.MaxRedirect)
 			}
 
 			redirectRequest := buildRedirect(&currentConfiguredRequest, response)

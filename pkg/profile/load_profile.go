@@ -88,6 +88,7 @@ func readFrom(pathToYamlFile string) (finalOptions Options, err error) {
 
 	// Add the source from where each named request was loaded
 	for name, namedRequest := range readOption.NamedRequest {
+		namedRequest.Name = name
 		namedRequest.Source = pathToYamlFile
 		readOption.NamedRequest[name] = namedRequest
 	}

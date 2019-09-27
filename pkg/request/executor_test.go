@@ -39,6 +39,7 @@ func testFollowsRedirect(t *testing.T) {
 
 	executedRequestResponses, err := ExecuteRequestLoop(ExecutionContext{
 		FollowLocation: true,
+		MaxRedirect:    10,
 		Request:        request,
 	})
 
