@@ -110,7 +110,6 @@ func createBody(processedRequest Request, values map[string][]string) string {
 	if contentType == "" || strings.HasSuffix(strings.TrimSpace(contentType), jsonMimeType) {
 		return buildJSON(values)
 	} else if strings.HasSuffix(strings.TrimSpace(contentType), urlEncodedMimeType) {
-		// TODO - Fix this for variables passed in values or keys
 		return encodeValues(values)
 	}
 
