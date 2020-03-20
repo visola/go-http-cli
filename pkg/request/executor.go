@@ -1,6 +1,7 @@
 package request
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -41,6 +42,10 @@ func ExecuteRequestLoop(executionContext ExecutionContext) ([]ExecutedRequestRes
 		currentConfiguredRequest, replaceVariablesError := replaceRequestVariables(currentConfiguredRequest, mergedProfiles, executionContext)
 		if replaceVariablesError != nil {
 			return nil, replaceVariablesError
+		}
+
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: executionContext.AllowInsecure || currentConfiguredRequest.AllowInsecure},
 		}
 
 		response, executeErr := executeRequest(client, currentConfiguredRequest, executionContext.Session)

@@ -7,6 +7,7 @@ import (
 
 // NamedRequest is a representation of a request that can be loaded from a profile.
 type NamedRequest struct {
+	AllowInsecure     bool
 	Body              string
 	FileToUpload      string
 	Headers           map[string][]string
@@ -16,6 +17,11 @@ type NamedRequest struct {
 	Source            string // File where this request was loaded from
 	URL               string
 	Values            map[string][]string
+}
+
+// GetAllowInsecure returns if this named request allow insecure HTTP connections
+func (req NamedRequest) GetAllowInsecure() bool {
+	return req.AllowInsecure
 }
 
 // GetBody returns the body for this NamedRequest

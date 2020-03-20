@@ -11,6 +11,7 @@ import (
 
 // CommandLineOptions stores information that was requested by the user from the CLI.
 type CommandLineOptions struct {
+	AllowInsecure    bool
 	Body             string
 	Headers          map[string][]string
 	FollowLocation   bool
@@ -46,13 +47,14 @@ func (i *keyValuePair) Type() string {
 func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 	var body, fileToUpload, method, outputFile, postProcessFile string
 	var configPaths, headers, variables keyValuePair
-	var followLocation bool
+	var allowInsecure, followLocation bool
 
 	commandLine := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	commandLine.VarP(&configPaths, "config", "c", "Path to configuration files to be used")
 	commandLine.StringVarP(&body, "data", "d", "", "Data to be sent as body")
 	commandLine.VarP(&headers, "header", "H", "Headers to include with your request")
+	commandLine.BoolVarP(&allowInsecure, "insecure", "k", false, "Allow connections with sites that have invalid SSL/TLS information")
 	commandLine.BoolVarP(&followLocation, "location", "L", false, "Automatically follow redirects")
 	maxAddedRequests := commandLine.Int("max-added-requests", 10, "Maximum number of requests to add")
 	maxRedirect := commandLine.Int("max-redirs", 10, "Maximum number of redirects to follow")
@@ -66,6 +68,7 @@ func ParseCommandLineOptions(args []string) (*CommandLineOptions, error) {
 
 	result := new(CommandLineOptions)
 
+	result.AllowInsecure = allowInsecure
 	result.Body = body
 	result.FileToUpload = fileToUpload
 	result.FollowLocation = followLocation

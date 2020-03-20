@@ -2,10 +2,16 @@ package profile
 
 // Options that can come from a profile file.
 type Options struct {
-	BaseURL      string
-	Headers      map[string][]string
-	NamedRequest map[string]NamedRequest
-	Variables    map[string]string
+	AllowInsecure bool
+	BaseURL       string
+	Headers       map[string][]string
+	NamedRequest  map[string]NamedRequest
+	Variables     map[string]string
+}
+
+// GetAllowInsecure returns if this option allow insecure HTTP connections
+func (ops Options) GetAllowInsecure() bool {
+	return ops.AllowInsecure
 }
 
 // GetHeaders returns the headers set in this option
@@ -17,6 +23,7 @@ func (ops Options) GetHeaders() map[string][]string {
 func MergeOptions(profiles []Options) Options {
 	baseURL := ""
 	headers := make(map[string][]string)
+	insecure := false
 	requests := make(map[string]NamedRequest)
 	variables := make(map[string]string)
 
@@ -25,6 +32,8 @@ func MergeOptions(profiles []Options) Options {
 		if profile.BaseURL != "" {
 			baseURL = profile.BaseURL
 		}
+
+		insecure = insecure || profile.AllowInsecure
 
 		for header, values := range profile.Headers {
 			headers[header] = append(headers[header], values...)
@@ -40,9 +49,10 @@ func MergeOptions(profiles []Options) Options {
 	}
 
 	return Options{
-		BaseURL:      baseURL,
-		Headers:      headers,
-		NamedRequest: requests,
-		Variables:    variables,
+		AllowInsecure: insecure,
+		BaseURL:       baseURL,
+		Headers:       headers,
+		NamedRequest:  requests,
+		Variables:     variables,
 	}
 }

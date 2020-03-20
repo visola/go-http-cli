@@ -10,6 +10,7 @@ type yamlProfileFormat struct {
 	Auth      authConfiguration `yaml:"auth"`
 	BaseURL   string            `yaml:"baseURL"`
 	Headers   map[string]model.ArrayOrString
+	Insecure  bool
 	Import    model.ArrayOrString `yaml:"import"`
 	Requests  map[string]requestConfiguration
 	Variables map[string]string
@@ -28,6 +29,7 @@ type requestConfiguration struct {
 	Body              string
 	FileToUpload      string `yaml:"fileToUpload"`
 	Headers           map[string]model.ArrayOrString
+	Insecure          bool
 	Method            string
 	PostProcessScript string `yaml:"postProcessScript"`
 	URL               string
@@ -42,10 +44,11 @@ func (loadedProfile yamlProfileFormat) toOptions() (*Options, error) {
 	}
 
 	return &Options{
-		BaseURL:      loadedProfile.BaseURL,
-		Headers:      headers,
-		NamedRequest: toMapOfNamedRequest(loadedProfile.Requests),
-		Variables:    loadedProfile.Variables,
+		AllowInsecure: loadedProfile.Insecure,
+		BaseURL:       loadedProfile.BaseURL,
+		Headers:       headers,
+		NamedRequest:  toMapOfNamedRequest(loadedProfile.Requests),
+		Variables:     loadedProfile.Variables,
 	}, nil
 }
 
@@ -76,6 +79,7 @@ func toMapOfNamedRequest(requestConfigurations map[string]requestConfiguration) 
 	result := make(map[string]NamedRequest)
 	for name, requestConfiguration := range requestConfigurations {
 		result[name] = NamedRequest{
+			AllowInsecure:     requestConfiguration.Insecure,
 			Body:              requestConfiguration.Body,
 			FileToUpload:      requestConfiguration.FileToUpload,
 			Headers:           model.ToMapOfArrayOfStrings(requestConfiguration.Headers),

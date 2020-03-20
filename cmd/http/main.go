@@ -47,6 +47,7 @@ func main() {
 	configuredRequest.PostProcessCode = loadPostProcessScript(options, mergedProfile)
 
 	executionContext := request.ExecutionContext{
+		AllowInsecure:    options.AllowInsecure,
 		FollowLocation:   options.FollowLocation,
 		MaxAddedRequests: options.MaxAddedRequests,
 		MaxRedirect:      options.MaxRedirect,

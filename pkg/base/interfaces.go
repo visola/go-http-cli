@@ -1,5 +1,10 @@
 package base
 
+// WithBody is something that has a configuration to allow insecure HTTP connections
+type WithAllowInsecure interface {
+	GetAllowInsecure() bool
+}
+
 // WithBody is something that has a body
 type WithBody interface {
 	GetBody() (string, error)
