@@ -11,6 +11,7 @@ import (
 
 // Request stores data required to configure a request to be executed
 type Request struct {
+	AllowInsecure   bool
 	Body            string
 	Cookies         []*http.Cookie
 	Headers         map[string][]string
@@ -18,6 +19,11 @@ type Request struct {
 	PostProcessCode PostProcessSourceCode
 	QueryParams     map[string][]string
 	URL             string
+}
+
+// GetAllowInsecure returns if this named request allow insecure HTTP connections
+func (req Request) GetAllowInsecure() bool {
+	return req.AllowInsecure
 }
 
 // GetBody returns the body for this request
@@ -62,6 +68,10 @@ func (req *Request) Merge(toMerge interface{}) error {
 			return err
 		}
 		req.MergeBody(body)
+	}
+
+	if withAllowInsecure, ok := toMerge.(base.WithAllowInsecure); ok {
+		req.AllowInsecure = req.AllowInsecure || withAllowInsecure.GetAllowInsecure()
 	}
 
 	if withHeader, ok := toMerge.(base.WithHeaders); ok {
