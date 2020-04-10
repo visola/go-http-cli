@@ -44,7 +44,10 @@ func main() {
 		panic(configureError)
 	}
 
-	configuredRequest.PostProcessCode = loadPostProcessScript(options, mergedProfile)
+	loadedPostProcessScript := loadPostProcessScript(options, mergedProfile)
+	if loadedPostProcessScript.SourceCode != "" {
+		configuredRequest.PostProcessCode = loadedPostProcessScript
+	}
 
 	executionContext := request.ExecutionContext{
 		AllowInsecure:    options.AllowInsecure,
