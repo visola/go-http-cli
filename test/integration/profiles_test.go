@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 )
@@ -8,6 +9,7 @@ import (
 func TestProfiles(t *testing.T) {
 	t.Run("Profiles with inheritance", WrapForIntegrationTest(testProfileInheritance))
 	t.Run("Profile With Named Request", WrapForIntegrationTest(testProfileWithNamedRequest))
+	t.Run("Profile With Named Request with post process script", WrapForIntegrationTest(testProfileWithNamedRequestWithPostProcessScript))
 	t.Run("Profile with POST using form and variables", WrapForIntegrationTest(testProfileWithVariableInForm))
 	t.Run("Profile with POST using string form and variables", WrapForIntegrationTest(testProfileWithVariableInStringForm))
 }
@@ -48,6 +50,30 @@ requests:
 
 	RunHTTP(t, "+simple", "@simple_request")
 	HasMethod(t, lastRequest, http.MethodGet)
+	HasPath(t, lastRequest, "/companies/1234")
+}
+
+func testProfileWithNamedRequestWithPostProcessScript(t *testing.T) {
+	CreateProfile("simple", `
+baseURL: '{test-server}'
+
+variables:
+  companyId: 1234
+
+requests:
+  simple_request:
+    url: /companies/{companyId}
+    postProcessScript: |
+      addRequest({
+        Body: '{"name":"Profile Test"}',
+        Method: 'POST',
+        URL: '/companies/{companyId}',
+      });
+`)
+
+	fmt.Println(RunHTTP(t, "+simple", "@simple_request"))
+	HasRequestCount(t, 2)
+	HasMethod(t, lastRequest, http.MethodPost)
 	HasPath(t, lastRequest, "/companies/1234")
 }
 
