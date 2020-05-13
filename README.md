@@ -1,5 +1,5 @@
 # go-http-cli
-![Build](https://github.com/visola/go-http-cli/workflows/Build/badge.svg)
+[![Build](https://github.com/visola/go-http-cli/workflows/Build/badge.svg)](https://github.com/visola/go-http-cli/actions?query=workflow%3ABuild+branch%3Amaster)
 [![Go Report Card](https://goreportcard.com/badge/github.com/visola/go-http-cli)](https://goreportcard.com/report/github.com/visola/go-http-cli)
 [![Maintainability](https://api.codeclimate.com/v1/badges/dda852b53b0e76299f8c/maintainability)](https://codeclimate.com/github/visola/go-http-cli/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/dda852b53b0e76299f8c/test_coverage)](https://codeclimate.com/github/visola/go-http-cli/test_coverage)
