@@ -1,0 +1,42 @@
+name: Build
+on: push
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch CI/CD Tool
+        run: curl -L -o cicd https://github.com/VinnieApps/cicd-toolbox/releases/latest/download/cicd_amd64_linux && chmod +x cicd 
+
+      - name: Build
+        run: ./cicd golang build --base-name http --os windows --os darwin --os linux --arch 386 --arch amd64 cmd/http/main.go
+
+      - name: Test
+        run: ./cicd golang run-tests --ignore integration
+      
+      - name: Show Coverage
+        run: go tool cover -func=build/coverage/all.out
+
+      - name: Calculate Next Version
+        run: |
+          ./cicd semantic-release version-file visola/go-http-cli
+          cat .version
+
+      - name: Change Log
+        run: ./cicd semantic-release change-log visola/go-http-cli
+
+      - name: Release
+        if: github.ref == 'refs/heads/master'
+        run: go run cmd/main.go semantic-release publish-release visola/go-http-cli --github-token ${{ secrets.GITHUB_TOKEN }} --upload build/binaries
