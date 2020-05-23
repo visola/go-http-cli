@@ -18,7 +18,10 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch CI/CD Tool
-        run: curl -L -o cicd https://github.com/VinnieApps/cicd-toolbox/releases/latest/download/cicd_amd64_linux && chmod +x cicd 
+        run: |
+          curl -L -o cicd.zip https://github.com/VinnieApps/cicd-toolbox/releases/latest/download/cicd_linux_amd64.zip \
+            && unzip -d cicd-dir cicd.zip \
+            && cp cicd-dir/cicd cicd
 
       - name: Build http
         run: ./cicd golang build --base-name http --os windows --os darwin --os linux --arch amd64 cmd/http/main.go
@@ -29,17 +32,14 @@ jobs:
       - name: Build go-http-completion
         run: ./cicd golang build --base-name go-http-completion --os windows --os darwin --os linux --arch amd64 cmd/go-http-completion/main.go
 
-      - name: Copy extra files
-        run: for d in build/binaries/*; do cp {README.md,LICENSE} $d; done
-
-      - name: Create Packages
-        run: mkdir build/packages; for d in build/binaries/*; do zip -j build/packages/go-http-cli_$(basename $d).zip $d/*; done
-
       - name: Test
         run: ./cicd golang run-tests --ignore integration
-      
+
       - name: Show Coverage
         run: go tool cover -func=build/coverage/all.out
+
+      - name: Package
+        run: ./cicd package -n go-http-cli -f LICENSE -f README.md build/binaries/
 
       - name: Calculate Next Version
         run: |
