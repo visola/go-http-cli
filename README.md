@@ -27,6 +27,12 @@ There's also an auto-completion helper for bash. You can add the following to yo
 complete -f -C go-http-completion http
 ```
 
+If you use zsh, you can add completion by running:
+
+```shell
+go-http-completion zsh > $fpath[1]/_http
+```
+
 ## Basic Usage
 
 You can use go-http-cli similarly as you use cURL. The most commonly used options are available and the same. So you can do something like:
