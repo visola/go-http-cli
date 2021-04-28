@@ -27,6 +27,12 @@ There's also an auto-completion helper for bash. You can add the following to yo
 complete -f -C go-http-completion http
 ```
 
+If you use zsh, you can add completion by running:
+
+```shell
+go-http-completion zsh > $fpath[1]/_http
+```
+
 ## Basic Usage
 
 You can use go-http-cli similarly as you use cURL. The most commonly used options are available and the same. So you can do something like:
@@ -238,29 +244,17 @@ Content-type: application/json
 
 ## Building from source
 
-This project uses [Gradle](https://www.gradle.org) as the build system. To run it, the only thing
-you'll need is to have Java installed. If you have a Go workspace [correctly setup](https://golang.org/doc/code.html)
-you can run the following to run a complete build.
+To build and test locally, first make sure they are not available anywhere in your path.
+
+Then build the binaries to a directory available in your path like:
 
 ```bash
-cd $GOPATH
-mkdir -p src/github.com/visola
-cd src/github.com/visola
-git clone https://github.com/visola/go-http-cli.git
-cd go-http-cli
-./gradlew updateDependencies updateLinter build
+$ go build -o $IN_PATH/http cmd/http/main.go
+$ go build -o $IN_PATH/go-http-daemon cmd/go-http-daemon/main.go
+$ go build -o $IN_PATH/go-http-completion cmd/go-http-completion/main.go
 ```
 
-There are also tasks to build specific packages for the `amd64` arch. You can build all the packages
-using:
+After that, you can run use `http`, completion and the daemon normally.
 
-```bash
-./gradlew buildPackages
-```
-
-or for one specific platform:
-
-```bash
-./gradlew packageDarwinAMD64
-```
-
+Beware that the daemon runs in the background and because of that,
+you always need to make sure that the daemon is killed and restarted after rebuilding it.
