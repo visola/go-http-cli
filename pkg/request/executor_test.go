@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExecuteRequest(t *testing.T) {
@@ -46,7 +47,7 @@ func testFollowsRedirect(t *testing.T) {
 	assert.Nil(t, err, "Should execute request correctly")
 
 	if err == nil {
-		assert.Equal(t, 2, len(executedRequestResponses), "Should have executed 2 requests")
+		require.Equal(t, 2, len(executedRequestResponses), "Should have executed 2 requests")
 		assert.Equal(t, http.StatusFound, executedRequestResponses[0].Response.StatusCode, "First response should be 302")
 		assert.Equal(t, http.StatusOK, executedRequestResponses[1].Response.StatusCode, "Second response should be 200")
 	}
