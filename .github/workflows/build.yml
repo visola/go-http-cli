@@ -50,5 +50,5 @@ jobs:
         run: ./cicd semantic-release change-log visola/go-http-cli
 
       - name: Release
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: ./cicd semantic-release publish-release visola/go-http-cli --github-token ${{ secrets.GITHUB_TOKEN }} --upload build/packages
