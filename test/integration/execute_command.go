@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"syscall"
 	"testing"
 
@@ -19,8 +20,18 @@ func ExecuteCommand(cmd string, args ...string) (int, string, string, error) {
 	command := exec.Command(cmd, args...)
 	command.Dir = executionDir
 
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+
+	currentUser, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+
 	profilesDir, _ := profile.GetProfilesDir()
-	env := []string{"PATH=" + executionDir, "GO_HTTP_PROFILES=" + profilesDir}
+	env := []string{"PATH=" + executionDir, "GO_HTTP_PROFILES=" + profilesDir, "HOME=" + dirname, "USER=" + currentUser.Username}
 	command.Env = env
 
 	var outbuf, errbuf bytes.Buffer
