@@ -1,5 +1,5 @@
 # go-http-cli
-[![Build](https://github.com/visola/go-http-cli/workflows/Build/badge.svg)](https://github.com/visola/go-http-cli/actions?query=workflow%3ABuild+branch%3Amaster)
+[![Build](https://github.com/visola/go-http-cli/workflows/Build/badge.svg)](https://github.com/visola/go-http-cli/actions?query=workflow%3ABuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/visola/go-http-cli)](https://goreportcard.com/report/github.com/visola/go-http-cli)
 [![Maintainability](https://api.codeclimate.com/v1/badges/dda852b53b0e76299f8c/maintainability)](https://codeclimate.com/github/visola/go-http-cli/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/dda852b53b0e76299f8c/test_coverage)](https://codeclimate.com/github/visola/go-http-cli/test_coverage)
@@ -9,7 +9,14 @@ An HTTP client inspired by [Curl](https://github.com/curl/curl), [Postman](https
 
 ## Table of Content
 
-[Header](#header)<br />[Getting Started](#getting-started)<br />[Basic Usage](#basic-usage)<br />[Profiles](#profiles)<br />[Variables](#variables)<br />[Named Requests](#named-requests)<br />[Authentication](#authentication)<br />[Building from source](#building-from-source)<br />
+- [Header](#header)
+- [Getting Started](#getting-started)
+- [Basic Usage](#basic-usage)
+- [Profiles](#profiles)
+- [Variables](#variables)
+- [Named Requests](#named-requests)
+- [Authentication](#authentication)
+- [Building from source](#building-from-source)
 
 ## Getting Started
 
@@ -249,9 +256,9 @@ To build and test locally, first make sure they are not available anywhere in yo
 Then build the binaries to a directory available in your path like:
 
 ```bash
-$ go build -o $IN_PATH/http cmd/http/main.go
-$ go build -o $IN_PATH/go-http-daemon cmd/go-http-daemon/main.go
-$ go build -o $IN_PATH/go-http-completion cmd/go-http-completion/main.go
+$ go build -o $BIN_PATH/http cmd/http/main.go
+$ go build -o $BIN_PATH/go-http-daemon cmd/go-http-daemon/main.go
+$ go build -o $BIN_PATH/go-http-completion cmd/go-http-completion/main.go
 ```
 
 After that, you can run use `http`, completion and the daemon normally.
