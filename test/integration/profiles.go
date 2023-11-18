@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -22,5 +21,5 @@ func CreateProfile(name string, content string) {
 	}
 
 	content = variables.ReplaceVariables(content, getContext())
-	ioutil.WriteFile(path.Join(profilesDir, name+".yml"), []byte(content), 0777)
+	os.WriteFile(path.Join(profilesDir, name+".yml"), []byte(content), 0777)
 }
